@@ -26,11 +26,11 @@ prompt = ChatPromptTemplate.from_template(
     FORMAT INSTRUCTIONS:
     You MUST output your response in two parts.
     Part 1: THOUGHT: (Your step-by-step logic)
-    Part 2: FINAL ANSWER: (The number only)
+    Part 2: FINAL ANSWER: (The number only, phrased politely)
     
     Example:
     THOUGHT: 1+1 is 2.
-    FINAL ANSWER: 2
+    FINAL ANSWER: The answer is 2, sir.
     """
 )
 

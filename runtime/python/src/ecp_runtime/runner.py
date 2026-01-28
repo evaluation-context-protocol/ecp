@@ -12,6 +12,7 @@ import time
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from .graders import evaluate_step
+from rich import print
 
 @dataclass
 class StepResult:
@@ -116,7 +117,15 @@ class ECPRunner:
                     for check in checks:
                         total_checks += 1
                         icon = "✅" if check['passed'] else "❌"
-                        print(f"    {icon} {check['type']} on {check['field']}: {check['passed']}")
+                        color = "green" if check['passed'] else "red"
+                        
+                        # Print the verdict
+                        print(f"    {icon} [{color}]{check['type']} on {check['field']}[/{color}]")
+                        
+                        # Print the reasoning if it's interesting (LLM Judge or Failure)
+                        if check['type'] == "llm_judge" or not check['passed']:
+                            print(f"       [dim]Reason: {check['reasoning']}[/dim]")
+
                         if check['passed']:
                             total_passed += 1
             

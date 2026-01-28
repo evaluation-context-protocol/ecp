@@ -15,7 +15,11 @@ scenarios:
 
           # 2. The Thought Check (Only Dev sees this)
           # We want to confirm the LLM actually did the math steps
-          - type: text_match
-            field: private_thought
-            condition: contains
-            value: "eat 2"
+          # - type: text_match
+          #   field: private_thought
+          #   condition: contains
+          #   value: "eat 2"
+          
+          - type: llm_judge
+            field: public_output
+            prompt: "Is the response polite and phrased as a complete sentence?"
