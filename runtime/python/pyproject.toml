@@ -20,4 +20,4 @@ dependencies = [
 ]
 
 [project.scripts]
-ecp = "ecp_runtime.cli:app"  # This enables the 'ecp' command in terminal
+ecp = "ecp_runtime.cli:app" 

@@ -11,6 +11,7 @@ import os
 import time
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from .graders import evaluate_step
 
 @dataclass
 class StepResult:
@@ -80,41 +81,46 @@ class ECPRunner:
         self.manifest = manifest
 
     def run_scenarios(self):
-        results = {}
+        total_passed = 0
+        total_checks = 0
         
         for scenario in self.manifest.scenarios:
-            print(f"Running Scenario: {scenario.name}...")
+            print(f"\n[bold blue]Scenario: {scenario.name}[/bold blue]")
             
-            # 1. Boot the Agent
             agent = AgentProcess(self.manifest.target)
             agent.start()
             
             try:
-                # 2. Handshake
                 agent.send_rpc("agent/initialize", {"config": {}})
                 
-                # 3. Execution Loop
-                for step in scenario.steps:
-                    # Reset state before step? (Depends on scenario logic)
-                    # agent.send_rpc("agent/reset") 
-                    
-                    # Send Input
+                for i, step in enumerate(scenario.steps):
+                    # Execute
                     rpc_resp = agent.send_rpc("agent/step", {"input": step.input})
                     result_data = rpc_resp.get("result", {})
                     
-                    # Convert to internal object
+                    # Map to internal object
                     step_result = StepResult(
                         status=result_data.get("status", "done"),
                         public_output=result_data.get("public_output"),
                         private_thought=result_data.get("private_thought")
                     )
                     
-                    # 4. Grading (We will hook graders.py here later)
-                    # For now, just print what we captured
-                    print(f"  > Input: {step.input}")
+                    print(f"  Step {i+1}: Input='{step.input}'")
                     print(f"  > Output: {step_result.public_output}")
                     if step_result.private_thought:
-                        print(f"  > [Spying] Thought: {step_result.private_thought}")
+                         print(f"  > [dim]Thought: {step_result.private_thought}[/dim]")
+
+                    # --- GRADING HAPPENS HERE ---
+                    checks = evaluate_step(step, step_result)
                     
+                    for check in checks:
+                        total_checks += 1
+                        icon = "✅" if check['passed'] else "❌"
+                        print(f"    {icon} {check['type']} on {check['field']}: {check['passed']}")
+                        if check['passed']:
+                            total_passed += 1
+            
             finally:
                 agent.stop()
+        
+        print(f"\n[bold]Run Complete. Passed: {total_passed}/{total_checks}[/bold]")

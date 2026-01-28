@@ -1,0 +1,21 @@
+manifest_version: "v1"
+name: "LangChain Logic Check"
+target: "python agent.py"
+
+scenarios:
+  - name: "Logic Puzzle"
+    steps:
+      - input: "I have 3 apples. I eat 2. I buy 5 more. How many do I have?"
+        graders:
+          # 1. The Output Check (User sees this)
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "6"
+
+          # 2. The Thought Check (Only Dev sees this)
+          # We want to confirm the LLM actually did the math steps
+          - type: text_match
+            field: private_thought
+            condition: contains
+            value: "eat 2"
