@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecp-runtime"
+version = "0.1.0"
+description = "The reference runtime for the Evaluation Context Protocol (ECP)."
+authors = [
+  { name = "ECP Maintainers", email = "hello@ecp.org" },
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "typer>=0.9.0",         # For the CLI
+    "pyyaml>=6.0",          # For reading Manifests
+    "pydantic>=2.0",        # For validating Schemas
+    "rich>=13.0",           # For pretty terminal output
+    "openai>=1.0.0",        # For the LLM Judge
+]
+
+[project.scripts]
+ecp = "ecp_runtime.cli:app"  # This enables the 'ecp' command in terminal
