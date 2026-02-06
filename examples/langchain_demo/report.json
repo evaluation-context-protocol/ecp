@@ -1,0 +1,72 @@
+{
+  "manifest": "C:\\Users\\anike\\Documents\\GitHub\\evaluation-context-protocol\\examples\\langchain_demo\\manifest.yaml",
+  "passed": 6,
+  "total": 6,
+  "failed": 0,
+  "scenarios": [
+    {
+      "name": "Ratio Word Problem",
+      "steps": [
+        {
+          "input": "Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.",
+          "output": "Katy used 42 teaspoonfuls of sugar.",
+          "checks": [
+            {
+              "type": "text_match",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "Expected to contain '42'"
+            },
+            {
+              "type": "llm_judge",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "The text states \"Katy used 42 teaspoonfuls of sugar,\" which clearly indicates the final number (42) and specifies that it refers to the amount of sugar. Therefore, it satisfies the criteria."
+            },
+            {
+              "type": "tool_usage",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "Found tool call 'calculator' with expected arguments"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Weekly Letters",
+      "steps": [
+        {
+          "input": "James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?",
+          "output": "James writes 624 pages in a year.",
+          "checks": [
+            {
+              "type": "text_match",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "Expected to contain '624'"
+            },
+            {
+              "type": "llm_judge",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "The text states that \"James writes 624 pages in a year,\" which clearly indicates the final number (624 pages) and specifies that it refers to pages written per year. Therefore, it satisfies the criteria."
+            },
+            {
+              "type": "tool_usage",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "Found tool call 'calculator' with expected arguments"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -54,3 +54,9 @@ The runtime can optionally generate a single HTML report for a run:
 ```bash
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
 ```
+
+The runtime can also emit a JSON report (useful for CI):
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
+```

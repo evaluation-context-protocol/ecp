@@ -35,6 +35,12 @@ Generate an HTML report:
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
 ```
 
+Print a JSON report (useful for CI tooling):
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
+```
+
 If your manifest uses `llm_judge`, set your key:
 
 ```bash

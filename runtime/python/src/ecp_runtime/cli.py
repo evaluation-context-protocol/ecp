@@ -2,6 +2,7 @@
 import typer
 import sys
 import os
+import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -63,7 +64,23 @@ def run(
         "--report",
         help="Path to save an HTML report (e.g., output.html)",
         resolve_path=True,
-    )
+    ),
+    json_out: Optional[Path] = typer.Option(
+        None,
+        "--json-out",
+        help="Path to save a JSON report (e.g., output.json)",
+        resolve_path=True,
+    ),
+    print_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the JSON report to stdout",
+    ),
+    fail_on_error: bool = typer.Option(
+        True,
+        "--fail-on-error/--no-fail-on-error",
+        help="Exit non-zero if any checks fail (useful for CI)",
+    ),
 ):
     """
     Execute an evaluation run based on a manifest file.
@@ -80,6 +97,17 @@ def run(
         # Run the Tests
         runner = ECPRunner(config)
         result_summary = runner.run_scenarios()
+        total = int(result_summary.get("total", 0) or 0)
+        passed = int(result_summary.get("passed", 0) or 0)
+        failed = max(total - passed, 0)
+
+        report_payload: Dict[str, Any] = {
+            "manifest": str(manifest),
+            "passed": passed,
+            "total": total,
+            "failed": failed,
+            "scenarios": result_summary.get("scenarios", []),
+        }
 
         if report:
             logger.info("Generating HTML report: %s", report)
@@ -90,6 +118,18 @@ def run(
             reporter.save(str(report))
             logger.info("Report saved to %s", report)
 
+        if json_out:
+            json_out.write_text(json.dumps(report_payload, indent=2), encoding="utf-8")
+            logger.info("JSON report saved to %s", json_out)
+
+        if print_json:
+            typer.echo(json.dumps(report_payload, indent=2))
+
+        if fail_on_error and failed > 0:
+            raise typer.Exit(code=2)
+
+    except typer.Exit:
+        raise
     except Exception as e:
         logger.error("CRITICAL ERROR: %s", e)
         if verbose:

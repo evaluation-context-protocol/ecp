@@ -21,7 +21,21 @@ python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
 ```
 
-## 4. Optional: enable LLM judge
+## 4. JSON output (for CI)
+
+Print a JSON report to stdout:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
+```
+
+Save a JSON report to a file:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
+```
+
+## 5. Optional: enable LLM judge
 
 If your manifest uses `llm_judge`, set the API key:
 
