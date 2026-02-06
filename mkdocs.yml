@@ -1,0 +1,27 @@
+﻿site_name: Evaluation Context Protocol (ECP)
+site_description: Lightweight protocol and runtime for agent evaluation
+site_url: https://example.com
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Specification: spec.md
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: slate
+      accent: indigo
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+markdown_extensions:
+  - fenced_code
+  - tables

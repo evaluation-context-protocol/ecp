@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ECP Evaluation Report</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        h1 { border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .meta { color: #666; font-size: 0.9em; }
+        pre { background: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>ECP Evaluation Report</h1>
+    <div class="meta">Generated: 2026-02-05 21:09:57</div>
+    
+    
+    <div class="card">
+        <h2>Scenario: Ratio Word Problem</h2>
+        
+        <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
+            <p><strong>Input:</strong> Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.</p>
+            <p><strong>Output:</strong> Katy used 42 teaspoonfuls of sugar.</p>
+            
+            <h4>Graders:</h4>
+            <ul>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    text_match 
+                    
+                    <br><small>Reason: Expected to contain '42'</small>
+                    
+                </li>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    llm_judge 
+                    
+                    <br><small>Reason: The text states "Katy used 42 teaspoonfuls of sugar," which clearly indicates the final number (42) and specifies that it refers to the amount of sugar. Therefore, it satisfies the criteria.</small>
+                    
+                </li>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    tool_usage 
+                    
+                    <br><small>Reason: Found tool call 'calculator' with expected arguments</small>
+                    
+                </li>
+            
+            </ul>
+        </div>
+        
+    </div>
+    
+    <div class="card">
+        <h2>Scenario: Weekly Letters</h2>
+        
+        <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
+            <p><strong>Input:</strong> James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?</p>
+            <p><strong>Output:</strong> James writes 624 pages in a year.</p>
+            
+            <h4>Graders:</h4>
+            <ul>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    text_match 
+                    
+                    <br><small>Reason: Expected to contain '624'</small>
+                    
+                </li>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    llm_judge 
+                    
+                    <br><small>Reason: The text states that "James writes 624 pages in a year," which clearly indicates the final number (624 pages) and specifies that it refers to pages written per year. Therefore, it satisfies the criteria.</small>
+                    
+                </li>
+            
+                <li>
+                    <span class="pass">
+                        ✅ PASS
+                    </span>
+                    tool_usage 
+                    
+                    <br><small>Reason: Found tool call 'calculator' with expected arguments</small>
+                    
+                </li>
+            
+            </ul>
+        </div>
+        
+    </div>
+    
+</body>
+</html>
