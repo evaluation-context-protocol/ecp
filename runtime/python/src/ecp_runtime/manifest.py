@@ -13,6 +13,9 @@ class GraderConfig(BaseModel):
     # For llm_judge
     prompt: Optional[str] = None
     assertion: Optional[str] = None
+    # For tool_usage
+    tool_name: Optional[str] = None
+    arguments: Dict[str, Any] = Field(default_factory=dict)
 
 # --- The Step (Scenario) Schema ---
 class StepConfig(BaseModel):

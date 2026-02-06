@@ -1,8 +1,11 @@
+﻿import logging
 import typer
 import sys
 import os
 from pathlib import Path
-from rich.console import Console
+from typing import Dict, Any, Optional
+
+from .reporter import HTMLReporter
 
 # Import local modules (Using relative imports)
 try:
@@ -14,15 +17,24 @@ except ImportError:
     from manifest import ECPManifest
     from runner import ECPRunner
 
-# Initialize the Typer App
 app = typer.Typer(
     name="ecp",
     help="Evaluation Context Protocol Runtime CLI",
     add_completion=False
 )
-console = Console()
 
-# 1. Define the Root Callback (Helps Typer understand this is a CLI group)
+logger = logging.getLogger(__name__)
+
+
+def _configure_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+
 @app.callback()
 def main():
     """
@@ -30,41 +42,60 @@ def main():
     """
     pass
 
-# 2. Define the Run Command
+
 @app.command()
 def run(
     manifest: Path = typer.Option(
-        ..., 
-        "--manifest", "-m", 
-        exists=True, 
-        file_okay=True, 
-        dir_okay=False, 
-        writable=False, 
-        readable=True, 
+        ...,
+        "--manifest", "-m",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        writable=False,
+        readable=True,
         resolve_path=True,
         help="Path to the test manifest YAML file"
     ),
-    verbose: bool = False
+
+    verbose: bool = False,
+    report: Optional[Path] = typer.Option(
+        None,
+        "--report",
+        help="Path to save an HTML report (e.g., output.html)",
+        resolve_path=True,
+    )
 ):
     """
     Execute an evaluation run based on a manifest file.
     """
-    console.print(f"[bold green]ECP Runtime Initializing...[/bold green]")
-    console.print(f"📂 Loading manifest: {manifest}")
+    _configure_logging(verbose)
+
+    logger.info("ECP Runtime Initializing...")
+    logger.info("Loading manifest: %s", manifest)
 
     try:
         # Load the YAML
         config = ECPManifest.from_yaml(str(manifest))
-        
+
         # Run the Tests
         runner = ECPRunner(config)
-        runner.run_scenarios()
+        result_summary = runner.run_scenarios()
+
+        if report:
+            logger.info("Generating HTML report: %s", report)
+            reporter = HTMLReporter()
+            # Feed scenarios directly to reporter
+            for scenario in result_summary.get("scenarios", []):
+                reporter.add_scenario(scenario.get("name"), scenario.get("steps", []))
+            reporter.save(str(report))
+            logger.info("Report saved to %s", report)
 
     except Exception as e:
-        console.print(f"[bold red]CRITICAL ERROR:[/bold red] {e}")
+        logger.error("CRITICAL ERROR: %s", e)
         if verbose:
-            raise e # Show full traceback
+            raise e
         sys.exit(1)
+
 
 if __name__ == "__main__":
     app()
