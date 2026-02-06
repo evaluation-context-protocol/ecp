@@ -1,25 +1,38 @@
-manifest_version: "v1"
-name: "LangChain Logic Check"
+﻿manifest_version: "v1"
+name: "LangChain Math Check"
 target: "python agent.py"
 
 scenarios:
-  - name: "Logic Puzzle"
+  - name: "Ratio Word Problem"
     steps:
-      - input: "I have 3 apples. I eat 2. I buy 5 more. How many do I have?"
+      - input: "Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used."
         graders:
-          # 1. The Output Check (User sees this)
           - type: text_match
             field: public_output
             condition: contains
-            value: "6"
+            value: "42"
 
-          # 2. The Thought Check (Only Dev sees this)
-          # We want to confirm the LLM actually did the math steps
-          # - type: text_match
-          #   field: private_thought
-          #   condition: contains
-          #   value: "eat 2"
-          
           - type: llm_judge
             field: public_output
-            prompt: "Is the response polite and phrased as a complete sentence?"
+            prompt: "Does the response state the correct final number and clearly indicate it refers to the amount of sugar?"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Weekly Letters"
+    steps:
+      - input: "James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "624"
+
+          - type: llm_judge
+            field: public_output
+            prompt: "Does the response state the correct final number and clearly indicate it refers to pages written per year?"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
