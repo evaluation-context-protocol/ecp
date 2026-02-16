@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ecp-runtime"
-version = "0.2.1"
+version = "0.2.2"
 description = "The reference runtime for the Evaluation Context Protocol (ECP)."
 authors = [
   { name = "ECP Maintainers", email = "hello@ecp.org" },
@@ -19,6 +19,12 @@ dependencies = [
     "openai>=1.0.0",        # For the LLM Judge
   "Jinja2>=3.1.0",        # For HTML report rendering
 ]
+
+[project.urls]
+Homepage = "https://github.com/evaluation-context-protocol/ecp"
+Documentation = "https://evaluation-context-protocol.github.io/ecp/"
+Repository = "https://github.com/evaluation-context-protocol/ecp"
+Issues = "https://github.com/evaluation-context-protocol/ecp/issues"
 
 [project.scripts]
 ecp = "ecp_runtime.cli:app" 

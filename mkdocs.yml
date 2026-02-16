@@ -1,6 +1,6 @@
 ﻿site_name: Evaluation Context Protocol (ECP)
 site_description: Lightweight protocol and runtime for agent evaluation
-site_url: https://example.com
+site_url: https://evaluation-context-protocol.github.io/ecp/
 
 nav:
   - Home: index.md
