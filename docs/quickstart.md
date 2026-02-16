@@ -1,12 +1,11 @@
 ﻿# Quickstart
 
-## 1. Create a venv and install in editable mode
+## 1. Create a venv and install from PyPI
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -e .\runtime\python
-pip install -e .\sdk\python
+pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
 ```
 
 ## 2. Run the demo

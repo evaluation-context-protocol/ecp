@@ -3,6 +3,8 @@
 ![Status](https://img.shields.io/badge/Status-Experimental-orange)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 
+> Work in progress: this repository is actively evolving, and some concepts may change.
+
 
 A lightweight protocol and reference runtime for evaluating agents with public output, private reasoning, and tool usage. This repo contains:
 
@@ -11,16 +13,14 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 - `examples/` - Minimal examples (LangChain demo).
 - `spec/` - Protocol specification.
 
+## Quick Start
 
-## Quick Start (Local Dev)
-
-Create a venv and install runtime + SDK in editable mode:
+Create a venv and install from PyPI:
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -e .\runtime\python
-pip install -e .\sdk\python
+pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
 ```
 
 Run the example manifest:

@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sdk/python/src')))
-
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
