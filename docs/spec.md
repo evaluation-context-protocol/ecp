@@ -1,5 +1,4 @@
-﻿# Specification
-
+# Specification`r`n`r`n[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Protocol Source](https://github.com/evaluation-context-protocol/ecp/blob/main/spec/protocol.md)`r`n
 ## Overview
 
 ECP is JSON-RPC 2.0 over stdio. The runtime spawns the agent process and sends requests for `initialize`, `step`, and `reset`. The agent returns structured results containing public output, private reasoning, and tool usage.
@@ -60,3 +59,4 @@ The runtime can also emit a JSON report (useful for CI):
 ```bash
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
 ```
+

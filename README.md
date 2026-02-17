@@ -13,6 +13,12 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 - `examples/` - Minimal examples (LangChain demo).
 - `spec/` - Protocol specification.
 
+## Documentation
+
+- Docs site: https://evaluation-context-protocol.github.io/ecp/
+- Quickstart: https://evaluation-context-protocol.github.io/ecp/quickstart/
+- Specification: https://evaluation-context-protocol.github.io/ecp/spec/
+
 ## Quick Start
 
 Create a venv and install from PyPI:
