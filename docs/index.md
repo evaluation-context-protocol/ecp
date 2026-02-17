@@ -1,4 +1,7 @@
-# Evaluation Context Protocol (ECP)`r`n`r`n[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [README](https://github.com/evaluation-context-protocol/ecp/blob/main/README.md)`r`n
+# Evaluation Context Protocol (ECP)
+
+[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [README](https://github.com/evaluation-context-protocol/ecp/blob/main/README.md)
+
 ECP is a lightweight protocol and reference runtime for evaluating agents with public output, private reasoning, and tool usage.
 
 It gives you a standard way to run deterministic evaluations without changing your production agent code.
@@ -85,5 +88,4 @@ scenarios:
 - Protocol spec: `spec/protocol.md`
 
 Go to **Quickstart** to run the demo, or **Specification** to implement the protocol in another language.
-
 
