@@ -1,4 +1,4 @@
-﻿site_name: Evaluation Context Protocol (ECP)
+site_name: Evaluation Context Protocol (ECP)
 site_description: Lightweight protocol and runtime for agent evaluation
 site_url: https://evaluation-context-protocol.github.io/ecp/
 repo_url: https://github.com/evaluation-context-protocol/ecp
@@ -7,6 +7,7 @@ repo_name: evaluation-context-protocol/ecp
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
+  - Examples: examples.md
   - Specification: spec.md
 
 theme:
