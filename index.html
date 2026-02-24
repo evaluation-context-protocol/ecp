@@ -328,10 +328,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-langchain-agent-manifest" class="md-nav__link">
+  <a href="#framework-adaptors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example (LangChain Agent + Manifest)
+        Framework Adaptors
       
     </span>
   </a>
@@ -372,6 +372,33 @@
     
   
     Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
   
 
     
@@ -450,63 +477,22 @@
 <li>A reference runtime to execute manifests and graders</li>
 <li>Optional HTML report output for sharing results</li>
 <li>A Python SDK to wrap agents quickly</li>
-<li>Minimal examples to copy and modify</li>
+<li>Minimal examples for LangChain and LlamaIndex</li>
 </ul>
-<h2 id="example-langchain-agent-manifest">Example (LangChain Agent + Manifest)</h2>
-<p>Agent:</p>
-<pre><code class="language-python">from langchain.agents import create_agent
-from langchain_openai import ChatOpenAI
-from langchain_core.tools import tool
-from ecp import serve
-from ecp.adaptors.langchain import ECPLangChainAdapter
-
-@tool
-def calculator(expression: str) -&gt; str:
-    allowed = set(&quot;0123456789+-*/() &quot;)
-    if not expression or any(ch not in allowed for ch in expression):
-        return &quot;Invalid expression.&quot;
-    try:
-        return str(int(eval(expression, {&quot;__builtins__&quot;: {}})))
-    except Exception:
-        return &quot;Invalid expression.&quot;
-
-agent = create_agent(
-    model=ChatOpenAI(model=&quot;gpt-3.5-turbo&quot;, temperature=0),
-    tools=[calculator],
-    system_prompt=&quot;Use the calculator tool for arithmetic.&quot;
-)
-
-def to_messages(text: str):
-    return {&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: text}]}
-
-serve(ECPLangChainAdapter(agent, name=&quot;MathBot&quot;, input_mapper=to_messages))
-</code></pre>
-<p>Manifest:</p>
-<pre><code class="language-yaml">manifest_version: &quot;v1&quot;
-name: &quot;LangChain Math Check&quot;
-target: &quot;python agent.py&quot;
-
-scenarios:
-  - name: &quot;Ratio Word Problem&quot;
-    steps:
-      - input: &quot;Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13...&quot;
-        graders:
-          - type: text_match
-            field: public_output
-            condition: contains
-            value: &quot;42&quot;
-          - type: tool_usage
-            tool_name: &quot;calculator&quot;
-            arguments: {}
-</code></pre>
+<h2 id="framework-adaptors">Framework Adaptors</h2>
+<ul>
+<li>LangChain: <code>ecp.adaptors.langchain.ECPLangChainAdapter</code></li>
+<li>LlamaIndex: <code>ecp.adaptors.llama_index.ECPLlamaIndexAdapter</code></li>
+</ul>
+<p>See <strong>Examples</strong> for full agent + manifest snippets.</p>
 <h2 id="what-is-in-this-repo">What is in this repo</h2>
 <ul>
 <li>Python SDK: <code>sdk/python/src/ecp</code></li>
 <li>Runtime CLI: <code>runtime/python/src/ecp_runtime</code></li>
-<li>Examples: <code>examples/langchain_demo</code></li>
+<li>Examples: <code>examples/langchain_demo</code>, <code>examples/llamaindex_demo</code></li>
 <li>Protocol spec: <code>spec/protocol.md</code></li>
 </ul>
-<p>Go to <strong>Quickstart</strong> to run the demo, or <strong>Specification</strong> to implement the protocol in another language.</p>
+<p>Go to <strong>Quickstart</strong> to run the demos, <strong>Examples</strong> for full manifests, or <strong>Specification</strong> to implement the protocol in another language.</p>
 
 
 

@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://evaluation-context-protocol.github.io/ecp/quickstart/">
+        <link rel="canonical" href="https://evaluation-context-protocol.github.io/ecp/examples/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../quickstart/">
       
       
-        <link rel="next" href="../examples/">
+        <link rel="next" href="../spec/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Quickstart - Evaluation Context Protocol (ECP)</title>
+        <title>Examples - Evaluation Context Protocol (ECP)</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart" class="md-skip">
+        <a href="#examples" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              Examples
             
           </span>
         </div>
@@ -272,6 +272,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -291,7 +318,7 @@
   <span class="md-ellipsis">
     
   
-    Quickstart
+    Examples
   
 
     
@@ -309,7 +336,7 @@
   <span class="md-ellipsis">
     
   
-    Quickstart
+    Examples
   
 
     
@@ -335,68 +362,58 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-create-a-venv-and-install-from-pypi" class="md-nav__link">
+  <a href="#langchain-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Create a venv and install from PyPI
+        LangChain Example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LangChain Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#langchain-manifest-full-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LangChain Manifest (Full Scenarios)
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#2-run-the-demo" class="md-nav__link">
+  <a href="#llamaindex-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Run the demo
+        LlamaIndex Example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LlamaIndex Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llamaindex-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LlamaIndex Manifest
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#3-generate-an-html-report" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Generate an HTML report
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-json-output-for-ci" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. JSON output (for CI)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-optional-enable-llm-judge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Optional: enable LLM judge
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Notes
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -404,33 +421,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -482,36 +472,116 @@
   
 
 
-<h1 id="quickstart">Quickstart</h1>
+<h1 id="examples">Examples</h1>
 <p><a href="https://github.com/evaluation-context-protocol/ecp">View on GitHub</a> | <a href="https://evaluation-context-protocol.github.io/ecp/">Docs Home</a></p>
-<h2 id="1-create-a-venv-and-install-from-pypi">1. Create a venv and install from PyPI</h2>
-<pre><code class="language-bash">py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install ecp-runtime &quot;ecp-sdk[langchain]&quot; langchain-openai
+<h2 id="langchain-example">LangChain Example</h2>
+<p>Agent file: <code>examples/langchain_demo/agent.py</code></p>
+<h3 id="langchain-manifest-full-scenarios">LangChain Manifest (Full Scenarios)</h3>
+<pre><code class="language-yaml">manifest_version: &quot;v1&quot;
+name: &quot;LangChain Math Check&quot;
+target: &quot;python agent.py&quot;
+
+scenarios:
+  - name: &quot;Ratio Word Problem&quot;
+    steps:
+      - input: &quot;Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;42&quot;
+
+          - type: llm_judge
+            field: public_output
+            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to the amount of sugar?&quot;
+
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
+
+  - name: &quot;Weekly Letters&quot;
+    steps:
+      - input: &quot;James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;624&quot;
+
+          - type: llm_judge
+            field: public_output
+            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to pages written per year?&quot;
+
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
 </code></pre>
-<h2 id="2-run-the-demo">2. Run the demo</h2>
-<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
+<h2 id="llamaindex-example">LlamaIndex Example</h2>
+<p>Agent file: <code>examples/llamaindex_demo/agent.py</code></p>
+<pre><code class="language-python">from llama_index.core.agent.workflow import FunctionAgent
+from llama_index.llms.openai import OpenAI
+from llama_index.tools.yahoo_finance import YahooFinanceToolSpec
+
+from ecp import serve
+from ecp.adaptors.llama_index import ECPLlamaIndexAdapter
+
+
+def multiply(a: float, b: float) -&gt; float:
+    return a * b
+
+
+def add(a: float, b: float) -&gt; float:
+    return a + b
+
+
+finance_tools = YahooFinanceToolSpec().to_tool_list()
+finance_tools.extend([multiply, add])
+
+workflow = FunctionAgent(
+    name=&quot;Agent&quot;,
+    description=&quot;Useful for performing financial operations.&quot;,
+    llm=OpenAI(model=&quot;gpt-4o-mini&quot;),
+    tools=[multiply, add],
+    system_prompt=&quot;You are a helpful assistant.&quot;,
+)
+
+ecp_agent = ECPLlamaIndexAdapter(workflow, name=&quot;FinanceBot&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    serve(ecp_agent)
 </code></pre>
-<h2 id="3-generate-an-html-report">3. Generate an HTML report</h2>
-<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
+<h3 id="llamaindex-manifest">LlamaIndex Manifest</h3>
+<pre><code class="language-yaml">manifest_version: &quot;v1&quot;
+name: &quot;LlamaIndex Capability Check&quot;
+target: &quot;python agent.py&quot;
+
+scenarios:
+  - name: &quot;Ratio Word Problem&quot;
+    steps:
+      - input: &quot;Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;42&quot;
+
+          - type: llm_judge
+            field: public_output
+            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to the amount of sugar?&quot;
+
+  - name: &quot;Weekly Letters&quot;
+    steps:
+      - input: &quot;James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;312&quot;
+
+          - type: llm_judge
+            field: public_output
+            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to pages written per year?&quot;
 </code></pre>
-<h2 id="4-json-output-for-ci">4. JSON output (for CI)</h2>
-<p>Print a JSON report to stdout:</p>
-<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
-</code></pre>
-<p>Save a JSON report to a file:</p>
-<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
-</code></pre>
-<h2 id="5-optional-enable-llm-judge">5. Optional: enable LLM judge</h2>
-<p>If your manifest uses <code>llm_judge</code>, set the API key:</p>
-<pre><code class="language-bash">$env:OPENAI_API_KEY=&quot;your_key_here&quot;
-</code></pre>
-<h2 id="notes">Notes</h2>
-<ul>
-<li>The runtime launches your agent via the <code>target</code> command in the manifest.</li>
-<li>The agent responds over JSON-RPC 2.0 on stdio.</li>
-<li>Use <code>ECP_RPC_TIMEOUT</code> to control step timeouts (default 30s).</li>
-</ul>
 
 
 
