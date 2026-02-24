@@ -14,6 +14,12 @@ For LangChain adaptor support:
 pip install "ecp-sdk[langchain]"
 ```
 
+For LlamaIndex adaptor support:
+
+```bash
+pip install "ecp-sdk[llamaindex]"
+```
+
 ## Usage
 
 ```python
