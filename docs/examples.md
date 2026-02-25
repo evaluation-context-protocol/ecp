@@ -87,11 +87,60 @@ if __name__ == "__main__":
     serve(ecp_agent)
 ```
 
-### LlamaIndex Manifest
+## CrewAI Example
+
+Agent file: `examples/crewai_demo/agent.py`
+
+```python
+from crewai import Agent, Crew, Process, Task
+from crewai.tools import tool
+
+from ecp import serve
+from ecp.adaptors.crewai import ECPCrewAIAdapter
+
+
+@tool("calculator")
+def calculator(expression: str) -> str:
+    allowed = set("0123456789+-*/() ")
+    if not expression or any(ch not in allowed for ch in expression):
+        return "Invalid expression."
+    try:
+        return str(int(eval(expression, {"__builtins__": {}})))
+    except Exception:
+        return "Invalid expression."
+
+
+agent = Agent(
+    role="Math Specialist",
+    goal="Solve arithmetic accurately using tools when needed",
+    backstory="You are careful with arithmetic and verify calculations with tools.",
+    tools=[calculator],
+    verbose=True,
+    allow_delegation=False,
+)
+
+task = Task(
+    description=(
+        "Solve this math problem: {input}. "
+        "Use the calculator tool for arithmetic and provide a concise final answer."
+    ),
+    expected_output="A concise answer that includes the final numeric result.",
+    agent=agent,
+)
+
+crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
+
+ecp_agent = ECPCrewAIAdapter(crew, name="CrewMathBot")
+
+if __name__ == "__main__":
+    serve(ecp_agent)
+```
+
+### CrewAI Manifest
 
 ```yaml
 manifest_version: "v1"
-name: "LlamaIndex Capability Check"
+name: "CrewAI Math Check"
 target: "python agent.py"
 
 scenarios:
@@ -108,6 +157,10 @@ scenarios:
             field: public_output
             prompt: "Does the response state the correct final number and clearly indicate it refers to the amount of sugar?"
 
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
   - name: "Weekly Letters"
     steps:
       - input: "James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?"
@@ -115,9 +168,13 @@ scenarios:
           - type: text_match
             field: public_output
             condition: contains
-            value: "312"
+            value: "624"
 
           - type: llm_judge
             field: public_output
             prompt: "Does the response state the correct final number and clearly indicate it refers to pages written per year?"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
 ```

@@ -10,7 +10,7 @@ py -m venv .venv
 pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
 ```
 
-## 2. Run the demo
+## 2. Run the LangChain demo
 
 ```bash
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
@@ -36,7 +36,21 @@ Save a JSON report to a file:
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
 ```
 
-## 5. Optional: enable LLM judge
+## 5. Run the CrewAI demo
+
+Install CrewAI support:
+
+```bash
+pip install "ecp-sdk[crewai]" crewai
+```
+
+Run CrewAI manifest:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
+```
+
+## 6. Optional: enable LLM judge
 
 If your manifest uses `llm_judge`, set the API key:
 
@@ -49,4 +63,3 @@ $env:OPENAI_API_KEY="your_key_here"
 - The runtime launches your agent via the `target` command in the manifest.
 - The agent responds over JSON-RPC 2.0 on stdio.
 - Use `ECP_RPC_TIMEOUT` to control step timeouts (default 30s).
-

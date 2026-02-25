@@ -1,0 +1,38 @@
+manifest_version: "v1"
+name: "CrewAI Math Check"
+target: "python agent.py"
+
+scenarios:
+  - name: "Ratio Word Problem"
+    steps:
+      - input: "Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used."
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "42"
+
+          - type: llm_judge
+            field: public_output
+            prompt: "Does the response state the correct final number and clearly indicate it refers to the amount of sugar?"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Weekly Letters"
+    steps:
+      - input: "James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "624"
+
+          - type: llm_judge
+            field: public_output
+            prompt: "Does the response state the correct final number and clearly indicate it refers to pages written per year?"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}

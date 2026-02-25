@@ -1,0 +1,58 @@
+{
+  "manifest": "C:\\Users\\anike\\Documents\\GitHub\\evaluation-context-protocol\\examples\\llamaindex_demo\\manifest.yaml",
+  "passed": 3,
+  "total": 4,
+  "failed": 1,
+  "scenarios": [
+    {
+      "name": "Ratio Word Problem",
+      "steps": [
+        {
+          "input": "Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.",
+          "output": "Let the number of teaspoons of sugar be \\( 7x \\) and the number of cups of water be \\( 13x \\), where \\( x \\) is a common multiplier.\n\nAccording to the problem, the total amount of sugar and water used is 120 teaspoons:\n\n\\[\n7x + 13x = 120\n\\]\n\nThis simplifies to:\n\n\\[\n20x = 120\n\\]\n\nNow, we can solve for \\( x \\):\n\n\\[\nx = \\frac{120}{20} = 6\n\\]\n\nNow, we can find the number of teaspoons of sugar used:\n\n\\[\n\\text{Teaspoons of sugar} = 7x = 7 \\times 6 = 42\n\\]\n\nThus, Katy used **42 teaspoons of sugar**.",
+          "checks": [
+            {
+              "type": "text_match",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "Expected to contain '42'"
+            },
+            {
+              "type": "llm_judge",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "The text clearly states the final number of teaspoons of sugar used, which is 42, and explicitly indicates that this amount refers to sugar. The calculations leading to this conclusion are also presented clearly and logically. Therefore, the response meets the criteria."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Weekly Letters",
+      "steps": [
+        {
+          "input": "James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?",
+          "output": "James writes a total of 624 pages in a year.",
+          "checks": [
+            {
+              "type": "text_match",
+              "field": "public_output",
+              "passed": false,
+              "score": 0.0,
+              "reasoning": "Expected to contain '312'"
+            },
+            {
+              "type": "llm_judge",
+              "field": "public_output",
+              "passed": true,
+              "score": 1.0,
+              "reasoning": "The text states that James writes a total of 624 pages in a year, which clearly indicates the final number (624 pages) and specifies that it refers to pages written per year. Therefore, it satisfies the criteria."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -15,3 +15,11 @@ try:
 except Exception:
     # Optional dependency.
     pass
+
+try:
+    from .crewai import ECPCrewAIAdapter
+
+    __all__.append("ECPCrewAIAdapter")
+except Exception:
+    # Optional dependency.
+    pass
