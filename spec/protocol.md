@@ -1,6 +1,6 @@
 # Evaluation Context Protocol (ECP) Specification
 
-Version: 0.2.3-draft
+Version: 0.2.4-draft
 Status: Experimental
 
 ## 1. Overview
@@ -101,4 +101,5 @@ Supported graders:
 - `tool_usage`: verifies tool call name and argument subset
 
 See `examples/langchain_demo/manifest.yaml` for a minimal manifest.
+
 
