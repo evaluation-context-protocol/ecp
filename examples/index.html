@@ -398,14 +398,25 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="LlamaIndex Example">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crewai-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CrewAI Example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CrewAI Example">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#llamaindex-manifest" class="md-nav__link">
+  <a href="#crewai-manifest" class="md-nav__link">
     <span class="md-ellipsis">
       
-        LlamaIndex Manifest
+        CrewAI Manifest
       
     </span>
   </a>
@@ -550,9 +561,54 @@ ecp_agent = ECPLlamaIndexAdapter(workflow, name=&quot;FinanceBot&quot;)
 if __name__ == &quot;__main__&quot;:
     serve(ecp_agent)
 </code></pre>
-<h3 id="llamaindex-manifest">LlamaIndex Manifest</h3>
+<h2 id="crewai-example">CrewAI Example</h2>
+<p>Agent file: <code>examples/crewai_demo/agent.py</code></p>
+<pre><code class="language-python">from crewai import Agent, Crew, Process, Task
+from crewai.tools import tool
+
+from ecp import serve
+from ecp.adaptors.crewai import ECPCrewAIAdapter
+
+
+@tool(&quot;calculator&quot;)
+def calculator(expression: str) -&gt; str:
+    allowed = set(&quot;0123456789+-*/() &quot;)
+    if not expression or any(ch not in allowed for ch in expression):
+        return &quot;Invalid expression.&quot;
+    try:
+        return str(int(eval(expression, {&quot;__builtins__&quot;: {}})))
+    except Exception:
+        return &quot;Invalid expression.&quot;
+
+
+agent = Agent(
+    role=&quot;Math Specialist&quot;,
+    goal=&quot;Solve arithmetic accurately using tools when needed&quot;,
+    backstory=&quot;You are careful with arithmetic and verify calculations with tools.&quot;,
+    tools=[calculator],
+    verbose=True,
+    allow_delegation=False,
+)
+
+task = Task(
+    description=(
+        &quot;Solve this math problem: {input}. &quot;
+        &quot;Use the calculator tool for arithmetic and provide a concise final answer.&quot;
+    ),
+    expected_output=&quot;A concise answer that includes the final numeric result.&quot;,
+    agent=agent,
+)
+
+crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
+
+ecp_agent = ECPCrewAIAdapter(crew, name=&quot;CrewMathBot&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    serve(ecp_agent)
+</code></pre>
+<h3 id="crewai-manifest">CrewAI Manifest</h3>
 <pre><code class="language-yaml">manifest_version: &quot;v1&quot;
-name: &quot;LlamaIndex Capability Check&quot;
+name: &quot;CrewAI Math Check&quot;
 target: &quot;python agent.py&quot;
 
 scenarios:
@@ -569,6 +625,10 @@ scenarios:
             field: public_output
             prompt: &quot;Does the response state the correct final number and clearly indicate it refers to the amount of sugar?&quot;
 
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
+
   - name: &quot;Weekly Letters&quot;
     steps:
       - input: &quot;James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?&quot;
@@ -576,11 +636,15 @@ scenarios:
           - type: text_match
             field: public_output
             condition: contains
-            value: &quot;312&quot;
+            value: &quot;624&quot;
 
           - type: llm_judge
             field: public_output
             prompt: &quot;Does the response state the correct final number and clearly indicate it refers to pages written per year?&quot;
+
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
 </code></pre>
 
 

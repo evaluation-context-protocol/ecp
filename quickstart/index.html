@@ -346,10 +346,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-run-the-demo" class="md-nav__link">
+  <a href="#2-run-the-langchain-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Run the demo
+        2. Run the LangChain demo
       
     </span>
   </a>
@@ -379,10 +379,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-optional-enable-llm-judge" class="md-nav__link">
+  <a href="#5-run-the-crewai-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Optional: enable LLM judge
+        5. Run the CrewAI demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-optional-enable-llm-judge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Optional: enable LLM judge
       
     </span>
   </a>
@@ -489,7 +500,7 @@
 .\.venv\Scripts\Activate.ps1
 pip install ecp-runtime &quot;ecp-sdk[langchain]&quot; langchain-openai
 </code></pre>
-<h2 id="2-run-the-demo">2. Run the demo</h2>
+<h2 id="2-run-the-langchain-demo">2. Run the LangChain demo</h2>
 <pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
 </code></pre>
 <h2 id="3-generate-an-html-report">3. Generate an HTML report</h2>
@@ -502,7 +513,14 @@ pip install ecp-runtime &quot;ecp-sdk[langchain]&quot; langchain-openai
 <p>Save a JSON report to a file:</p>
 <pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
 </code></pre>
-<h2 id="5-optional-enable-llm-judge">5. Optional: enable LLM judge</h2>
+<h2 id="5-run-the-crewai-demo">5. Run the CrewAI demo</h2>
+<p>Install CrewAI support:</p>
+<pre><code class="language-bash">pip install &quot;ecp-sdk[crewai]&quot; crewai
+</code></pre>
+<p>Run CrewAI manifest:</p>
+<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
+</code></pre>
+<h2 id="6-optional-enable-llm-judge">6. Optional: enable LLM judge</h2>
 <p>If your manifest uses <code>llm_judge</code>, set the API key:</p>
 <pre><code class="language-bash">$env:OPENAI_API_KEY=&quot;your_key_here&quot;
 </code></pre>
