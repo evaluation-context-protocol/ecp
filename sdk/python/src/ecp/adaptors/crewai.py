@@ -81,6 +81,13 @@ class ECPCrewAIAdapter:
         if raw_tool_calls:
             self.captured_tool_calls.extend(self._normalize_tool_calls(raw_tool_calls))
 
+        # -----------------------------------------------------------
+        # CrewAI stores tool calls inside tasks_output[].messages[].
+        # Each message is an OpenAI-format dict. Assistant messages
+        # may contain a "tool_calls" key with function call details.
+        # -----------------------------------------------------------
+        self._capture_from_task_outputs(response)
+
     def _extract_metadata(self, response: Any) -> Dict[str, Any]:
         if isinstance(response, dict):
             metadata = response.get("metadata")
@@ -104,6 +111,57 @@ class ECPCrewAIAdapter:
             payload["task_outputs"] = [self._to_dict(item) for item in task_outputs]
 
         return payload
+
+    def _capture_from_task_outputs(self, response: Any) -> None:
+        """Extract tool calls and thoughts from CrewAI's task output messages.
+
+        CrewAI stores the full message chain in ``tasks_output[].messages``.
+        Assistant messages may carry an OpenAI-style ``tool_calls`` list::
+
+            {"role": "assistant", "tool_calls": [{"type": "function",
+             "function": {"name": "calculator", "arguments": "..."}}]}
+        """
+        task_outputs = getattr(response, "tasks_output", None)
+        if not isinstance(task_outputs, list):
+            return
+
+        for task_output in task_outputs:
+            messages = getattr(task_output, "messages", None)
+            if not isinstance(messages, list):
+                continue
+
+            for msg in messages:
+                if not isinstance(msg, dict):
+                    continue
+
+                role = msg.get("role")
+
+                # Capture assistant reasoning as private thought
+                if role == "assistant" and msg.get("content"):
+                    content = msg["content"].strip()
+                    if content:
+                        self.captured_thoughts.append(content)
+
+                # Extract tool calls from assistant messages
+                if role == "assistant" and msg.get("tool_calls"):
+                    for tc in msg["tool_calls"]:
+                        if not isinstance(tc, dict):
+                            continue
+
+                        func = tc.get("function") or {}
+                        name = func.get("name") or tc.get("name")
+                        args = func.get("arguments") or tc.get("arguments") or {}
+
+                        if isinstance(args, str):
+                            try:
+                                args = json.loads(args)
+                            except (json.JSONDecodeError, TypeError):
+                                args = {"raw": args}
+
+                        if name:
+                            self.captured_tool_calls.append(
+                                {"name": name, "arguments": args}
+                            )
 
     def _to_dict(self, value: Any) -> Any:
         if hasattr(value, "model_dump"):
