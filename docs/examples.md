@@ -178,3 +178,75 @@ scenarios:
             tool_name: "calculator"
             arguments: {}
 ```
+
+## Pydantic AI Example
+
+Agent file: `examples/pydantic_ai_demo/agent.py`
+
+```python
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from pydantic_ai import Agent, RunContext
+from ecp import serve
+from ecp.adaptors.pydantic_ai import ECPPydanticAIAdapter
+
+def calculator(ctx: RunContext[None], expression: str) -> str:
+    allowed = set("0123456789+-*/() .")
+    if not expression or any(ch not in allowed for ch in expression):
+        return "Invalid expression."
+    try:
+        result = eval(expression, {"__builtins__": {}})
+        if isinstance(result, float) and result == int(result):
+            return str(int(result))
+        return str(result)
+    except Exception:
+        return "Invalid expression."
+
+math_agent = Agent(
+    'openai:gpt-4o',
+    system_prompt=(
+        "You are a helpful math assistant. "
+        "Use the calculator tool for all arithmetic operations. "
+        "Always show your reasoning before giving the final answer."
+    )
+)
+math_agent.tool(calculator)
+ecp_agent = ECPPydanticAIAdapter(math_agent, name="PydanticAIMathBot")
+
+if __name__ == "__main__":
+    serve(ecp_agent)
+```
+
+### Pydantic AI Manifest
+
+```yaml
+manifest_version: "v1"
+name: "PydanticAI Integration Test"
+target: "python agent.py"
+
+scenarios:
+  - name: "Basic Math"
+    steps:
+      - input: "What is 123 * 456?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: regex
+            pattern: "56,?088"
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Word Problem"
+    steps:
+      - input: "If I have 15 Apples and I give 7 to my friend, how many do I have left?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "8"
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+```
