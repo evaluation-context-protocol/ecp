@@ -23,3 +23,11 @@ try:
 except Exception:
     # Optional dependency.
     pass
+
+try:
+    from .pydantic_ai import ECPPydanticAIAdapter
+
+    __all__.append("ECPPydanticAIAdapter")
+except Exception:
+    # Optional dependency.
+    pass
