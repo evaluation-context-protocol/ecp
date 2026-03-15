@@ -428,6 +428,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pydantic-ai-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pydantic AI Example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pydantic AI Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pydantic-ai-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pydantic AI Manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -642,6 +670,71 @@ scenarios:
             field: public_output
             prompt: &quot;Does the response state the correct final number and clearly indicate it refers to pages written per year?&quot;
 
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
+</code></pre>
+<h2 id="pydantic-ai-example">Pydantic AI Example</h2>
+<p>Agent file: <code>examples/pydantic_ai_demo/agent.py</code></p>
+<pre><code class="language-python">import os
+from dotenv import load_dotenv
+load_dotenv()
+from pydantic_ai import Agent, RunContext
+from ecp import serve
+from ecp.adaptors.pydantic_ai import ECPPydanticAIAdapter
+
+def calculator(ctx: RunContext[None], expression: str) -&gt; str:
+    allowed = set(&quot;0123456789+-*/() .&quot;)
+    if not expression or any(ch not in allowed for ch in expression):
+        return &quot;Invalid expression.&quot;
+    try:
+        result = eval(expression, {&quot;__builtins__&quot;: {}})
+        if isinstance(result, float) and result == int(result):
+            return str(int(result))
+        return str(result)
+    except Exception:
+        return &quot;Invalid expression.&quot;
+
+math_agent = Agent(
+    'openai:gpt-4o',
+    system_prompt=(
+        &quot;You are a helpful math assistant. &quot;
+        &quot;Use the calculator tool for all arithmetic operations. &quot;
+        &quot;Always show your reasoning before giving the final answer.&quot;
+    )
+)
+math_agent.tool(calculator)
+ecp_agent = ECPPydanticAIAdapter(math_agent, name=&quot;PydanticAIMathBot&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    serve(ecp_agent)
+</code></pre>
+<h3 id="pydantic-ai-manifest">Pydantic AI Manifest</h3>
+<pre><code class="language-yaml">manifest_version: &quot;v1&quot;
+name: &quot;PydanticAI Integration Test&quot;
+target: &quot;python agent.py&quot;
+
+scenarios:
+  - name: &quot;Basic Math&quot;
+    steps:
+      - input: &quot;What is 123 * 456?&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: regex
+            pattern: &quot;56,?088&quot;
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
+
+  - name: &quot;Word Problem&quot;
+    steps:
+      - input: &quot;If I have 15 Apples and I give 7 to my friend, how many do I have left?&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;8&quot;
           - type: tool_usage
             tool_name: &quot;calculator&quot;
             arguments: {}
