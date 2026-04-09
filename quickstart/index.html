@@ -390,10 +390,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-optional-enable-llm-judge" class="md-nav__link">
+  <a href="#6-run-the-pydanticai-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Optional: enable LLM judge
+        6. Run the PydanticAI demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-optional-enable-llm-judge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Optional: enable LLM judge
       
     </span>
   </a>
@@ -520,9 +531,17 @@ pip install ecp-runtime &quot;ecp-sdk[langchain]&quot; langchain-openai
 <p>Run CrewAI manifest:</p>
 <pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 </code></pre>
-<h2 id="6-optional-enable-llm-judge">6. Optional: enable LLM judge</h2>
+<h2 id="6-run-the-pydanticai-demo">6. Run the PydanticAI demo</h2>
+<p>Install PydanticAI support:</p>
+<pre><code class="language-bash">pip install &quot;ecp-sdk[pydanticai]&quot; pydantic-ai
+</code></pre>
+<p>Run PydanticAI manifest:</p>
+<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
+</code></pre>
+<h2 id="7-optional-enable-llm-judge">7. Optional: enable LLM judge</h2>
 <p>If your manifest uses <code>llm_judge</code>, set the API key:</p>
 <pre><code class="language-bash">$env:OPENAI_API_KEY=&quot;your_key_here&quot;
+$env:ECP_LLM_JUDGE_MODEL=&quot;gpt-4o-mini&quot;
 </code></pre>
 <h2 id="notes">Notes</h2>
 <ul>
