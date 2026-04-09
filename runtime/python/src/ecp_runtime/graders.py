@@ -9,6 +9,19 @@ try:
 except ImportError:
     OpenAI = None
 
+
+def _llm_judge_model() -> str:
+    return os.environ.get("ECP_LLM_JUDGE_MODEL", "gpt-4o-mini")
+
+
+def _llm_judge_temperature() -> float:
+    raw = os.environ.get("ECP_LLM_JUDGE_TEMPERATURE", "0")
+    try:
+        return float(raw)
+    except ValueError:
+        return 0.0
+
+
 def check_text_match(grader: GraderConfig, text: str) -> Tuple[bool, str]:
     """Handles simple string assertions."""
     if not text:
@@ -38,7 +51,7 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     if not grader.prompt:
         return False, "No prompt provided for llm_judge", 0.0
     if OpenAI is None:
-        return False, "OpenAI library not installed. Run 'pip install openai'", 0.0
+        return False, "LLM judge unavailable: OpenAI library not installed", 0.0
     
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -67,14 +80,16 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     # 2. Call the Judge (using a cheap, smart model)
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini", # Fast, cheap, smart enough for grading
+            model=_llm_judge_model(),
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=0.0
+            temperature=_llm_judge_temperature()
         )
         content = response.choices[0].message.content
+        if not isinstance(content, str):
+            return False, "LLM Judge returned non-text content", 0.0
         
         # 3. Parse the Verdict
         passed = "RESULT: PASS" in content

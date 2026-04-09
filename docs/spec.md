@@ -47,6 +47,8 @@ Supported graders:
 - `llm_judge` (requires `OPENAI_API_KEY`)
 - `tool_usage` (name + argument subset match)
 
+`llm_judge` model can be configured with `ECP_LLM_JUDGE_MODEL` (default: `gpt-4o-mini`).
+
 See `examples/langchain_demo/manifest.yaml` for a minimal example.
 
 ## Reports

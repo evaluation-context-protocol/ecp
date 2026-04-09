@@ -24,9 +24,8 @@ scenarios:
           - type: text_match
             field: public_output
             condition: contains
-            value: "312"
+            value: "624"
           
           - type: llm_judge
             field: public_output
             prompt: "Does the response state the correct final number and clearly indicate it refers to pages written per year?"
-

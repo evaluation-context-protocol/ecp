@@ -50,12 +50,27 @@ Run CrewAI manifest:
 python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 ```
 
-## 6. Optional: enable LLM judge
+## 6. Run the PydanticAI demo
+
+Install PydanticAI support:
+
+```bash
+pip install "ecp-sdk[pydanticai]" pydantic-ai
+```
+
+Run PydanticAI manifest:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
+```
+
+## 7. Optional: enable LLM judge
 
 If your manifest uses `llm_judge`, set the API key:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"
+$env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
 
 ## Notes

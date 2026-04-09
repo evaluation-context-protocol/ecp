@@ -24,8 +24,8 @@ Issues = "https://github.com/evaluation-context-protocol/ecp/issues"
 crewai = ["crewai"]
 langchain = ["langchain"]
 llamaindex = ["llama-index"]
+pydanticai = ["pydantic-ai"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ecp"]
-
 

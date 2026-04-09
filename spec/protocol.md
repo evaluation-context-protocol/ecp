@@ -1,6 +1,6 @@
 # Evaluation Context Protocol (ECP) Specification
 
-Version: 0.2.4-draft
+Version: 0.2.5-draft
 Status: Experimental
 
 ## 1. Overview

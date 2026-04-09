@@ -51,9 +51,15 @@ class AgentProcess:
     def stop(self):
         if self.process:
             self.process.terminate()
+            try:
+                self.process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
 
     def send_rpc(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Sends a JSON-RPC request and waits for the response."""
+        if not self.process or not self.process.stdin:
+            raise RuntimeError("Agent process is not running")
         if not params:
             params = {}
 
@@ -102,7 +108,10 @@ class AgentProcess:
                 continue
 
             try:
-                return json.loads(line)
+                payload = json.loads(line)
+                if isinstance(payload, dict):
+                    return payload
+                last_non_json = line
             except json.JSONDecodeError:
                 last_non_json = line
                 logger.warning("Agent emitted non-JSON stdout: %s", line)
@@ -157,12 +166,14 @@ class ECPRunner:
             agent.start()
 
             try:
-                agent.send_rpc("agent/initialize", {"config": {}})
+                init_resp = agent.send_rpc("agent/initialize", {"config": {}})
+                self._ensure_rpc_success(init_resp, scenario.name, step_idx=None, method="agent/initialize")
                 scenario_steps: List[Dict[str, Any]] = []
 
                 for i, step in enumerate(scenario.steps):
                     # Execute
                     rpc_resp = agent.send_rpc("agent/step", {"input": step.input})
+                    self._ensure_rpc_success(rpc_resp, scenario.name, step_idx=i + 1, method="agent/step")
                     result_data = rpc_resp.get("result", {})
 
                     # Map to internal object
@@ -212,3 +223,23 @@ class ECPRunner:
             "total": total_checks,
             "scenarios": report_data
         }
+
+    def _ensure_rpc_success(
+        self,
+        rpc_resp: Dict[str, Any],
+        scenario_name: str,
+        step_idx: Optional[int],
+        method: str,
+    ) -> None:
+        if "error" not in rpc_resp:
+            return
+
+        error = rpc_resp.get("error") or {}
+        code = error.get("code")
+        message = error.get("message", "Unknown JSON-RPC error")
+        where = f"scenario='{scenario_name}'"
+        if step_idx is not None:
+            where += f", step={step_idx}"
+        raise RuntimeError(
+            f"RPC call failed ({method}) at {where}: code={code}, message={message}"
+        )

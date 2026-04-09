@@ -12,7 +12,6 @@ nav:
 
 theme:
   name: material
-  custom_dir: docs/overrides
   features:
     - navigation.sections
     - navigation.top
@@ -30,8 +29,6 @@ markdown_extensions:
   - fenced_code
   - tables
 
-extra:
-  analytics:
-    provider: google
-    property: G-H5L08G84E8
+extra_javascript:
+  - javascripts/gtag.js
 

@@ -23,6 +23,13 @@ You can also run via module entrypoint:
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
 ```
 
+If your manifest includes `llm_judge`, set an API key and optional judge model:
+
+```bash
+$env:OPENAI_API_KEY="your_key_here"
+$env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
+```
+
 ## Links
 
 - Documentation: https://evaluation-context-protocol.github.io/ecp/

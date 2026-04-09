@@ -51,6 +51,7 @@ If your manifest uses `llm_judge`, set your key:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"
+$env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
 
 ## Example (LangChain Agent + Manifest)

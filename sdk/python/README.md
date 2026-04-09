@@ -20,6 +20,12 @@ For LlamaIndex adaptor support:
 pip install "ecp-sdk[llamaindex]"
 ```
 
+For PydanticAI adaptor support:
+
+```bash
+pip install "ecp-sdk[pydanticai]"
+```
+
 ## Usage
 
 ```python
