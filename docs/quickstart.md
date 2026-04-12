@@ -1,6 +1,6 @@
 # Quickstart
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluation-context-protocol.github.io/ecp/)
+[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
 
 ## 1. Create a venv and install from PyPI
 

@@ -16,7 +16,7 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 ## Documentation
 
 - Docs site: https://evaluationcontextprotocol.io/
-- Quickstart: https://evaluationcontextprotocol.io/quickstart/
+- Quickstart: https://evaluationcontextprotocol.io/quickstart/    
 - Specification: https://evaluationcontextprotocol.io/spec/
 
 ## Quick Start

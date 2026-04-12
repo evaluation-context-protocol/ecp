@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Resolve and validate version from tag
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          IS_PRERELEASE="false"
+
+          if [[ "$TAG" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-beta$ ]]; then
+            EXPECTED_VERSION="${BASH_REMATCH[1]}b0"
+            IS_PRERELEASE="true"
+          elif [[ "$TAG" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-beta\.([0-9]+)$ ]]; then
+            EXPECTED_VERSION="${BASH_REMATCH[1]}b${BASH_REMATCH[2]}"
+            IS_PRERELEASE="true"
+          else
+            EXPECTED_VERSION="$TAG"
+            if [[ "$TAG" == *"a"* || "$TAG" == *"b"* || "$TAG" == *"rc"* ]]; then
+              IS_PRERELEASE="true"
+            fi
+          fi
+
+          EXPECTED_VERSION="$EXPECTED_VERSION" python - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          expected = os.environ["EXPECTED_VERSION"]
+          runtime = tomllib.loads(Path("runtime/python/pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+          sdk = tomllib.loads(Path("sdk/python/pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+
+          if runtime != expected or sdk != expected:
+              raise SystemExit(
+                  f"Version mismatch: expected={expected}, runtime={runtime}, sdk={sdk}. "
+                  "Update both pyproject.toml versions to match this tag."
+              )
+          PY
+
+          echo "expected_version=$EXPECTED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Install test dependencies
+        run: pip install -e runtime/python
+
+      - name: Run runtime tests
+        run: python -m unittest discover -s runtime/python/tests -p "test_*.py"
+
+      - name: Run sdk tests
+        run: python -m unittest discover -s sdk/python/tests -p "test_*.py"
+
+      - name: Run feature-agent spec tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Install build tool
+        run: python -m pip install --upgrade build
+
+      - name: Build runtime package
+        run: |
+          rm -rf runtime/python/dist
+          python -m build runtime/python
+
+      - name: Build sdk package
+        run: |
+          rm -rf sdk/python/dist
+          python -m build sdk/python
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
+          files: |
+            runtime/python/dist/*
+            sdk/python/dist/*
+
+      - name: Publish runtime to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: runtime/python/dist
+
+      - name: Publish sdk to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist

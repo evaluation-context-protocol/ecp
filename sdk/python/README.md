@@ -38,6 +38,6 @@ class MyAgent:
 
 ## Links
 
-- Documentation: https://evaluation-context-protocol.github.io/ecp/
+- Documentation: https://evaluationcontextprotocol.io/
 - Repository: https://github.com/evaluation-context-protocol/ecp
 - Issues: https://github.com/evaluation-context-protocol/ecp/issues

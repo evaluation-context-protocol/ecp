@@ -32,6 +32,6 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 
 ## Links
 
-- Documentation: https://evaluation-context-protocol.github.io/ecp/
+- Documentation: https://evaluationcontextprotocol.io/
 - Repository: https://github.com/evaluation-context-protocol/ecp
 - Issues: https://github.com/evaluation-context-protocol/ecp/issues
