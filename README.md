@@ -10,14 +10,14 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 
 - `sdk/` - Python SDK for implementing an ECP agent.
 - `runtime/` - Python runtime (CLI) that runs manifests and grades results.
-- `examples/` - Minimal examples (LangChain demo).
+- `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
 - `spec/` - Protocol specification.
 
 ## Documentation
 
-- Docs site: https://evaluation-context-protocol.github.io/ecp/
-- Quickstart: https://evaluation-context-protocol.github.io/ecp/quickstart/
-- Specification: https://evaluation-context-protocol.github.io/ecp/spec/
+- Docs site: https://evaluationcontextprotocol.io/
+- Quickstart: https://evaluationcontextprotocol.io/quickstart/
+- Specification: https://evaluationcontextprotocol.io/spec/
 
 ## Quick Start
 
@@ -47,11 +47,27 @@ Print a JSON report (useful for CI tooling):
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
 ```
 
+Save a JSON report to a file:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
+```
+
 If your manifest uses `llm_judge`, set your key:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
+```
+
+Run the other demos:
+
+```bash
+pip install "ecp-sdk[crewai]" crewai
+python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
+
+pip install "ecp-sdk[pydanticai]" pydantic-ai
+python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 ```
 
 ## Example (LangChain Agent + Manifest)
@@ -108,6 +124,14 @@ scenarios:
             arguments: {}
 ```
 
+Supported graders:
+
+- `text_match` (`contains`, `equals`, `does_not_contain`, `regex`)
+- `llm_judge` (requires `OPENAI_API_KEY`)
+- `tool_usage` (name + argument subset match)
+
+Note: manifest validation is strict and fails fast on invalid grader configuration.
+
 ## ECP in 60 Seconds
 
 ECP is JSON-RPC 2.0 over stdio. The runtime launches your agent process and calls:
@@ -128,7 +152,12 @@ See `spec/protocol.md` for the full protocol.
 
 - `sdk/python/src/ecp` - SDK decorators and server loop
 - `runtime/python/src/ecp_runtime` - CLI, runner, graders
-- `examples/langchain_demo` - LangChain-based demo agent and manifest
+- `examples/langchain_demo` - LangChain demo
+- `examples/llamaindex_demo` - LlamaIndex demo
+- `examples/crewai_demo` - CrewAI demo
+- `examples/pydantic_ai_demo` - PydanticAI demo
+- `runtime/python/tests` - Runtime unit and CLI smoke tests
+- `sdk/python/tests` - Adapter normalization tests
 
 ## Status
 
