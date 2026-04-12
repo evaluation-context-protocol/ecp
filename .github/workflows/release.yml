@@ -69,6 +69,7 @@ jobs:
         run: python -m unittest discover -s sdk/python/tests -p "test_*.py"
 
       - name: Run feature-agent spec tests
+        if: ${{ hashFiles('tests/test_*.py') != '' }}
         run: python -m unittest discover -s tests -p "test_*.py"
 
       - name: Install build tool
