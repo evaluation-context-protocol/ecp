@@ -24,13 +24,14 @@ ECP solves this by separating **public output** (what users see) from **private 
 - A reference runtime to execute manifests and graders
 - Optional HTML report output for sharing results
 - A Python SDK to wrap agents quickly
-- Minimal examples for LangChain, LlamaIndex, and CrewAI
+- Minimal examples for LangChain, LlamaIndex, CrewAI, and PydanticAI
 
 ## Framework Adaptors
 
 - LangChain: `ecp.adaptors.langchain.ECPLangChainAdapter`
 - LlamaIndex: `ecp.adaptors.llama_index.ECPLlamaIndexAdapter`
 - CrewAI: `ecp.adaptors.crewai.ECPCrewAIAdapter`
+- PydanticAI: `ecp.adaptors.pydantic_ai.ECPPydanticAIAdapter`
 
 See **Examples** for full agent + manifest snippets.
 
@@ -38,7 +39,7 @@ See **Examples** for full agent + manifest snippets.
 
 - Python SDK: `sdk/python/src/ecp`
 - Runtime CLI: `runtime/python/src/ecp_runtime`
-- Examples: `examples/langchain_demo`, `examples/llamaindex_demo`, `examples/crewai_demo`
+- Examples: `examples/langchain_demo`, `examples/llamaindex_demo`, `examples/crewai_demo`, `examples/pydantic_ai_demo`
 - Protocol spec: `spec/protocol.md`
 
 Go to **Quickstart** to run the demos, **Examples** for full manifests, or **Specification** to implement the protocol in another language.

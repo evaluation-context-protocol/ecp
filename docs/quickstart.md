@@ -64,13 +64,28 @@ Run PydanticAI manifest:
 python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 ```
 
-## 7. Optional: enable LLM judge
+## 7. Run the LlamaIndex demo
+
+Install LlamaIndex support:
+
+```bash
+pip install "ecp-sdk[llamaindex]" llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
+```
+
+Run LlamaIndex manifest:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\llamaindex_demo\manifest.yaml
+```
+
+## 8. Optional: enable LLM judge
 
 If your manifest uses `llm_judge`, set the API key:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
+$env:ECP_LLM_JUDGE_TEMPERATURE="0"
 ```
 
 ## Notes

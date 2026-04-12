@@ -48,6 +48,9 @@ Supported graders:
 - `tool_usage` (name + argument subset match)
 
 `llm_judge` model can be configured with `ECP_LLM_JUDGE_MODEL` (default: `gpt-4o-mini`).
+`llm_judge` temperature can be configured with `ECP_LLM_JUDGE_TEMPERATURE` (default: `0`).
+
+Manifest validation is strict: invalid grader types or missing required grader fields fail fast during manifest load.
 
 See `examples/langchain_demo/manifest.yaml` for a minimal example.
 
