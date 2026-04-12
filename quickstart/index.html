@@ -401,10 +401,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-optional-enable-llm-judge" class="md-nav__link">
+  <a href="#7-run-the-llamaindex-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. Optional: enable LLM judge
+        7. Run the LlamaIndex demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-optional-enable-llm-judge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Optional: enable LLM judge
       
     </span>
   </a>
@@ -538,10 +549,18 @@ pip install ecp-runtime &quot;ecp-sdk[langchain]&quot; langchain-openai
 <p>Run PydanticAI manifest:</p>
 <pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 </code></pre>
-<h2 id="7-optional-enable-llm-judge">7. Optional: enable LLM judge</h2>
+<h2 id="7-run-the-llamaindex-demo">7. Run the LlamaIndex demo</h2>
+<p>Install LlamaIndex support:</p>
+<pre><code class="language-bash">pip install &quot;ecp-sdk[llamaindex]&quot; llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
+</code></pre>
+<p>Run LlamaIndex manifest:</p>
+<pre><code class="language-bash">python -m ecp_runtime.cli run --manifest .\examples\llamaindex_demo\manifest.yaml
+</code></pre>
+<h2 id="8-optional-enable-llm-judge">8. Optional: enable LLM judge</h2>
 <p>If your manifest uses <code>llm_judge</code>, set the API key:</p>
 <pre><code class="language-bash">$env:OPENAI_API_KEY=&quot;your_key_here&quot;
 $env:ECP_LLM_JUDGE_MODEL=&quot;gpt-4o-mini&quot;
+$env:ECP_LLM_JUDGE_TEMPERATURE=&quot;0&quot;
 </code></pre>
 <h2 id="notes">Notes</h2>
 <ul>

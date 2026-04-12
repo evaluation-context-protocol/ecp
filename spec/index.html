@@ -528,7 +528,9 @@
 <li><code>llm_judge</code> (requires <code>OPENAI_API_KEY</code>)</li>
 <li><code>tool_usage</code> (name + argument subset match)</li>
 </ul>
-<p><code>llm_judge</code> model can be configured with <code>ECP_LLM_JUDGE_MODEL</code> (default: <code>gpt-4o-mini</code>).</p>
+<p><code>llm_judge</code> model can be configured with <code>ECP_LLM_JUDGE_MODEL</code> (default: <code>gpt-4o-mini</code>).
+<code>llm_judge</code> temperature can be configured with <code>ECP_LLM_JUDGE_TEMPERATURE</code> (default: <code>0</code>).</p>
+<p>Manifest validation is strict: invalid grader types or missing required grader fields fail fast during manifest load.</p>
 <p>See <code>examples/langchain_demo/manifest.yaml</code> for a minimal example.</p>
 <h2 id="reports">Reports</h2>
 <p>The runtime can optionally generate a single HTML report for a run:</p>

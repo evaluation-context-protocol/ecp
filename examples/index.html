@@ -636,10 +636,23 @@ if __name__ == &quot;__main__&quot;:
 </code></pre>
 <h3 id="crewai-manifest">CrewAI Manifest</h3>
 <pre><code class="language-yaml">manifest_version: &quot;v1&quot;
-name: &quot;CrewAI Math Check&quot;
+name: &quot;CrewAI Docs Integration Test&quot;
 target: &quot;python agent.py&quot;
 
 scenarios:
+  - name: &quot;Simple Arithmetic&quot;
+    steps:
+      - input: &quot;What is 15 multiplied by 8?&quot;
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: &quot;120&quot;
+
+          - type: tool_usage
+            tool_name: &quot;calculator&quot;
+            arguments: {}
+
   - name: &quot;Ratio Word Problem&quot;
     steps:
       - input: &quot;Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used.&quot;
@@ -649,26 +662,18 @@ scenarios:
             condition: contains
             value: &quot;42&quot;
 
-          - type: llm_judge
-            field: public_output
-            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to the amount of sugar?&quot;
-
           - type: tool_usage
             tool_name: &quot;calculator&quot;
             arguments: {}
 
-  - name: &quot;Weekly Letters&quot;
+  - name: &quot;Multi-Step Calculation&quot;
     steps:
-      - input: &quot;James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?&quot;
+      - input: &quot;James writes a 3-page letter to each of 2 different friends, and he does this 2 times every week. How many total pages does he write in a year (52 weeks)?&quot;
         graders:
           - type: text_match
             field: public_output
             condition: contains
             value: &quot;624&quot;
-
-          - type: llm_judge
-            field: public_output
-            prompt: &quot;Does the response state the correct final number and clearly indicate it refers to pages written per year?&quot;
 
           - type: tool_usage
             tool_name: &quot;calculator&quot;
