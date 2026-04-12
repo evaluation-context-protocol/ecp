@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install runtime deps
+        run: pip install -e runtime/python
+
+      - name: Run runtime tests
+        run: python -m unittest discover -s runtime/python/tests -p "test_*.py"
+
+      - name: Run sdk adapter tests
+        run: python -m unittest discover -s sdk/python/tests -p "test_*.py"
+
+      - name: Run feature-agent spec tests
+        if: ${{ hashFiles('tests/test_*.py') != '' }}
+        run: python -m unittest discover -s tests -p "test_*.py"
