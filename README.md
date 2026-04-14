@@ -21,12 +21,12 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 
 ## Quick Start
 
-Create a venv and install from PyPI:
+Create a venv and install the current PyPI prerelease that matches the latest GitHub beta release:
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
+pip install --pre "ecp-runtime==0.2.9b0" "ecp-sdk[langchain]==0.2.9b0" langchain-openai
 ```
 
 Run the example manifest:
@@ -53,6 +53,8 @@ If your manifest uses `llm_judge`, set your key:
 $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
+
+The latest stable packages on PyPI are still on `0.2.4`. The repo and GitHub releases are currently on the `0.2.9-beta` line, so use the prerelease install shown above if you want the package behavior to match this repository.
 
 ## Example (LangChain Agent + Manifest)
 

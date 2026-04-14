@@ -2,12 +2,12 @@
 
 [View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluation-context-protocol.github.io/ecp/)
 
-## 1. Create a venv and install from PyPI
+## 1. Create a venv and install the current PyPI prerelease
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
+pip install --pre "ecp-runtime==0.2.9b0" "ecp-sdk[langchain]==0.2.9b0" langchain-openai
 ```
 
 ## 2. Run the LangChain demo
@@ -41,7 +41,7 @@ python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
 Install CrewAI support:
 
 ```bash
-pip install "ecp-sdk[crewai]" crewai
+pip install --pre "ecp-sdk[crewai]==0.2.9b0" crewai
 ```
 
 Run CrewAI manifest:
@@ -55,7 +55,7 @@ python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 Install PydanticAI support:
 
 ```bash
-pip install "ecp-sdk[pydanticai]" pydantic-ai
+pip install --pre "ecp-sdk[pydanticai]==0.2.9b0" pydantic-ai
 ```
 
 Run PydanticAI manifest:
@@ -75,6 +75,7 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 
 ## Notes
 
+- The latest stable packages on PyPI are still `0.2.4`. This docs site currently matches the `0.2.9-beta` release line, so use the prerelease install command above if you want the published packages to match the repo and GitHub release.
 - The runtime launches your agent via the `target` command in the manifest.
 - The agent responds over JSON-RPC 2.0 on stdio.
 - Use `ECP_RPC_TIMEOUT` to control step timeouts (default 30s).

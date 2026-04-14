@@ -6,8 +6,10 @@ It includes the CLI tool `ecp` for running agent evaluations.
 ## Install
 
 ```bash
-pip install ecp-runtime
+pip install --pre "ecp-runtime==0.2.9b0"
 ```
+
+The latest stable PyPI release is still `0.2.4`. Use the pinned prerelease above if you want the installed runtime to match the current GitHub `v0.2.9-beta` release line.
 
 ## Usage
 
