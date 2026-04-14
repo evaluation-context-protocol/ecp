@@ -13,7 +13,7 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 <<<<<<< HEAD
 - `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
 =======
-- `examples/` - Reference examples for LangChain, LlamaIndex, CrewAI, and PydanticAI.
+- `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
 >>>>>>> 3a2366c (docs: align public docs with current examples)
 - `spec/` - Protocol specification.
 
@@ -25,12 +25,12 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 
 ## Quick Start
 
-Create a venv and install from PyPI:
+Create a venv and install the current PyPI prerelease that matches the latest GitHub beta release:
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
+pip install --pre "ecp-runtime==0.2.9b0" "ecp-sdk[langchain]==0.2.9b0" langchain-openai
 ```
 
 Run the example manifest:
@@ -64,13 +64,15 @@ $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
 
+The latest stable packages on PyPI are still on `0.2.4`. The repo and GitHub releases are currently on the `0.2.9-beta` line, so use the prerelease install shown above if you want the package behavior to match this repository.
+
 Run the other demos:
 
 ```bash
-pip install "ecp-sdk[crewai]" crewai
+pip install --pre "ecp-sdk[crewai]==0.2.9b0" crewai
 python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 
-pip install "ecp-sdk[pydanticai]" pydantic-ai
+pip install --pre "ecp-sdk[pydanticai]==0.2.9b0" pydantic-ai
 python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 ```
 
