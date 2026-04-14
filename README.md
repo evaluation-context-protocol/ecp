@@ -10,7 +10,11 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 
 - `sdk/` - Python SDK for implementing an ECP agent.
 - `runtime/` - Python runtime (CLI) that runs manifests and grades results.
+<<<<<<< HEAD
 - `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
+=======
+- `examples/` - Reference examples for LangChain, LlamaIndex, CrewAI, and PydanticAI.
+>>>>>>> 3a2366c (docs: align public docs with current examples)
 - `spec/` - Protocol specification.
 
 ## Documentation
@@ -150,12 +154,9 @@ See `spec/protocol.md` for the full protocol.
 
 ## Repo Layout
 
-- `sdk/python/src/ecp` - SDK decorators and server loop
-- `runtime/python/src/ecp_runtime` - CLI, runner, graders
-- `examples/langchain_demo` - LangChain demo
-- `examples/llamaindex_demo` - LlamaIndex demo
-- `examples/crewai_demo` - CrewAI demo
-- `examples/pydantic_ai_demo` - PydanticAI demo
+- `sdk/python/src/ecp` - SDK decorators, adapters, and server loop
+- `runtime/python/src/ecp_runtime` - CLI, runner, graders, reporting, and trend analysis
+- `examples/` - Demo agents and manifests for LangChain, LlamaIndex, CrewAI, and PydanticAI
 - `runtime/python/tests` - Runtime unit and CLI smoke tests
 - `sdk/python/tests` - Adapter normalization tests
 
