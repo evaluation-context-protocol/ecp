@@ -10,18 +10,15 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 
 - `sdk/` - Python SDK for implementing an ECP agent.
 - `runtime/` - Python runtime (CLI) that runs manifests and grades results.
-<<<<<<< HEAD
 - `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
-=======
-- `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
->>>>>>> 3a2366c (docs: align public docs with current examples)
 - `spec/` - Protocol specification.
 
 ## Documentation
 
 - Docs site: https://evaluationcontextprotocol.io/
-- Quickstart: https://evaluationcontextprotocol.io/quickstart/    
+- Quickstart: https://evaluationcontextprotocol.io/quickstart/
 - Specification: https://evaluationcontextprotocol.io/spec/
+- Docs deploy automatically from `main` via GitHub Actions.
 
 ## Quick Start
 
