@@ -18,6 +18,7 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 - Docs site: https://evaluation-context-protocol.github.io/ecp/
 - Quickstart: https://evaluation-context-protocol.github.io/ecp/quickstart/
 - Specification: https://evaluation-context-protocol.github.io/ecp/spec/
+- Docs deploy automatically from `main` via GitHub Actions.
 
 ## Quick Start
 
