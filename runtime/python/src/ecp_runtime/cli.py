@@ -1,12 +1,14 @@
-﻿import logging
+﻿import glob
+import logging
 import typer
 import sys
 import os
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 
 from .reporter import HTMLReporter
+from .trend import RunTrendAnalyzer
 
 # Import local modules (Using relative imports)
 try:
@@ -135,6 +137,67 @@ def run(
         if verbose:
             raise e
         sys.exit(1)
+
+
+@app.command()
+def trend(
+    pattern: str = typer.Argument(
+        ...,
+        help="Glob pattern matching saved JSON report files (e.g. 'results/run-*.json')",
+    ),
+    window: int = typer.Option(
+        20,
+        "--window",
+        "-w",
+        help="Maximum number of recent runs to include in the analysis",
+        min=1,
+    ),
+    exit_on_regression: bool = typer.Option(
+        False,
+        "--exit-on-regression",
+        help="Exit with code 2 when a degrading trend is detected (for CI gates)",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable verbose output",
+    ),
+):
+    """
+    Analyse pass-rate trends across a sequence of saved JSON report files.
+    """
+    _configure_logging(verbose)
+
+    matched: List[Path] = sorted(Path(path) for path in glob.glob(pattern, recursive=True))
+
+    if not matched:
+        typer.echo(f"No files matched the pattern: {pattern}", err=True)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Found {len(matched)} report(s). Analysing last {window}...")
+
+    analyzer = RunTrendAnalyzer(matched, window=window)
+    report = analyzer.analyze()
+
+    typer.echo("")
+    typer.echo(f"{'Run':<5}  {'Manifest':<45}  {'Passed':>6}  {'Total':>6}  {'Rate':>6}")
+    typer.echo("-" * 74)
+    for index, run in enumerate(report.runs, start=1):
+        manifest_label = Path(run.manifest).name if len(run.manifest) > 45 else run.manifest
+        rate_pct = f"{run.pass_rate * 100:.1f}%"
+        typer.echo(f"{index:<5}  {manifest_label:<45}  {run.passed:>6}  {run.total:>6}  {rate_pct:>6}")
+
+    typer.echo("")
+    typer.echo(f"Trend Direction : {report.direction.upper()}")
+    typer.echo(f"Slope (per run) : {report.pass_rate_slope:+.6f}")
+    typer.echo(f"Window          : {len(report.runs)} run(s) analysed (max {report.window})")
+    typer.echo(f"Regression flag : {'YES' if report.any_regression else 'No'}")
+    typer.echo("")
+
+    if report.any_regression and exit_on_regression:
+        typer.echo("Regression detected. Exiting with code 2 (--exit-on-regression).", err=True)
+        raise typer.Exit(code=2)
 
 
 if __name__ == "__main__":
