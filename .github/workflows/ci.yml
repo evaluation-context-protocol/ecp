@@ -26,7 +26,8 @@ jobs:
           python -m pip install -r docs/requirements.txt
 
       - name: Run top-level tests
-        run: python -m unittest discover -s tests
+        if: ${{ hashFiles('tests/test_*.py') != '' }}
+        run: python -m unittest discover -s tests -p "test_*.py"
 
       - name: Run SDK tests
         run: python -m unittest discover -s sdk/python/tests
