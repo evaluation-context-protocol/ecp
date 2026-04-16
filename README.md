@@ -16,17 +16,18 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 ## Documentation
 
 - Docs site: https://evaluationcontextprotocol.io/
-- Quickstart: https://evaluationcontextprotocol.io/quickstart/    
+- Quickstart: https://evaluationcontextprotocol.io/quickstart/
 - Specification: https://evaluationcontextprotocol.io/spec/
+- Docs deploy automatically from `main` via GitHub Actions.
 
 ## Quick Start
 
-Create a venv and install from PyPI:
+Create a venv and install the current PyPI prerelease that matches the latest GitHub beta release:
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install ecp-runtime "ecp-sdk[langchain]" langchain-openai
+pip install --pre "ecp-runtime==0.2.9b0" "ecp-sdk[langchain]==0.2.9b0" langchain-openai
 ```
 
 Run the example manifest:
@@ -60,13 +61,15 @@ $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
 
+The latest stable packages on PyPI are still on `0.2.4`. The repo and GitHub releases are currently on the `0.2.9-beta` line, so use the prerelease install shown above if you want the package behavior to match this repository.
+
 Run the other demos:
 
 ```bash
-pip install "ecp-sdk[crewai]" crewai
+pip install --pre "ecp-sdk[crewai]==0.2.9b0" crewai
 python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 
-pip install "ecp-sdk[pydanticai]" pydantic-ai
+pip install --pre "ecp-sdk[pydanticai]==0.2.9b0" pydantic-ai
 python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 ```
 
@@ -150,12 +153,9 @@ See `spec/protocol.md` for the full protocol.
 
 ## Repo Layout
 
-- `sdk/python/src/ecp` - SDK decorators and server loop
-- `runtime/python/src/ecp_runtime` - CLI, runner, graders
-- `examples/langchain_demo` - LangChain demo
-- `examples/llamaindex_demo` - LlamaIndex demo
-- `examples/crewai_demo` - CrewAI demo
-- `examples/pydantic_ai_demo` - PydanticAI demo
+- `sdk/python/src/ecp` - SDK decorators, adapters, and server loop
+- `runtime/python/src/ecp_runtime` - CLI, runner, graders, reporting, and trend analysis
+- `examples/` - Demo agents and manifests for LangChain, LlamaIndex, CrewAI, and PydanticAI
 - `runtime/python/tests` - Runtime unit and CLI smoke tests
 - `sdk/python/tests` - Adapter normalization tests
 

@@ -29,4 +29,3 @@ Issues = "https://github.com/evaluation-context-protocol/ecp/issues"
 [project.scripts]
 ecp = "ecp_runtime.cli:app" 
 
-
