@@ -1,7 +1,7 @@
 import json
+import sys
 import tempfile
 import unittest
-import sys
 from pathlib import Path
 from unittest import mock
 
@@ -9,9 +9,8 @@ RUNTIME_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
-from typer.testing import CliRunner
-
 from ecp_runtime.cli import app
+from typer.testing import CliRunner
 
 
 class CLISmokeTests(unittest.TestCase):

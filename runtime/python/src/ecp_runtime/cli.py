@@ -1,11 +1,12 @@
 ﻿import glob
-import logging
-import typer
-import sys
-import os
 import json
+import logging
+import os
+import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import typer
 
 from .reporter import HTMLReporter
 from .trend import RunTrendAnalyzer

@@ -1,16 +1,16 @@
 import json
-import unittest
+import sys
 import tempfile
+import unittest
 from pathlib import Path
 from unittest import mock
-import sys
 
 # Ensure srd is in path for imports
 RUNTIME_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
-from ecp_runtime.trend import RunTrendAnalyzer, RunPoint, RunTrendReport
+from ecp_runtime.trend import RunPoint, RunTrendAnalyzer
 
 
 class RunTrendAnalyzerTests(unittest.TestCase):

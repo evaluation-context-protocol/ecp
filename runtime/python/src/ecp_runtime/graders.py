@@ -1,6 +1,7 @@
-import re
 import os
+import re
 from typing import Any, Dict, List, Tuple
+
 from .manifest import GraderConfig, StepConfig
 
 # Try importing OpenAI, but don't crash if it's missing (unless used)

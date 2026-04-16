@@ -1,10 +1,12 @@
-from typing import Any, Callable, Dict, List, Optional
 import json
+from typing import Any, Callable, Dict, List, Optional
+
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.outputs import LLMResult
 
 # We use your SDK's Result object
 from ecp import Result, agent, on_step
+
 
 class ECPLangChainAdapter(BaseCallbackHandler):
     """

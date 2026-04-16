@@ -1,6 +1,6 @@
-import functools
-from typing import Callable, Optional, Any, Dict
 from dataclasses import dataclass
+from typing import Optional
+
 
 # --- Public Types ---
 @dataclass

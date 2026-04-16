@@ -1,7 +1,8 @@
-import sys
 import json
-import traceback
-from .decorators import _HOOKS, _CURRENT_AGENT_INSTANCE, Result
+import sys
+
+from .decorators import _CURRENT_AGENT_INSTANCE, _HOOKS, Result
+
 
 def serve(agent_instance):
     """

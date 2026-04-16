@@ -1,6 +1,6 @@
+import sys
 import tempfile
 import unittest
-import sys
 from pathlib import Path
 
 from pydantic import ValidationError
