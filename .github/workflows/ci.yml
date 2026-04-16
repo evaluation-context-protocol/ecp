@@ -21,9 +21,12 @@ jobs:
       - name: Install build and package dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build hatchling
+          python -m pip install build hatchling ruff
           python -m pip install -e sdk/python -e runtime/python
           python -m pip install -r docs/requirements.txt
+
+      - name: Run Ruff
+        run: ruff check runtime/python/src runtime/python/tests sdk/python/src sdk/python/tests tests
 
       - name: Run top-level tests
         if: ${{ hashFiles('tests/test_*.py') != '' }}
