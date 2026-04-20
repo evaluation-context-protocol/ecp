@@ -1,0 +1,32 @@
+manifest_version: "v1"
+name: "Plain Python App Validation"
+target: "python3 examples/plain_python_demo/agent.py"
+
+scenarios:
+  - name: "Arithmetic Request"
+    steps:
+      - input: "calc: (18 + 6) * 3"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "72"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments:
+              expression: "(18 + 6) * 3"
+
+  - name: "Policy Lookup"
+    steps:
+      - input: "policy:refund"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "14 days"
+
+          - type: tool_usage
+            tool_name: "policy_lookup"
+            arguments:
+              topic: "refund"

@@ -1,0 +1,23 @@
+manifest_version: "v1"
+name: "Two-Agent Workflow Validation"
+target: "python3 examples/two_agent_demo/agent.py"
+
+scenarios:
+  - name: "Launch Note Drafting"
+    steps:
+      - input: "the ECP beta launch"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "the latest validation is green"
+
+          - type: tool_usage
+            tool_name: "planner_agent"
+            arguments:
+              request: "the ECP beta launch"
+
+          - type: tool_usage
+            tool_name: "writer_agent"
+            arguments:
+              request: "the ECP beta launch"

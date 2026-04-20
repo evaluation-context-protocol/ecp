@@ -2,6 +2,69 @@
 
 [View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
 
+## Plain Python App Example
+
+Agent file: `examples/plain_python_demo/agent.py`
+
+This example uses only the ECP SDK. It does not depend on any external agent framework.
+
+### Plain Python Manifest
+
+```yaml
+manifest_version: "v1"
+name: "Plain Python App Validation"
+target: "python3 examples/plain_python_demo/agent.py"
+
+scenarios:
+  - name: "Arithmetic Request"
+    steps:
+      - input: "calc: (18 + 6) * 3"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "72"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments:
+              expression: "(18 + 6) * 3"
+```
+
+## Two-Agent Workflow Example
+
+Agent file: `examples/two_agent_demo/agent.py`
+
+This example shows a small planner/writer workflow wrapped behind a single ECP server.
+
+### Two-Agent Manifest
+
+```yaml
+manifest_version: "v1"
+name: "Two-Agent Workflow Validation"
+target: "python3 examples/two_agent_demo/agent.py"
+
+scenarios:
+  - name: "Launch Note Drafting"
+    steps:
+      - input: "the ECP beta launch"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "the latest validation is green"
+
+          - type: tool_usage
+            tool_name: "planner_agent"
+            arguments:
+              request: "the ECP beta launch"
+
+          - type: tool_usage
+            tool_name: "writer_agent"
+            arguments:
+              request: "the ECP beta launch"
+```
+
 ## LangChain Example
 
 Agent file: `examples/langchain_demo/agent.py`
