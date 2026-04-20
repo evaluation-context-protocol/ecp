@@ -8,6 +8,7 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Examples: examples.md
+  - DX Validation: dev-experience.md
   - Specification: spec.md
 
 theme:
@@ -31,4 +32,3 @@ markdown_extensions:
 
 extra_javascript:
   - javascripts/gtag.js
-
