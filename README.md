@@ -27,7 +27,7 @@ Create a venv and install the current PyPI prerelease that matches the latest Gi
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install --pre "ecp-runtime==0.2.9b0" "ecp-sdk[langchain]==0.2.9b0" langchain-openai
+pip install "ecp-runtime==0.2.9" "ecp-sdk[langchain]==0.2.9" langchain-openai
 ```
 
 Run the example manifest:
@@ -61,15 +61,15 @@ $env:OPENAI_API_KEY="your_key_here"
 $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 ```
 
-The latest stable packages on PyPI are still on `0.2.4`. The repo and GitHub releases are currently on the `0.2.9-beta` line, so use the prerelease install shown above if you want the package behavior to match this repository.
+The latest stable packages on PyPI are now `0.2.9`, and this repository is aligned with that release line.
 
 Run the other demos:
 
 ```bash
-pip install --pre "ecp-sdk[crewai]==0.2.9b0" crewai
+pip install "ecp-sdk[crewai]==0.2.9" crewai
 python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
 
-pip install --pre "ecp-sdk[pydanticai]==0.2.9b0" pydantic-ai
+pip install "ecp-sdk[pydanticai]==0.2.9" pydantic-ai
 python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
 ```
 

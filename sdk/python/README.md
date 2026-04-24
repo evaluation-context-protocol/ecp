@@ -5,33 +5,33 @@ This is the SDK for building agents that comply with the Evaluation Context Prot
 ## Install
 
 ```bash
-pip install --pre "ecp-sdk==0.2.9b0"
+pip install "ecp-sdk==0.2.9"
 ```
 
-The latest stable PyPI release is still `0.2.4`. Use the pinned prerelease above if you want the installed SDK to match the current GitHub `v0.2.9-beta` release line.
+The latest stable PyPI release is now `0.2.9`. Use the install command above to install the matching package version.
 
 For LangChain adaptor support:
 
 ```bash
-pip install --pre "ecp-sdk[langchain]==0.2.9b0"
+pip install "ecp-sdk[langchain]==0.2.9"
 ```
 
 For CrewAI adaptor support:
 
 ```bash
-pip install --pre "ecp-sdk[crewai]==0.2.9b0"
+pip install "ecp-sdk[crewai]==0.2.9"
 ```
 
 For LlamaIndex adaptor support:
 
 ```bash
-pip install --pre "ecp-sdk[llamaindex]==0.2.9b0"
+pip install "ecp-sdk[llamaindex]==0.2.9"
 ```
 
 For PydanticAI adaptor support:
 
 ```bash
-pip install --pre "ecp-sdk[pydanticai]==0.2.9b0"
+pip install "ecp-sdk[pydanticai]==0.2.9"
 ```
 
 ## Usage
