@@ -18,6 +18,7 @@ lib/
 lib64/
 parts/
 sdist/
+.specify/*
 var/
 wheels/
 share/python-wheels/
@@ -25,7 +26,11 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+.github/agents/
+.github/prompts
+client/node_modules
+server/node_modules
+specs/
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
