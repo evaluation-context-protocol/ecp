@@ -14,6 +14,8 @@ import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from urllib import error, request
+from urllib.parse import urlparse
 
 from .graders import evaluate_step
 
@@ -148,6 +150,75 @@ class AgentProcess:
             return ""
 
 
+class HTTPAgentClient:
+    """JSON-RPC client for ECP Streamable HTTP endpoints."""
+
+    def __init__(self, endpoint: str, rpc_timeout: float = 30.0):
+        self.endpoint = endpoint
+        self.rpc_timeout = rpc_timeout
+
+    def start(self):
+        return None
+
+    def stop(self):
+        return None
+
+    def send_rpc(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+        if not params:
+            params = {}
+
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": params,
+            "id": int(time.time() * 1000),
+        }
+        body = json.dumps(payload).encode("utf-8")
+        req = request.Request(
+            self.endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Content-Type": "application/json",
+            },
+        )
+
+        try:
+            with request.urlopen(req, timeout=self.rpc_timeout) as resp:
+                content_type = resp.headers.get("Content-Type", "")
+                raw = resp.read().decode("utf-8")
+        except error.HTTPError as exc:
+            raw = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"HTTP RPC failed: status={exc.code}, body={raw or exc.reason}"
+            ) from exc
+        except error.URLError as exc:
+            raise RuntimeError(f"HTTP RPC failed: {exc.reason}") from exc
+
+        if "text/event-stream" in content_type:
+            return self._parse_sse_response(raw)
+        if not raw:
+            raise RuntimeError("HTTP RPC response was empty")
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise RuntimeError("HTTP RPC response must be a JSON object")
+        return payload
+
+    def _parse_sse_response(self, raw: str) -> Dict[str, Any]:
+        for event in raw.split("\n\n"):
+            data_lines = []
+            for line in event.splitlines():
+                if line.startswith("data:"):
+                    data_lines.append(line[5:].lstrip())
+            if not data_lines:
+                continue
+            payload = json.loads("\n".join(data_lines))
+            if isinstance(payload, dict) and ("result" in payload or "error" in payload):
+                return payload
+        raise RuntimeError("SSE stream ended without a JSON-RPC response")
+
+
 class ECPRunner:
     """The Orchestrator."""
 
@@ -163,7 +234,7 @@ class ECPRunner:
             logger.info("Scenario: %s", scenario.name)
 
             rpc_timeout = float(os.environ.get("ECP_RPC_TIMEOUT", "30"))
-            agent = AgentProcess(self.manifest.target, rpc_timeout=rpc_timeout)
+            agent = self._create_agent(self.manifest.target, rpc_timeout=rpc_timeout)
             agent.start()
 
             try:
@@ -225,6 +296,11 @@ class ECPRunner:
             "scenarios": report_data
         }
 
+    def _create_agent(self, target: str, rpc_timeout: float):
+        if _is_http_url(target):
+            return HTTPAgentClient(target, rpc_timeout=rpc_timeout)
+        return AgentProcess(target, rpc_timeout=rpc_timeout)
+
     def _ensure_rpc_success(
         self,
         rpc_resp: Dict[str, Any],
@@ -244,3 +320,8 @@ class ECPRunner:
         raise RuntimeError(
             f"RPC call failed ({method}) at {where}: code={code}, message={message}"
         )
+
+
+def _is_http_url(target: str) -> bool:
+    parsed = urlparse(target)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)

@@ -1,6 +1,6 @@
 manifest_version: "v1"
 name: "Plain Python App Validation"
-target: "python3 examples/plain_python_demo/agent.py"
+target: "python examples/plain_python_demo/agent.py"
 
 scenarios:
   - name: "Arithmetic Request"

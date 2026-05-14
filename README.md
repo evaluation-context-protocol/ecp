@@ -11,6 +11,7 @@ A lightweight protocol and reference runtime for evaluating agents with public o
 - `sdk/` - Python SDK for implementing an ECP agent.
 - `runtime/` - Python runtime (CLI) that runs manifests and grades results.
 - `examples/` - Minimal framework demos (LangChain, LlamaIndex, CrewAI, PydanticAI).
+- `client/` and `server/` - Local ECP Inspector UI and proxy server.
 - `spec/` - Protocol specification.
 
 ## Documentation
@@ -53,6 +54,16 @@ Save a JSON report to a file:
 ```bash
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
 ```
+
+Launch the local ECP Inspector:
+
+```bash
+npm run inspector
+```
+
+Open `http://127.0.0.1:6274` to browse manifests, connect to stdio or
+Streamable HTTP agents, send `agent/step` requests, run evaluations, and inspect
+protocol logs.
 
 If your manifest uses `llm_judge`, set your key:
 

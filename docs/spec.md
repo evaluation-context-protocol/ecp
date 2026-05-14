@@ -4,7 +4,13 @@
 
 ## Overview
 
-ECP is JSON-RPC 2.0 over stdio. The runtime spawns the agent process and sends requests for `initialize`, `step`, and `reset`. The agent returns structured results containing public output, private reasoning, and tool usage.
+ECP is JSON-RPC 2.0 over stdio or Streamable HTTP. The runtime sends requests for `initialize`, `step`, and `reset`. The agent returns structured results containing public output, private reasoning, and tool usage.
+
+## Transports
+
+The default transport is stdio: the runtime spawns the agent process and exchanges one JSON-RPC object per line over standard input and output.
+
+For Streamable HTTP, the agent runs as an HTTP server and exposes one endpoint, conventionally `/ecp`. Clients `POST` JSON-RPC messages with `Accept: application/json, text/event-stream`; request responses may be JSON or SSE, while notifications return `202 Accepted`. Servers that do not support server-initiated SSE streams return `405 Method Not Allowed` for `GET`.
 
 ## Methods
 

@@ -8,14 +8,44 @@ Status: Experimental
 ECP defines a simple JSON-RPC 2.0 interface between:
 
 - **Runtime**: the test runner that executes scenarios and graders.
-- **Agent**: the system under test, running as a child process.
+- **Agent**: the system under test, running as a child process or HTTP service.
 
-The runtime launches the agent and communicates over stdio. Each request is a single JSON-RPC object on its own line; each response is a single JSON-RPC object on its own line.
+The runtime communicates with the agent over one of ECP's standard transports.
 
-## 2. Transport
+## 2. Transports
 
 - **Default transport**: stdio (runtime spawns the agent process).
+- **Remote/local service transport**: Streamable HTTP.
 - **Protocol**: JSON-RPC 2.0.
+
+### 2.1 stdio
+
+For stdio, the runtime launches the agent and communicates over standard input and
+standard output. Each request is a single JSON-RPC object on its own line; each
+response is a single JSON-RPC object on its own line.
+
+### 2.2 Streamable HTTP
+
+For Streamable HTTP, the agent runs as an independent HTTP server and exposes one
+endpoint for ECP JSON-RPC messages, conventionally `/ecp`.
+
+- Clients send each JSON-RPC message with `POST` to the ECP endpoint.
+- `POST` requests use `Content-Type: application/json`.
+- Clients include `Accept: application/json, text/event-stream`.
+- If a `POST` contains one or more JSON-RPC requests, the server returns either
+  `Content-Type: application/json` with the JSON-RPC response object or
+  `Content-Type: text/event-stream` with JSON-RPC responses in SSE `data` events.
+- If a `POST` contains only JSON-RPC notifications or responses, the server
+  returns `202 Accepted` with no body.
+- Clients may send `GET` with `Accept: text/event-stream` to open a
+  server-to-client SSE stream. Servers that do not support server-initiated
+  messages return `405 Method Not Allowed`.
+- Local HTTP servers should bind to `127.0.0.1` by default and validate
+  `Origin` headers.
+
+The reference Python SDK currently returns JSON responses for `POST` requests
+and `405 Method Not Allowed` for `GET` because ECP does not yet define
+server-initiated messages.
 
 ## 3. Methods
 

@@ -1,0 +1,12 @@
+{
+  "name": "ecp-inspector-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../server/src/server.js",
+    "start": "node ../server/src/server.js",
+    "build": "node -e \"console.log('Static client requires no build step')\""
+  },
+  "dependencies": {}
+}
