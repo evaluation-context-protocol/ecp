@@ -44,6 +44,19 @@ class MyAgent:
     ...
 ```
 
+### Streamable HTTP
+
+Agents can also run as an ECP Streamable HTTP server:
+
+```python
+if __name__ == "__main__":
+    ecp.serve_http(MyAgent(), host="127.0.0.1", port=8765, path="/ecp")
+```
+
+The endpoint accepts JSON-RPC `POST` requests at `/ecp`. It returns JSON for
+requests, `202 Accepted` for notifications, and `405 Method Not Allowed` for
+`GET` SSE streams until ECP defines server-initiated messages.
+
 ## Links
 
 - Documentation: https://evaluationcontextprotocol.io/

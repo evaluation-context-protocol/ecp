@@ -13,7 +13,7 @@ This example uses only the ECP SDK. It does not depend on any external agent fra
 ```yaml
 manifest_version: "v1"
 name: "Plain Python App Validation"
-target: "python3 examples/plain_python_demo/agent.py"
+target: "python examples/plain_python_demo/agent.py"
 
 scenarios:
   - name: "Arithmetic Request"
@@ -42,7 +42,7 @@ This example shows a small planner/writer workflow wrapped behind a single ECP s
 ```yaml
 manifest_version: "v1"
 name: "Two-Agent Workflow Validation"
-target: "python3 examples/two_agent_demo/agent.py"
+target: "python examples/two_agent_demo/agent.py"
 
 scenarios:
   - name: "Launch Note Drafting"
@@ -63,6 +63,45 @@ scenarios:
             tool_name: "writer_agent"
             arguments:
               request: "the ECP beta launch"
+```
+
+## Streamable HTTP Transport Example
+
+Agent file: `examples/streamable_http_demo/agent.py`
+
+Start the agent service first:
+
+```bash
+python examples/streamable_http_demo/agent.py
+```
+
+Then run the manifest from another terminal:
+
+```bash
+python -m ecp_runtime.cli run --manifest examples/streamable_http_demo/manifest.yaml --json
+```
+
+### Streamable HTTP Manifest
+
+```yaml
+manifest_version: "v1"
+name: "Streamable HTTP Transport Validation"
+target: "http://127.0.0.1:8765/ecp"
+
+scenarios:
+  - name: "HTTP Echo"
+    steps:
+      - input: "echo: transport is online"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "transport is online"
+
+          - type: tool_usage
+            tool_name: "http_echo"
+            arguments:
+              message: "transport is online"
 ```
 
 ## LangChain Example

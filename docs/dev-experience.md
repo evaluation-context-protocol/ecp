@@ -44,6 +44,40 @@ Run it:
 python -m ecp_runtime.cli run --manifest examples/two_agent_demo/manifest.yaml --json
 ```
 
+### 3. Streamable HTTP transport app
+
+Files:
+
+- `examples/streamable_http_demo/agent.py`
+- `examples/streamable_http_demo/manifest.yaml`
+
+What it proves:
+
+- an ECP agent can run as a long-lived HTTP service instead of a child process
+- the runtime can evaluate a manifest whose `target` is an HTTP endpoint
+- JSON-RPC request/response behavior remains the same from the grader's point of view
+
+Run it in terminal 1:
+
+```bash
+python examples/streamable_http_demo/agent.py
+```
+
+Run the evaluation in terminal 2:
+
+```bash
+python -m ecp_runtime.cli run --manifest examples/streamable_http_demo/manifest.yaml --json
+```
+
+Optional direct transport smoke test:
+
+```bash
+curl -i http://127.0.0.1:8765/ecp ^
+  -H "Accept: application/json, text/event-stream" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"agent/step\",\"params\":{\"input\":\"echo: hello\"}}"
+```
+
 ## Honest DX Verdict
 
 What feels good today:
@@ -52,13 +86,15 @@ What feels good today:
 - a plain app integration is very little code
 - manifests are readable and easy to reason about
 - the runtime gives a usable pass/fail result without much setup
+- Streamable HTTP can be tested with the same manifest/grader flow as stdio
 
 What still feels rough:
 
 - `target` commands are still working-directory sensitive unless written carefully
 - there is no dedicated `validate` CLI yet for fast manifest checking
 - richer diagnostics and report detail would improve debugging when integrations fail
+- the HTTP server must be started separately before running an HTTP-target manifest
 
 ## Bottom Line
 
-Yes, ECP can already be used with a small application and with a simple 1-2 agent workflow. The current developer experience is credible for lightweight integrations, but it would get meaningfully better with manifest validation, stronger diagnostics, and richer runtime/report output.
+Yes, ECP can already be used with a small application, with a simple 1-2 agent workflow, and with a Streamable HTTP agent service. The current developer experience is credible for lightweight integrations, but it would get meaningfully better with manifest validation, stronger diagnostics, richer runtime/report output, and a helper command for launching HTTP agents.

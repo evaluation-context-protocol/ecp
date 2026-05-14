@@ -31,7 +31,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-
+/specs/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -50,7 +50,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-
+node_modules/
+.github/agents
+.github/prompts/
+.specify/
 # Translations
 *.mo
 *.pot

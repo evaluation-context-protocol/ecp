@@ -88,9 +88,33 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 $env:ECP_LLM_JUDGE_TEMPERATURE="0"
 ```
 
+## 9. Optional: validate Streamable HTTP
+
+Start the HTTP agent in one terminal:
+
+```bash
+python examples/streamable_http_demo/agent.py
+```
+
+Run the HTTP-target manifest in another terminal:
+
+```bash
+python -m ecp_runtime.cli run --manifest .\examples\streamable_http_demo\manifest.yaml --json
+```
+
+## 10. Optional: launch ECP Inspector
+
+Start the local inspector UI:
+
+```bash
+npm run inspector
+```
+
+Open `http://127.0.0.1:6274`.
+
 ## Notes
 
 - The latest stable packages on PyPI are now `0.2.9`. This docs site matches that release line.
-- The runtime launches your agent via the `target` command in the manifest.
-- The agent responds over JSON-RPC 2.0 on stdio.
+- The runtime launches your agent via a command target or connects to an HTTP target in the manifest.
+- The agent responds over JSON-RPC 2.0 on stdio or Streamable HTTP.
 - Use `ECP_RPC_TIMEOUT` to control step timeouts (default 30s).

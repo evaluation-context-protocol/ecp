@@ -25,6 +25,13 @@ You can also run via module entrypoint:
 python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
 ```
 
+Manifest `target` values may be either a command for the default stdio transport
+or an ECP Streamable HTTP endpoint:
+
+```yaml
+target: "http://127.0.0.1:8765/ecp"
+```
+
 If your manifest includes `llm_judge`, set an API key and optional judge model:
 
 ```bash

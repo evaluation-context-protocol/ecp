@@ -9,7 +9,7 @@ if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
 from ecp_runtime.manifest import StepConfig
-from ecp_runtime.runner import ECPRunner
+from ecp_runtime.runner import ECPRunner, HTTPAgentClient
 
 
 class RunnerTests(unittest.TestCase):
@@ -67,6 +67,50 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("Scenario A", msg)
         self.assertIn("step=1", msg)
         self.assertIn("boom", msg)
+
+    def test_runner_uses_http_client_for_url_target(self) -> None:
+        runner = ECPRunner(SimpleNamespace(target="http://127.0.0.1:8765/ecp", scenarios=[]))
+
+        agent = runner._create_agent(runner.manifest.target, rpc_timeout=12.0)
+
+        self.assertIsInstance(agent, HTTPAgentClient)
+        self.assertEqual(agent.endpoint, "http://127.0.0.1:8765/ecp")
+        self.assertEqual(agent.rpc_timeout, 12.0)
+
+    def test_http_agent_client_posts_json_rpc(self) -> None:
+        class FakeResponse:
+            headers = {"Content-Type": "application/json; charset=utf-8"}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def read(self):
+                return b'{"jsonrpc":"2.0","id":1,"result":{"ok":true}}'
+
+        captured = {}
+
+        def fake_urlopen(req, timeout):
+            captured["url"] = req.full_url
+            captured["timeout"] = timeout
+            captured["body"] = req.data
+            captured["accept"] = req.headers.get("Accept")
+            return FakeResponse()
+
+        with mock.patch("ecp_runtime.runner.request.urlopen", fake_urlopen):
+            response = HTTPAgentClient("http://agent.test/ecp", rpc_timeout=3).send_rpc(
+                "agent/step", {"input": "hi"}
+            )
+
+        self.assertEqual(response["result"]["ok"], True)
+        self.assertEqual(captured["url"], "http://agent.test/ecp")
+        self.assertEqual(captured["timeout"], 3)
+        self.assertIn("application/json", captured["accept"])
+        body = captured["body"].decode("utf-8")
+        self.assertIn('"method": "agent/step"', body)
+        self.assertIn('"input": "hi"', body)
 
 
 if __name__ == "__main__":

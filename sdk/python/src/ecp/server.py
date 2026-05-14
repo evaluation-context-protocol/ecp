@@ -1,7 +1,15 @@
 import json
 import sys
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+from urllib.parse import urlparse
 
 from .decorators import _CURRENT_AGENT_INSTANCE, _HOOKS, Result
+
+
+JSON_RPC_VERSION = "2.0"
+JSON_CONTENT_TYPE = "application/json"
 
 
 def serve(agent_instance):
@@ -16,33 +24,148 @@ def serve(agent_instance):
     for line in sys.stdin:
         if not line.strip():
             continue
+        req_id = None
             
         try:
             request = json.loads(line)
-            method = request.get("method")
-            params = request.get("params", {})
-            req_id = request.get("id")
-
-            # 2. Router
-            response_data = None
-            
-            if method == "agent/initialize":
-                response_data = _handle_init(params)
-            elif method == "agent/step":
-                response_data = _handle_step(params)
-            elif method == "agent/reset":
-                response_data = _handle_reset()
-            else:
-                raise ValueError(f"Unknown method: {method}")
-
-            # 3. Response
-            _send_json_rpc(req_id, response_data)
+            if isinstance(request, dict):
+                req_id = request.get("id")
+            response = _dispatch_json_rpc(request)
+            if response is not None:
+                _write_json_rpc(response)
 
         except Exception as e:
             # If the agent crashes, we must tell the Runtime why
             error_msg = f"{type(e).__name__}: {str(e)}"
             # traceback.print_exc(file=sys.stderr) # Debugging help
             _send_error(req_id if 'req_id' in locals() else None, -32000, error_msg)
+
+
+def serve_http(
+    agent_instance,
+    host: str = "127.0.0.1",
+    port: int = 8765,
+    path: str = "/ecp",
+    allowed_origins: Optional[Iterable[str]] = None,
+):
+    """
+    Starts an ECP Streamable HTTP server.
+
+    The server exposes a single endpoint that accepts JSON-RPC over POST.
+    It returns JSON responses for requests and HTTP 202 for notifications.
+    GET currently returns 405 because ECP does not yet define server-initiated
+    messages.
+    """
+    global _CURRENT_AGENT_INSTANCE
+    _CURRENT_AGENT_INSTANCE = agent_instance
+    server = _build_http_server(host, port, path, allowed_origins)
+    print(f"ECP Streamable HTTP listening on http://{host}:{server.server_port}{_normalize_path(path)}", file=sys.stderr)
+    server.serve_forever()
+
+
+def _build_http_server(
+    host: str = "127.0.0.1",
+    port: int = 8765,
+    path: str = "/ecp",
+    allowed_origins: Optional[Iterable[str]] = None,
+):
+    endpoint_path = _normalize_path(path)
+    origins = set(allowed_origins or _default_allowed_origins(host, port))
+
+    class ECPStreamableHTTPRequestHandler(BaseHTTPRequestHandler):
+        server_version = "ECPStreamableHTTP/0.1"
+
+        def do_POST(self):
+            if not self._is_endpoint():
+                self._send_status(HTTPStatus.NOT_FOUND)
+                return
+            if not self._origin_allowed(origins):
+                self._discard_request_body()
+                self._send_status(HTTPStatus.FORBIDDEN)
+                return
+
+            accept = self.headers.get("Accept", "")
+            if not _accepts(accept, JSON_CONTENT_TYPE):
+                self._discard_request_body()
+                self._send_status(HTTPStatus.NOT_ACCEPTABLE)
+                return
+
+            content_type = self.headers.get("Content-Type", "")
+            if content_type and JSON_CONTENT_TYPE not in content_type.lower():
+                self._discard_request_body()
+                self._send_status(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+                return
+
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                raw_body = self.rfile.read(length).decode("utf-8")
+                payload = json.loads(raw_body) if raw_body else None
+                response = _dispatch_http_payload(payload)
+            except json.JSONDecodeError:
+                self._send_json(_json_rpc_error(None, -32700, "Parse error"), HTTPStatus.BAD_REQUEST)
+                return
+            except Exception as exc:
+                self._send_json(
+                    _json_rpc_error(None, -32000, f"{type(exc).__name__}: {exc}"),
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+                return
+
+            if response is None:
+                self._send_status(HTTPStatus.ACCEPTED)
+            else:
+                self._send_json(response)
+
+        def do_GET(self):
+            if not self._is_endpoint():
+                self._send_status(HTTPStatus.NOT_FOUND)
+                return
+            if not self._origin_allowed(origins):
+                self._send_status(HTTPStatus.FORBIDDEN)
+                return
+            self._send_status(HTTPStatus.METHOD_NOT_ALLOWED, allow="POST")
+
+        def do_DELETE(self):
+            if not self._is_endpoint():
+                self._send_status(HTTPStatus.NOT_FOUND)
+                return
+            self._send_status(HTTPStatus.METHOD_NOT_ALLOWED, allow="POST")
+
+        def log_message(self, format, *args):
+            print(format % args, file=sys.stderr)
+
+        def _is_endpoint(self) -> bool:
+            return urlparse(self.path).path == endpoint_path
+
+        def _origin_allowed(self, allowed: set) -> bool:
+            origin = self.headers.get("Origin")
+            return origin is None or origin in allowed
+
+        def _discard_request_body(self) -> None:
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = 0
+            if length > 0:
+                self.rfile.read(length)
+
+        def _send_status(self, status: HTTPStatus, allow: Optional[str] = None) -> None:
+            self.send_response(status)
+            if allow:
+                self.send_header("Allow", allow)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def _send_json(self, payload: Any, status: HTTPStatus = HTTPStatus.OK) -> None:
+            body = json.dumps(payload).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", f"{JSON_CONTENT_TYPE}; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    return ThreadingHTTPServer((host, port), ECPStreamableHTTPRequestHandler)
+
 
 # --- Handlers ---
 
@@ -81,22 +204,91 @@ def _handle_reset():
         handler()
     return True
 
+
+def _dispatch_http_payload(payload: Any) -> Optional[Any]:
+    if isinstance(payload, list):
+        responses: List[Dict[str, Any]] = []
+        for item in payload:
+            response = _dispatch_json_rpc(item)
+            if response is not None:
+                responses.append(response)
+        return responses or None
+
+    return _dispatch_json_rpc(payload)
+
+
+def _dispatch_json_rpc(request: Any) -> Optional[Dict[str, Any]]:
+    if not isinstance(request, dict):
+        return _json_rpc_error(None, -32600, "Invalid Request")
+
+    req_id = request.get("id")
+    if request.get("jsonrpc") != JSON_RPC_VERSION:
+        return _json_rpc_error(req_id, -32600, "Invalid Request")
+
+    method = request.get("method")
+    params = request.get("params", {})
+    if params is None:
+        params = {}
+    if not isinstance(params, dict):
+        return _json_rpc_error(req_id, -32602, "Invalid params")
+
+    try:
+        if method == "agent/initialize":
+            response_data = _handle_init(params)
+        elif method == "agent/step":
+            response_data = _handle_step(params)
+        elif method == "agent/reset":
+            response_data = _handle_reset()
+        else:
+            return _json_rpc_error(req_id, -32601, f"Unknown method: {method}")
+    except Exception as exc:
+        return _json_rpc_error(req_id, -32000, f"{type(exc).__name__}: {exc}")
+
+    if "id" not in request:
+        return None
+    return _json_rpc_result(req_id, response_data)
+
+
 # --- Helpers ---
 
 def _send_json_rpc(req_id, result):
-    response = {
-        "jsonrpc": "2.0",
-        "id": req_id,
-        "result": result
-    }
+    _write_json_rpc(_json_rpc_result(req_id, result))
+
+def _write_json_rpc(response):
     sys.stdout.write(json.dumps(response) + "\n")
     sys.stdout.flush()
 
 def _send_error(req_id, code, message):
-    response = {
-        "jsonrpc": "2.0",
+    _write_json_rpc(_json_rpc_error(req_id, code, message))
+
+def _json_rpc_result(req_id, result):
+    return {
+        "jsonrpc": JSON_RPC_VERSION,
+        "id": req_id,
+        "result": result
+    }
+
+def _json_rpc_error(req_id, code, message):
+    return {
+        "jsonrpc": JSON_RPC_VERSION,
         "id": req_id,
         "error": {"code": code, "message": message}
     }
-    sys.stdout.write(json.dumps(response) + "\n")
-    sys.stdout.flush()
+
+def _accepts(header: str, media_type: str) -> bool:
+    if not header:
+        return True
+    accepted = [part.split(";", 1)[0].strip().lower() for part in header.split(",")]
+    return "*/*" in accepted or media_type in accepted
+
+def _normalize_path(path: str) -> str:
+    if not path.startswith("/"):
+        return f"/{path}"
+    return path
+
+def _default_allowed_origins(host: str, port: int) -> Tuple[str, ...]:
+    return (
+        f"http://{host}:{port}",
+        f"http://localhost:{port}",
+        f"http://127.0.0.1:{port}",
+    )
