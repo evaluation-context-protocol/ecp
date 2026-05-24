@@ -1,0 +1,46 @@
+manifest_version: "v1"
+name: "Customer Support Refund Policy"
+target: "python examples/customer_support_demo/agent.py"
+
+scenarios:
+  - name: "Eligible refund uses order lookup and policy check"
+    steps:
+      - input: "I want a refund for order A100."
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "eligible for a refund"
+          - type: text_match
+            field: evaluation_context
+            condition: contains
+            value: "refund_eligible=True"
+          - type: tool_usage
+            tool_name: "lookup_order"
+            arguments:
+              order_id: "A100"
+          - type: tool_usage
+            tool_name: "check_refund_policy"
+            arguments:
+              order_id: "A100"
+
+  - name: "Ineligible refund is denied after policy check"
+    steps:
+      - input: "Please refund order B200."
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "not eligible"
+          - type: text_match
+            field: evaluation_context
+            condition: contains
+            value: "delivery was more than 30 days ago"
+          - type: tool_usage
+            tool_name: "lookup_order"
+            arguments:
+              order_id: "B200"
+          - type: tool_usage
+            tool_name: "check_refund_policy"
+            arguments:
+              order_id: "B200"

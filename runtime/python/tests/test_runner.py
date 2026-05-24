@@ -33,7 +33,11 @@ class RunnerTests(unittest.TestCase):
             def send_rpc(self, method, params=None):
                 if method == "agent/initialize":
                     return {"jsonrpc": "2.0", "id": 1, "result": {"name": "x", "capabilities": {}}}
-                return {"jsonrpc": "2.0", "id": 2, "result": {"status": "done", "public_output": "ok"}}
+                return {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "result": {"status": "done", "public_output": "ok", "evaluation_context": "checked"},
+                }
 
         with mock.patch("ecp_runtime.runner.AgentProcess", FakeAgentProcess):
             output = ECPRunner(self._manifest()).run_scenarios()
@@ -41,6 +45,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(output["total"], 0)
         self.assertEqual(len(output["scenarios"]), 1)
         self.assertEqual(output["scenarios"][0]["name"], "Scenario A")
+        self.assertEqual(output["scenarios"][0]["steps"][0]["evaluation_context"], "checked")
 
     def test_runner_raises_on_rpc_error_with_context(self) -> None:
         class FakeAgentProcess:

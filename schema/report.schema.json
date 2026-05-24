@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/report.schema.json",
+  "title": "ECP Runtime Report",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "manifest": {
+      "type": "string"
+    },
+    "passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scenarios": {
+      "type": "array"
+    }
+  },
+  "required": ["manifest", "passed", "total", "failed", "scenarios"]
+}

@@ -8,9 +8,17 @@ class Result:
     """The object the user must return from their step function."""
     status: str = "done"  # 'done', 'paused'
     public_output: Optional[str] = None
+    evaluation_context: Optional[str] = None
+    # Deprecated compatibility alias. Prefer evaluation_context for new agents.
     private_thought: Optional[str] = None
     tool_calls: Optional[list] = None
     logs: Optional[str] = None
+
+    def __post_init__(self):
+        if self.evaluation_context is None and self.private_thought is not None:
+            self.evaluation_context = self.private_thought
+        elif self.private_thought is None and self.evaluation_context is not None:
+            self.private_thought = self.evaluation_context
 
 # --- Global Registry (Where we store the agent hooks) ---
 _CURRENT_AGENT_INSTANCE = None

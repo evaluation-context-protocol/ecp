@@ -6,7 +6,9 @@ repo_name: evaluation-context-protocol/ecp
 
 nav:
   - Home: index.md
+  - Why ECP: why-ecp.md
   - Quickstart: quickstart.md
+  - CI: ci.md
   - Inspector: inspector.md
   - Examples: examples.md
   - DX Validation: dev-experience.md

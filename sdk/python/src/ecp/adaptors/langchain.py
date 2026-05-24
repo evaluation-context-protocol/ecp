@@ -47,8 +47,7 @@ class ECPLangChainAdapter(BaseCallbackHandler):
         return Result(
             status="done",
             public_output=final_text,
-            # We join all the intermediate LLM tokens/thoughts we caught
-            private_thought="\n".join(self.captured_thoughts),
+            evaluation_context="\n".join(self.captured_thoughts),
             tool_calls=self.captured_tool_calls or None
         )
 

@@ -42,7 +42,7 @@ class TwoAgentLaunchBot:
         self.last_plan = plan
         return Result(
             public_output=f"{draft}\n\nInternal workflow summary: {plan}",
-            private_thought="Planner agent created a structure and writer agent turned it into a concise response.",
+            evaluation_context="Planner agent created a structure and writer agent turned it into a concise response.",
             tool_calls=[
                 {"name": "planner_agent", "arguments": {"request": request}},
                 {"name": "writer_agent", "arguments": {"request": request}},

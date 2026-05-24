@@ -1,32 +1,38 @@
 # ECP Runtime
 
-This is the reference implementation of the Evaluation Context Protocol (ECP) Runtime.
-It includes the CLI tool `ecp` for running agent evaluations.
+Reference runtime and CLI for the Evaluation Context Protocol (ECP).
+
+ECP is a vendor-neutral protocol for testing agent outputs, tool calls, and evaluator-visible audit context across frameworks, models, eval platforms, and CI systems.
 
 ## Install
 
 ```bash
-pip install "ecp-runtime==0.2.9"
+pip install "ecp-runtime==0.3.1"
 ```
-
-The latest stable PyPI release is now `0.2.9` and matches the current GitHub release line.
 
 ## Usage
 
-Run an evaluation manifest:
-
 ```bash
-ecp run --manifest .\examples\langchain_demo\manifest.yaml
+ecp init
+ecp validate ecp_eval/manifest.yaml
+ecp run --manifest ecp_eval/manifest.yaml --json
 ```
 
-You can also run via module entrypoint:
+Run the flagship example:
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
+ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
 ```
 
-Manifest `target` values may be either a command for the default stdio transport
-or an ECP Streamable HTTP endpoint:
+Useful commands:
+
+```bash
+ecp validate examples/customer_support_demo/manifest.yaml
+ecp conformance --target "python examples/customer_support_demo/agent.py"
+ecp doctor
+```
+
+Manifest `target` values may be either a command for the default stdio transport or an ECP Streamable HTTP endpoint:
 
 ```yaml
 target: "http://127.0.0.1:8765/ecp"
@@ -44,3 +50,4 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 - Documentation: https://evaluationcontextprotocol.io/
 - Repository: https://github.com/evaluation-context-protocol/ecp
 - Issues: https://github.com/evaluation-context-protocol/ecp/issues
+

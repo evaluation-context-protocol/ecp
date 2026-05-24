@@ -23,7 +23,7 @@ class PlainPythonOpsBot:
             answer = self._safe_eval(expression)
             return Result(
                 public_output=f"Calculation result: {answer}",
-                private_thought="Used the calculator helper for the requested arithmetic.",
+                evaluation_context="Used the calculator helper for the requested arithmetic.",
                 tool_calls=[
                     {
                         "name": "calculator",
@@ -38,7 +38,7 @@ class PlainPythonOpsBot:
                     "Refund policy: subscriptions can be refunded within 14 days "
                     "when no premium export has been used."
                 ),
-                private_thought="Answered directly from the in-app policy table.",
+                evaluation_context="Answered directly from the in-app policy table.",
                 tool_calls=[
                     {
                         "name": "policy_lookup",
@@ -50,7 +50,7 @@ class PlainPythonOpsBot:
         return Result(
             status="done",
             public_output="Unsupported request. Use 'calc:' or 'policy:refund'.",
-            private_thought="Returned a guided fallback for an unsupported command.",
+            evaluation_context="Returned a guided fallback for an unsupported command.",
         )
 
     @on_reset

@@ -39,7 +39,7 @@ class ECPCrewAIAdapter:
         return Result(
             status="done",
             public_output=final_text,
-            private_thought="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
+            evaluation_context="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
             tool_calls=self.captured_tool_calls or None,
         )
 
@@ -62,7 +62,7 @@ class ECPCrewAIAdapter:
     def _capture_from_response(self, response: Any) -> None:
         metadata = self._extract_metadata(response)
 
-        thought_keys = ["private_thought", "thought", "reasoning", "trace", "analysis", "logs"]
+        thought_keys = ["evaluation_context", "private_thought", "thought", "reasoning", "trace", "analysis", "logs"]
         for key in thought_keys:
             value = metadata.get(key)
             if isinstance(value, str) and value.strip():
@@ -136,7 +136,7 @@ class ECPCrewAIAdapter:
 
                 role = msg.get("role")
 
-                # Capture assistant reasoning as private thought
+                # Capture assistant reasoning as evaluator context
                 if role == "assistant" and msg.get("content"):
                     content = msg["content"].strip()
                     if content:

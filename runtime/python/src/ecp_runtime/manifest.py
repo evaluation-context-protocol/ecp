@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 # --- The Grader (Assertion) Schema ---
 class GraderConfig(BaseModel):
     type: Literal["text_match", "llm_judge", "tool_usage"]
-    field: Literal["public_output", "private_thought"] = "public_output"
+    field: Literal["public_output", "evaluation_context", "private_thought"] = "public_output"
     # For text_match
     condition: Optional[Literal["contains", "equals", "does_not_contain", "regex"]] = None
     value: Optional[str] = None

@@ -72,6 +72,29 @@ class CLISmokeTests(unittest.TestCase):
             result = self.runner.invoke(app, ["run", "--manifest", self.manifest_path, "--no-fail-on-error"])
         self.assertEqual(result.exit_code, 0, msg=result.output)
 
+    def test_validate_command(self) -> None:
+        result = self.runner.invoke(app, ["validate", self.manifest_path])
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        self.assertIn("Manifest valid", result.output)
+
+    def test_doctor_command(self) -> None:
+        result = self.runner.invoke(app, ["doctor"])
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        self.assertIn("ECP doctor", result.output)
+
+    def test_init_command_creates_starter_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "evals"
+            result = self.runner.invoke(app, ["init", str(target)])
+
+            self.assertEqual(result.exit_code, 0, msg=result.output)
+            self.assertTrue((target / "agent.py").exists())
+            manifest = target / "manifest.yaml"
+            self.assertTrue(manifest.exists())
+            self.assertIn("evaluation_context", manifest.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()

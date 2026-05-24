@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/manifest.schema.json",
+  "title": "ECP Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "const": "v1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "input": {
+                  "type": "string"
+                },
+                "constraints": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "graders": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["text_match", "llm_judge", "tool_usage"]
+                      },
+                      "field": {
+                        "type": "string",
+                        "enum": ["public_output", "evaluation_context", "private_thought"]
+                      }
+                    },
+                    "required": ["type"]
+                  }
+                }
+              },
+              "required": ["input"]
+            }
+          }
+        },
+        "required": ["name", "steps"]
+      }
+    }
+  },
+  "required": ["manifest_version", "name", "target", "scenarios"]
+}

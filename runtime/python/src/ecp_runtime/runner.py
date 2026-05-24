@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 class StepResult:
     status: str
     public_output: Optional[str] = None
+    evaluation_context: Optional[str] = None
     private_thought: Optional[str] = None
     logs: Optional[str] = None
     tool_calls: Optional[List[Dict[str, Any]]] = None
@@ -252,14 +253,15 @@ class ECPRunner:
                     step_result = StepResult(
                         status=result_data.get("status", "done"),
                         public_output=result_data.get("public_output"),
-                        private_thought=result_data.get("private_thought"),
+                        evaluation_context=result_data.get("evaluation_context") or result_data.get("private_thought"),
+                        private_thought=result_data.get("private_thought") or result_data.get("evaluation_context"),
                         tool_calls=result_data.get("tool_calls") if isinstance(result_data.get("tool_calls"), list) else None
                     )
 
                     logger.info("Step %d: Input='%s'", i + 1, step.input)
                     logger.info("Output: %s", step_result.public_output)
-                    if step_result.private_thought:
-                        logger.debug("Thought: %s", step_result.private_thought)
+                    if step_result.evaluation_context:
+                        logger.debug("Evaluation context: %s", step_result.evaluation_context)
 
                     checks = evaluate_step(step, step_result)
 
@@ -278,6 +280,8 @@ class ECPRunner:
                     scenario_steps.append({
                         "input": step.input,
                         "output": step_result.public_output,
+                        "evaluation_context": step_result.evaluation_context,
+                        "tool_calls": step_result.tool_calls or [],
                         "checks": checks
                     })
 

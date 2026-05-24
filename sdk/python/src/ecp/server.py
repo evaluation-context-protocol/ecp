@@ -193,6 +193,7 @@ def _handle_step(params):
     return {
         "status": result.status,
         "public_output": result.public_output,
+        "evaluation_context": result.evaluation_context,
         "private_thought": result.private_thought,
         "tool_calls": result.tool_calls
     }

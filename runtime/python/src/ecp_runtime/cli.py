@@ -2,11 +2,13 @@
 import json
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import typer
+from pydantic import ValidationError
 
 from .reporter import HTMLReporter
 from .trend import RunTrendAnalyzer
@@ -141,6 +143,127 @@ def run(
 
 
 @app.command()
+def validate(
+    manifest: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Path to the ECP manifest YAML file",
+    ),
+):
+    """
+    Validate a manifest without running the agent.
+    """
+    try:
+        config = ECPManifest.from_yaml(str(manifest))
+    except ValidationError as exc:
+        typer.echo(f"Manifest invalid: {manifest}", err=True)
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        typer.echo(f"Manifest invalid: {manifest}", err=True)
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1)
+
+    step_count = sum(len(scenario.steps) for scenario in config.scenarios)
+    grader_count = sum(len(step.graders) for scenario in config.scenarios for step in scenario.steps)
+    typer.echo(f"Manifest valid: {manifest}")
+    typer.echo(f"Name: {config.name}")
+    typer.echo(f"Scenarios: {len(config.scenarios)}")
+    typer.echo(f"Steps: {step_count}")
+    typer.echo(f"Graders: {grader_count}")
+
+
+@app.command()
+def doctor():
+    """
+    Check the local ECP runtime environment.
+    """
+    typer.echo("ECP doctor")
+    typer.echo(f"Python: {sys.version.split()[0]}")
+    typer.echo(f"Executable: {sys.executable}")
+    typer.echo(f"Working directory: {Path.cwd()}")
+    typer.echo(f"OpenAI key: {'set' if os.environ.get('OPENAI_API_KEY') else 'not set'}")
+    typer.echo(f"Git: {'available' if shutil.which('git') else 'not found'}")
+
+
+@app.command()
+def init(
+    directory: Path = typer.Argument(
+        Path("ecp_eval"),
+        help="Directory where a starter ECP agent and manifest should be created",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing starter files",
+    ),
+):
+    """
+    Create a minimal ECP evaluation project.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    agent_path = directory / "agent.py"
+    manifest_path = directory / "manifest.yaml"
+
+    if not force and (agent_path.exists() or manifest_path.exists()):
+        typer.echo(f"Refusing to overwrite existing files in {directory}. Use --force to replace starters.", err=True)
+        raise typer.Exit(code=1)
+
+    agent_path.write_text(_starter_agent(), encoding="utf-8")
+    manifest_path.write_text(_starter_manifest(agent_path.as_posix()), encoding="utf-8")
+
+    typer.echo(f"Created {agent_path}")
+    typer.echo(f"Created {manifest_path}")
+    typer.echo(f"Try: ecp validate {manifest_path}")
+    typer.echo(f"Then: ecp run --manifest {manifest_path}")
+
+
+@app.command()
+def conformance(
+    target: str = typer.Option(
+        ...,
+        "--target",
+        "-t",
+        help="Agent command or ECP HTTP endpoint to check",
+    ),
+    step_input: str = typer.Option(
+        "hello",
+        "--input",
+        help="Input text for the conformance step call",
+    ),
+):
+    """
+    Run a small protocol conformance smoke test against an ECP agent.
+    """
+    runner = ECPRunner(type("Manifest", (), {"target": target, "scenarios": []})())
+    agent = runner._create_agent(target, rpc_timeout=float(os.environ.get("ECP_RPC_TIMEOUT", "30")))
+    agent.start()
+    try:
+        init_resp = agent.send_rpc("agent/initialize", {"config": {}})
+        _assert_rpc_result(init_resp, "agent/initialize")
+        step_resp = agent.send_rpc("agent/step", {"input": step_input})
+        _assert_rpc_result(step_resp, "agent/step")
+        result = step_resp.get("result", {})
+        if not isinstance(result, dict):
+            raise ValueError("agent/step result must be an object")
+        if "public_output" not in result and "evaluation_context" not in result and "tool_calls" not in result:
+            raise ValueError("agent/step result should expose public_output, evaluation_context, or tool_calls")
+        reset_resp = agent.send_rpc("agent/reset", {})
+        _assert_rpc_result(reset_resp, "agent/reset")
+    except Exception as exc:
+        typer.echo(f"Conformance failed: {exc}", err=True)
+        raise typer.Exit(code=1)
+    finally:
+        agent.stop()
+
+    typer.echo("Conformance smoke test passed")
+
+
+@app.command()
 def trend(
     pattern: str = typer.Argument(
         ...,
@@ -199,6 +322,70 @@ def trend(
     if report.any_regression and exit_on_regression:
         typer.echo("Regression detected. Exiting with code 2 (--exit-on-regression).", err=True)
         raise typer.Exit(code=2)
+
+
+def _assert_rpc_result(response: Dict[str, Any], method: str) -> None:
+    if not isinstance(response, dict):
+        raise ValueError(f"{method} response must be a JSON-RPC object")
+    if response.get("jsonrpc") != "2.0":
+        raise ValueError(f"{method} response must include jsonrpc='2.0'")
+    if "error" in response:
+        raise ValueError(f"{method} returned error: {response['error']}")
+    if "result" not in response:
+        raise ValueError(f"{method} response must include result")
+
+
+def _starter_agent() -> str:
+    return '''from ecp import Result, agent, on_reset, on_step, serve
+
+
+@agent(name="StarterAgent")
+class StarterAgent:
+    def __init__(self):
+        self.seen = []
+
+    @on_step
+    def step(self, user_input: str):
+        self.seen.append(user_input)
+        return Result(
+            public_output=f"Echo: {user_input}",
+            evaluation_context="The starter agent echoed the user input.",
+            tool_calls=[{"name": "echo", "arguments": {"text": user_input}}],
+        )
+
+    @on_reset
+    def reset(self):
+        self.seen.clear()
+
+
+if __name__ == "__main__":
+    serve(StarterAgent())
+'''
+
+
+def _starter_manifest(agent_filename: str) -> str:
+    return f'''manifest_version: "v1"
+name: "Starter ECP Evaluation"
+target: 'python {agent_filename}'
+
+scenarios:
+  - name: "Echo contract"
+    steps:
+      - input: "hello ecp"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "hello ecp"
+          - type: text_match
+            field: evaluation_context
+            condition: contains
+            value: "echoed"
+          - type: tool_usage
+            tool_name: "echo"
+            arguments:
+              text: "hello ecp"
+'''
 
 
 if __name__ == "__main__":

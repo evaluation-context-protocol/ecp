@@ -33,6 +33,16 @@ class ManifestValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             GraderConfig(type="unknown")  # type: ignore[arg-type]
 
+    def test_evaluation_context_field_allowed(self) -> None:
+        grader = GraderConfig(
+            type="text_match",
+            field="evaluation_context",
+            condition="contains",
+            value="checked",
+        )
+
+        self.assertEqual(grader.field, "evaluation_context")
+
     def test_manifest_root_must_be_mapping(self) -> None:
         with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8") as tmp:
             tmp.write("- not: a mapping\n")

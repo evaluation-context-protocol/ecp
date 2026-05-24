@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/tool-call.schema.json",
+  "title": "ECP Tool Call",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": ["name"]
+}
