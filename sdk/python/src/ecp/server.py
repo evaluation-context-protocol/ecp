@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 
 from .decorators import _CURRENT_AGENT_INSTANCE, _HOOKS, Result
 
-
 JSON_RPC_VERSION = "2.0"
 JSON_CONTENT_TYPE = "application/json"
 
