@@ -4,7 +4,7 @@
 
 ## Overview
 
-ECP is JSON-RPC 2.0 over stdio or Streamable HTTP. The runtime sends requests for `initialize`, `step`, and `reset`. The agent returns structured results containing public output, private reasoning, and tool usage.
+ECP is JSON-RPC 2.0 over stdio or Streamable HTTP. The runtime sends `agent/initialize`, `agent/step`, and `agent/reset`. The agent returns structured results containing public output, evaluator-safe audit context, and tool usage.
 
 ## Transports
 
@@ -28,7 +28,8 @@ For Streamable HTTP, the agent runs as an HTTP server and exposes one endpoint, 
 
 - `status`: `done` or `paused`
 - `public_output`: string or null
-- `private_thought`: string or null
+- `evaluation_context`: string or null
+- `private_thought`: deprecated compatibility alias for `evaluation_context`
 - `tool_calls`: array or null
 
 Tool call format:
@@ -53,24 +54,31 @@ Supported graders:
 - `llm_judge` (requires `OPENAI_API_KEY`)
 - `tool_usage` (name + argument subset match)
 
-`llm_judge` model can be configured with `ECP_LLM_JUDGE_MODEL` (default: `gpt-4o-mini`).
-`llm_judge` temperature can be configured with `ECP_LLM_JUDGE_TEMPERATURE` (default: `0`).
+Text and LLM graders can target `public_output`, `evaluation_context`, or the deprecated `private_thought` alias.
 
-Manifest validation is strict: invalid grader types or missing required grader fields fail fast during manifest load.
+`llm_judge` model can be configured with `ECP_LLM_JUDGE_MODEL` (default: `gpt-4o-mini`). `llm_judge` temperature can be configured with `ECP_LLM_JUDGE_TEMPERATURE` (default: `0`).
 
-See `examples/langchain_demo/manifest.yaml` for a minimal example.
+Validate a manifest without running an agent:
+
+```bash
+ecp validate examples/customer_support_demo/manifest.yaml
+```
 
 ## Reports
 
-The runtime can optionally generate a single HTML report for a run:
+The runtime can generate HTML and JSON reports:
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
+ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
+ecp run --manifest examples/customer_support_demo/manifest.yaml --json
+ecp run --manifest examples/customer_support_demo/manifest.yaml --json-out report.json
 ```
 
-The runtime can also emit a JSON report (useful for CI):
+## Schemas
 
-```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
-```
+Machine-readable JSON Schemas live in `schema/`:
 
+- `schema/manifest.schema.json`
+- `schema/agent-result.schema.json`
+- `schema/tool-call.schema.json`
+- `schema/report.schema.json`

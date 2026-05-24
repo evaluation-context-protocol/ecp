@@ -30,6 +30,13 @@ HTML_TEMPLATE = """
         <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
             <p><strong>Input:</strong> {{ step.input }}</p>
             <p><strong>Output:</strong> {{ step.output }}</p>
+            {% if step.evaluation_context %}
+            <p><strong>Evaluation context:</strong> {{ step.evaluation_context }}</p>
+            {% endif %}
+            {% if step.tool_calls %}
+            <h4>Tool Calls:</h4>
+            <pre>{{ step.tool_calls | tojson(indent=2) }}</pre>
+            {% endif %}
 
             <h4>Graders:</h4>
             <ul>

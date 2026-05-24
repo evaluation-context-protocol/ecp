@@ -81,6 +81,26 @@ class EvaluateStepSmokeTests(unittest.TestCase):
         self.assertEqual(len(checks), 1)
         self.assertTrue(checks[0]["passed"])
 
+    def test_step_can_grade_evaluation_context(self) -> None:
+        grader = GraderConfig(
+            type="text_match",
+            field="evaluation_context",
+            condition="contains",
+            value="policy checked",
+        )
+        step = StepConfig(input="refund", graders=[grader])
+        result_obj = SimpleNamespace(
+            public_output="ok",
+            evaluation_context="policy checked before response",
+            private_thought=None,
+            tool_calls=[],
+        )
+
+        from ecp_runtime.graders import evaluate_step
+
+        checks = evaluate_step(step, result_obj)
+        self.assertTrue(checks[0]["passed"])
+
 
 if __name__ == "__main__":
     unittest.main()

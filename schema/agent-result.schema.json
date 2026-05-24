@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/agent-result.schema.json",
+  "title": "ECP Agent Step Result",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["done", "paused"]
+    },
+    "public_output": {
+      "type": ["string", "null"]
+    },
+    "evaluation_context": {
+      "type": ["string", "null"],
+      "description": "Evaluator-visible audit context. Prefer this over private_thought for new agents."
+    },
+    "private_thought": {
+      "type": ["string", "null"],
+      "deprecated": true,
+      "description": "Deprecated compatibility alias for evaluation_context."
+    },
+    "tool_calls": {
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "./tool-call.schema.json"
+      }
+    }
+  },
+  "required": ["status"]
+}

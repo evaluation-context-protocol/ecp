@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ecp-sdk"
-version = "0.3.0"
-description = "The official Python SDK for the Evaluation Context Protocol (ECP)."
+version = "0.3.1"
+description = "Python SDK for portable AI agent evaluations with outputs, tool calls, and audit context."
 authors = [
-  { name = "ECP Maintainers", email = "hello@ecp.org" },
+  { name = "ECP Maintainers", email = "aniket.wattamwar17@gmail.com" },
 ]
 readme = "README.md"
 requires-python = ">=3.9"
@@ -28,3 +28,4 @@ pydanticai = ["pydantic-ai"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ecp"]
+

@@ -1,45 +1,61 @@
 # Evaluation Context Protocol (ECP)
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [README](https://github.com/evaluation-context-protocol/ecp/blob/main/README.md)
+[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Quickstart](quickstart.md) | [Specification](spec.md)
 
-ECP is a lightweight protocol and reference runtime for evaluating agents with public output, private reasoning, and tool usage.
+**Portable evaluations for AI agents.**
 
-It gives you a standard way to run deterministic evaluations without changing your production agent code.
+ECP is a vendor-neutral protocol for testing agent outputs, tool calls, and evaluator-visible audit context across frameworks, models, eval platforms, and CI systems.
 
-## Why ECP exists
+Think of it as the evaluation contract layer: MCP gives agents a common way to use tools; ECP gives evaluators a common way to inspect what an agent returned, what tools it used, and what audit evidence it exposed.
 
-Most agent evaluations only check the final answer. That is not enough for safety or reliability.
+## Why ECP Exists
 
-Common gaps:
+Agent evaluations are still too tied to individual frameworks, tracing tools, and hosted platforms. Those tools are useful, but the evaluation contract itself should be portable.
 
-- Did the agent use the right tool or hallucinate data?
-- Did it follow policy internally before responding?
-- Did it reason correctly even if the final answer looks right?
+ECP separates the protocol from the platform:
 
-ECP solves this by separating **public output** (what users see) from **private reasoning** and **tool calls** (what evaluators need to verify). The runtime can then grade each aspect explicitly.
+- run evals locally or in CI
+- wrap agents built with plain Python, LangChain, LlamaIndex, CrewAI, or PydanticAI
+- grade final outputs, tool calls, and `evaluation_context`
+- emit JSON and HTML reports that other systems can ingest
+- implement the same JSON-RPC contract in another language or runtime
 
-## What you get
+## What ECP Checks
 
-- A simple JSON-RPC protocol over stdio
-- A reference runtime to execute manifests and graders
-- Optional HTML report output for sharing results
-- A Python SDK to wrap agents quickly
-- Minimal examples for LangChain, LlamaIndex, CrewAI, and PydanticAI
+Most evals start with the final answer. ECP also checks the behavior behind that answer.
 
-## Framework Adaptors
+| Evaluation Need | ECP Surface |
+| --- | --- |
+| Did the user-visible answer satisfy the task? | `public_output` |
+| Did the agent call the required tool with the right arguments? | `tool_calls` |
+| Did the agent expose evaluator-safe audit evidence? | `evaluation_context` |
+| Can this run in CI and fail a build? | `ecp run --manifest ...` |
 
-- LangChain: `ecp.adaptors.langchain.ECPLangChainAdapter`
-- LlamaIndex: `ecp.adaptors.llama_index.ECPLlamaIndexAdapter`
-- CrewAI: `ecp.adaptors.crewai.ECPCrewAIAdapter`
-- PydanticAI: `ecp.adaptors.pydantic_ai.ECPPydanticAIAdapter`
+`private_thought` is still accepted as a compatibility alias, but new agents should use `evaluation_context`. ECP is not asking providers to expose raw chain-of-thought; it is asking agents to expose evaluator-safe evidence.
 
-See **Examples** for full agent + manifest snippets.
+## Developer Path
 
-## What is in this repo
+```bash
+pip install "ecp-runtime==0.3.1" "ecp-sdk==0.3.1"
+ecp init
+ecp validate ecp_eval/manifest.yaml
+ecp run --manifest ecp_eval/manifest.yaml --json
+```
 
-- Python SDK: `sdk/python/src/ecp`
-- Runtime CLI: `runtime/python/src/ecp_runtime`
-- Examples: `examples/langchain_demo`, `examples/llamaindex_demo`, `examples/crewai_demo`, `examples/pydantic_ai_demo`
-- Protocol spec: `spec/protocol.md`
+For a realistic example that shows why output-only evals are not enough:
 
-Go to **Quickstart** to run the demos, **Examples** for full manifests, or **Specification** to implement the protocol in another language.
+```bash
+ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
+```
+
+## What Is In This Repo
+
+- `sdk/python/src/ecp` - Python SDK for implementing ECP agents
+- `runtime/python/src/ecp_runtime` - reference runtime and `ecp` CLI
+- `examples/customer_support_demo` - flagship policy/tool-use demo
+- `examples/*_demo` - framework integrations
+- `schema/` - JSON Schema contracts for manifests, agent results, tool calls, and reports
+- `spec/` and `docs/spec.md` - protocol specification
+
+Go to **Quickstart** to run your first eval, **Examples** for integration patterns, or **Specification** to implement ECP in another runtime.
+

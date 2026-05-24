@@ -2,85 +2,73 @@
 
 [View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
 
-## 1. Create a venv and install the current stable release
+## 1. Install
 
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install "ecp-runtime==0.2.9" "ecp-sdk[langchain]==0.2.9" langchain-openai
+pip install "ecp-runtime==0.3.1" "ecp-sdk==0.3.1"
 ```
 
-## 2. Run the LangChain demo
+For framework demos, install the matching SDK extra:
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml
+pip install "ecp-sdk[langchain]==0.3.1" langchain-openai
+pip install "ecp-sdk[crewai]==0.3.1" crewai
+pip install "ecp-sdk[pydanticai]==0.3.1" pydantic-ai
+pip install "ecp-sdk[llamaindex]==0.3.1" llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
 ```
 
-## 3. Generate an HTML report
+## 2. Create A Starter Eval
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --report .\report.html
+ecp init
+ecp validate ecp_eval/manifest.yaml
+ecp run --manifest ecp_eval/manifest.yaml --json
 ```
 
-## 4. JSON output (for CI)
+## 3. Run The Flagship Demo
 
-Print a JSON report to stdout:
+The customer support demo checks final output, required tool calls, and evaluator-safe audit context.
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json
+ecp validate examples/customer_support_demo/manifest.yaml
+ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
 ```
 
-Save a JSON report to a file:
+## 4. Run A Framework Demo
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\langchain_demo\manifest.yaml --json-out .\report.json
+ecp run --manifest examples/langchain_demo/manifest.yaml
 ```
 
-## 5. Run the CrewAI demo
+Other manifests live in:
 
-Install CrewAI support:
+- `examples/plain_python_demo/manifest.yaml`
+- `examples/two_agent_demo/manifest.yaml`
+- `examples/crewai_demo/manifest.yaml`
+- `examples/pydantic_ai_demo/manifest.yaml`
+- `examples/llamaindex_demo/manifest.yaml`
+
+## 5. JSON Output For CI
+
+Print a JSON report:
 
 ```bash
-pip install "ecp-sdk[crewai]==0.2.9" crewai
+ecp run --manifest examples/customer_support_demo/manifest.yaml --json
 ```
 
-Run CrewAI manifest:
+Save a JSON report:
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\crewai_demo\manifest.yaml
+ecp run --manifest examples/customer_support_demo/manifest.yaml --json-out report.json
 ```
 
-## 6. Run the PydanticAI demo
+By default, `ecp run` exits non-zero when checks fail. Use `--no-fail-on-error` when you want a report without failing the process.
 
-Install PydanticAI support:
+## 6. Optional LLM Judge
 
-```bash
-pip install "ecp-sdk[pydanticai]==0.2.9" pydantic-ai
-```
-
-Run PydanticAI manifest:
-
-```bash
-python -m ecp_runtime.cli run --manifest .\examples\pydantic_ai_demo\manifest.yaml
-```
-
-## 7. Run the LlamaIndex demo
-
-Install LlamaIndex support:
-
-```bash
-pip install "ecp-sdk[llamaindex]" llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
-```
-
-Run LlamaIndex manifest:
-
-```bash
-python -m ecp_runtime.cli run --manifest .\examples\llamaindex_demo\manifest.yaml
-```
-
-## 8. Optional: enable LLM judge
-
-If your manifest uses `llm_judge`, set the API key:
+If your manifest uses `llm_judge`, set:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"
@@ -88,23 +76,21 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 $env:ECP_LLM_JUDGE_TEMPERATURE="0"
 ```
 
-## 9. Optional: validate Streamable HTTP
+## 7. Streamable HTTP
 
-Start the HTTP agent in one terminal:
+Start the HTTP agent:
 
 ```bash
 python examples/streamable_http_demo/agent.py
 ```
 
-Run the HTTP-target manifest in another terminal:
+Run the HTTP-target manifest:
 
 ```bash
-python -m ecp_runtime.cli run --manifest .\examples\streamable_http_demo\manifest.yaml --json
+ecp run --manifest examples/streamable_http_demo/manifest.yaml --json
 ```
 
-## 10. Optional: launch ECP Inspector
-
-Start the local inspector UI:
+## 8. Inspector
 
 ```bash
 npm run inspector
@@ -112,9 +98,17 @@ npm run inspector
 
 Open `http://127.0.0.1:6274`.
 
+## 9. Conformance Smoke Test
+
+For protocol implementers:
+
+```bash
+ecp conformance --target "python examples/customer_support_demo/agent.py"
+```
+
 ## Notes
 
-- The latest stable packages on PyPI are now `0.2.9`. This docs site matches that release line.
-- The runtime launches your agent via a command target or connects to an HTTP target in the manifest.
-- The agent responds over JSON-RPC 2.0 on stdio or Streamable HTTP.
-- Use `ECP_RPC_TIMEOUT` to control step timeouts (default 30s).
+- The current release line is `0.3.1`.
+- New agents should use `evaluation_context`; `private_thought` remains a deprecated compatibility alias.
+- Use `ECP_RPC_TIMEOUT` to control step timeouts. The default is 30 seconds.
+

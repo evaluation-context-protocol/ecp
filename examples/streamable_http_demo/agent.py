@@ -23,7 +23,7 @@ class StreamableHTTPDemoBot:
             message = text.split(":", 1)[1].strip()
             return Result(
                 public_output=f"Echo over HTTP: {message}",
-                private_thought="Handled the request through the Streamable HTTP transport.",
+                evaluation_context="Handled the request through the Streamable HTTP transport.",
                 tool_calls=[
                     {
                         "name": "http_echo",
@@ -34,7 +34,7 @@ class StreamableHTTPDemoBot:
 
         return Result(
             public_output="Unsupported request. Use 'echo: <message>'.",
-            private_thought="Returned a guided fallback for an unsupported command.",
+            evaluation_context="Returned a guided fallback for an unsupported command.",
         )
 
     @on_reset

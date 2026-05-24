@@ -2,6 +2,44 @@
 
 [View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
 
+## Customer Support Policy Example
+
+Agent file: `examples/customer_support_demo/agent.py`
+
+This is the flagship example. It shows why ECP is more than an output checker: the manifest verifies the final answer, the required order lookup, the refund policy check, and the evaluator-safe `evaluation_context`.
+
+Run it:
+
+```bash
+ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
+```
+
+### Customer Support Manifest
+
+```yaml
+manifest_version: "v1"
+name: "Customer Support Refund Policy"
+target: "python examples/customer_support_demo/agent.py"
+
+scenarios:
+  - name: "Eligible refund uses order lookup and policy check"
+    steps:
+      - input: "I want a refund for order A100."
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "eligible for a refund"
+          - type: text_match
+            field: evaluation_context
+            condition: contains
+            value: "refund_eligible=True"
+          - type: tool_usage
+            tool_name: "lookup_order"
+            arguments:
+              order_id: "A100"
+```
+
 ## Plain Python App Example
 
 Agent file: `examples/plain_python_demo/agent.py`
@@ -78,7 +116,7 @@ python examples/streamable_http_demo/agent.py
 Then run the manifest from another terminal:
 
 ```bash
-python -m ecp_runtime.cli run --manifest examples/streamable_http_demo/manifest.yaml --json
+ecp run --manifest examples/streamable_http_demo/manifest.yaml --json
 ```
 
 ### Streamable HTTP Manifest

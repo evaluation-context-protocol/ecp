@@ -17,7 +17,7 @@ from ecp import Result, agent, on_step
 class HTTPTestAgent:
     @on_step
     def step(self, user_input: str) -> Result:
-        return Result(public_output=f"echo: {user_input}")
+        return Result(public_output=f"echo: {user_input}", evaluation_context="echoed input")
 
 
 class StreamableHTTPServerTests(unittest.TestCase):
@@ -66,6 +66,12 @@ class StreamableHTTPServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("application/json", headers.get("Content-Type", ""))
         self.assertEqual(body["result"]["public_output"], "echo: hello")
+        self.assertEqual(body["result"]["evaluation_context"], "echoed input")
+
+    def test_result_syncs_private_thought_alias(self) -> None:
+        result = Result(public_output="ok", private_thought="legacy")
+
+        self.assertEqual(result.evaluation_context, "legacy")
 
     def test_post_json_rpc_notification_returns_accepted(self) -> None:
         status, body, _headers = self._post(

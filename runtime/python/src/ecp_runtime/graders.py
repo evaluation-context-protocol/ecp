@@ -112,8 +112,10 @@ def evaluate_step(step_config: StepConfig, result_obj: Any) -> List[Dict[str, An
         target_text = ""
         if grader.field == "public_output":
             target_text = result_obj.public_output
+        elif grader.field == "evaluation_context":
+            target_text = getattr(result_obj, "evaluation_context", None)
         elif grader.field == "private_thought":
-            target_text = result_obj.private_thought
+            target_text = getattr(result_obj, "private_thought", None) or getattr(result_obj, "evaluation_context", None)
             
         passed = False
         reasoning = ""
@@ -132,7 +134,7 @@ def evaluate_step(step_config: StepConfig, result_obj: Any) -> List[Dict[str, An
         
         check_results.append({
             "type": grader.type,
-            "field": grader.field,
+            "field": "tool_calls" if grader.type == "tool_usage" else grader.field,
             "passed": passed,
             "score": score,
             "reasoning": reasoning

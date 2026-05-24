@@ -43,7 +43,7 @@ class ECPLlamaIndexAdapter:
         return Result(
             status="done",
             public_output=final_text,
-            private_thought="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
+            evaluation_context="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
             tool_calls=self.captured_tool_calls or None,
         )
 
@@ -99,7 +99,7 @@ class ECPLlamaIndexAdapter:
         if not metadata:
             return
 
-        thought_keys = ["private_thought", "thought", "reasoning", "trace", "analysis"]
+        thought_keys = ["evaluation_context", "private_thought", "thought", "reasoning", "trace", "analysis"]
         for key in thought_keys:
             value = metadata.get(key)
             if isinstance(value, str) and value.strip():

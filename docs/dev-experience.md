@@ -22,7 +22,7 @@ What it proves:
 Run it:
 
 ```bash
-python -m ecp_runtime.cli run --manifest examples/plain_python_demo/manifest.yaml --json
+ecp run --manifest examples/plain_python_demo/manifest.yaml --json
 ```
 
 ### 2. Two-agent workflow app
@@ -41,7 +41,7 @@ What it proves:
 Run it:
 
 ```bash
-python -m ecp_runtime.cli run --manifest examples/two_agent_demo/manifest.yaml --json
+ecp run --manifest examples/two_agent_demo/manifest.yaml --json
 ```
 
 ### 3. Streamable HTTP transport app
@@ -66,7 +66,7 @@ python examples/streamable_http_demo/agent.py
 Run the evaluation in terminal 2:
 
 ```bash
-python -m ecp_runtime.cli run --manifest examples/streamable_http_demo/manifest.yaml --json
+ecp run --manifest examples/streamable_http_demo/manifest.yaml --json
 ```
 
 Optional direct transport smoke test:
