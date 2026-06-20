@@ -49,3 +49,11 @@ ecp validate evals/support.yaml
 ecp conformance --target "python agent.py"
 ```
 
+For CI systems, emit a stable machine-readable report:
+
+```bash
+ecp conformance --target "python agent.py" --json-out conformance.json
+```
+
+The command exits with code `1` when any initialize, step-result, or reset
+contract check fails. Use `--json` to print only the JSON report to stdout.

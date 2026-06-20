@@ -194,7 +194,8 @@ def _handle_step(params):
         "public_output": result.public_output,
         "evaluation_context": result.evaluation_context,
         "private_thought": result.private_thought,
-        "tool_calls": result.tool_calls
+        "tool_calls": result.tool_calls,
+        "logs": result.logs,
     }
 
 def _handle_reset():

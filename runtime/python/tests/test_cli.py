@@ -95,6 +95,41 @@ class CLISmokeTests(unittest.TestCase):
             self.assertTrue(manifest.exists())
             self.assertIn("evaluation_context", manifest.read_text(encoding="utf-8"))
 
+    def test_conformance_json_report(self) -> None:
+        fake_agent = mock.Mock()
+        fake_agent.send_rpc.side_effect = [
+            {"jsonrpc": "2.0", "id": 1, "result": {"name": "test", "capabilities": {}}},
+            {"jsonrpc": "2.0", "id": 2, "result": {"status": "done", "public_output": "ok"}},
+            {"jsonrpc": "2.0", "id": 3, "result": True},
+        ]
+        fake_runtime = mock.Mock()
+        fake_runtime._create_agent.return_value = fake_agent
+
+        with mock.patch("ecp_runtime.cli.ECPRunner", return_value=fake_runtime):
+            result = self.runner.invoke(app, ["conformance", "--target", "python agent.py", "--json"])
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["conformant"])
+        self.assertEqual(payload["total"], 3)
+        fake_agent.stop.assert_called_once()
+
+    def test_conformance_rejects_invalid_step_result(self) -> None:
+        fake_agent = mock.Mock()
+        fake_agent.send_rpc.side_effect = [
+            {"jsonrpc": "2.0", "id": 1, "result": {}},
+            {"jsonrpc": "2.0", "id": 2, "result": {"status": "invalid"}},
+            {"jsonrpc": "2.0", "id": 3, "result": True},
+        ]
+        fake_runtime = mock.Mock()
+        fake_runtime._create_agent.return_value = fake_agent
+
+        with mock.patch("ecp_runtime.cli.ECPRunner", return_value=fake_runtime):
+            result = self.runner.invoke(app, ["conformance", "--target", "python agent.py"])
+
+        self.assertEqual(result.exit_code, 1, msg=result.output)
+        self.assertIn("FAIL | step result contract", result.output)
+
 
 if __name__ == "__main__":
     unittest.main()

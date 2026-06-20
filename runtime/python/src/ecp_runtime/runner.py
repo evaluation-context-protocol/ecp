@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 from urllib import error, request
 from urllib.parse import urlparse
 
+from .conformance import validate_rpc_response, validate_step_result
 from .graders import evaluate_step
 
 logger = logging.getLogger(__name__)
@@ -67,11 +68,12 @@ class AgentProcess:
         if not params:
             params = {}
 
+        request_id = int(time.time() * 1000)
         request = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
-            "id": int(time.time() * 1000)
+            "id": request_id
         }
 
         # Write to Agent's STDIN
@@ -79,7 +81,9 @@ class AgentProcess:
         self.process.stdin.write(json_str + "\n")
         self.process.stdin.flush()
 
-        return self._read_json_response()
+        response = self._read_json_response()
+        _ensure_response_id(response, request_id)
+        return response
 
     def _read_json_response(self) -> Dict[str, Any]:
         start_time = time.time()
@@ -168,11 +172,12 @@ class HTTPAgentClient:
         if not params:
             params = {}
 
+        request_id = int(time.time() * 1000)
         payload = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
-            "id": int(time.time() * 1000),
+            "id": request_id,
         }
         body = json.dumps(payload).encode("utf-8")
         req = request.Request(
@@ -198,12 +203,15 @@ class HTTPAgentClient:
             raise RuntimeError(f"HTTP RPC failed: {exc.reason}") from exc
 
         if "text/event-stream" in content_type:
-            return self._parse_sse_response(raw)
+            response = self._parse_sse_response(raw)
+            _ensure_response_id(response, request_id)
+            return response
         if not raw:
             raise RuntimeError("HTTP RPC response was empty")
         payload = json.loads(raw)
         if not isinstance(payload, dict):
             raise RuntimeError("HTTP RPC response must be a JSON object")
+        _ensure_response_id(payload, request_id)
         return payload
 
     def _parse_sse_response(self, raw: str) -> Dict[str, Any]:
@@ -247,7 +255,7 @@ class ECPRunner:
                     # Execute
                     rpc_resp = agent.send_rpc("agent/step", {"input": step.input})
                     self._ensure_rpc_success(rpc_resp, scenario.name, step_idx=i + 1, method="agent/step")
-                    result_data = rpc_resp.get("result", {})
+                    result_data = validate_step_result(rpc_resp["result"])
 
                     # Map to internal object
                     step_result = StepResult(
@@ -255,6 +263,7 @@ class ECPRunner:
                         public_output=result_data.get("public_output"),
                         evaluation_context=result_data.get("evaluation_context") or result_data.get("private_thought"),
                         private_thought=result_data.get("private_thought") or result_data.get("evaluation_context"),
+                        logs=result_data.get("logs"),
                         tool_calls=result_data.get("tool_calls") if isinstance(result_data.get("tool_calls"), list) else None
                     )
 
@@ -282,6 +291,7 @@ class ECPRunner:
                         "output": step_result.public_output,
                         "evaluation_context": step_result.evaluation_context,
                         "tool_calls": step_result.tool_calls or [],
+                        "logs": step_result.logs,
                         "checks": checks
                     })
 
@@ -312,20 +322,22 @@ class ECPRunner:
         step_idx: Optional[int],
         method: str,
     ) -> None:
-        if "error" not in rpc_resp:
-            return
-
-        error = rpc_resp.get("error") or {}
-        code = error.get("code")
-        message = error.get("message", "Unknown JSON-RPC error")
         where = f"scenario='{scenario_name}'"
         if step_idx is not None:
             where += f", step={step_idx}"
-        raise RuntimeError(
-            f"RPC call failed ({method}) at {where}: code={code}, message={message}"
-        )
+        try:
+            validate_rpc_response(rpc_resp, method)
+        except ValueError as exc:
+            raise RuntimeError(f"RPC call failed ({method}) at {where}: {exc}") from exc
 
 
 def _is_http_url(target: str) -> bool:
     parsed = urlparse(target)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _ensure_response_id(response: Dict[str, Any], request_id: int) -> None:
+    if response.get("id") != request_id:
+        raise RuntimeError(
+            f"JSON-RPC response id mismatch: expected {request_id}, got {response.get('id')}"
+        )

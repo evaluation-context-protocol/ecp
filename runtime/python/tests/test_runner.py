@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -102,6 +103,10 @@ class RunnerTests(unittest.TestCase):
             captured["timeout"] = timeout
             captured["body"] = req.data
             captured["accept"] = req.headers.get("Accept")
+            request_id = json.loads(req.data.decode("utf-8"))["id"]
+            FakeResponse.read = lambda self: json.dumps(
+                {"jsonrpc": "2.0", "id": request_id, "result": {"ok": True}}
+            ).encode("utf-8")
             return FakeResponse()
 
         with mock.patch("ecp_runtime.runner.request.urlopen", fake_urlopen):

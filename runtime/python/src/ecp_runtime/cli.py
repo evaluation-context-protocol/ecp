@@ -5,11 +5,19 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import typer
 from pydantic import ValidationError
 
+from .conformance import (
+    build_conformance_report,
+    conformance_check,
+    validate_initialize_result,
+    validate_reset_result,
+    validate_rpc_response,
+    validate_step_result,
+)
 from .reporter import HTMLReporter
 from .trend import RunTrendAnalyzer
 
@@ -235,32 +243,87 @@ def conformance(
         "--input",
         help="Input text for the conformance step call",
     ),
+    json_out: Optional[Path] = typer.Option(
+        None,
+        "--json-out",
+        help="Path to save the machine-readable conformance report",
+        resolve_path=True,
+    ),
+    print_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print only the machine-readable conformance report",
+    ),
 ):
     """
-    Run a small protocol conformance smoke test against an ECP agent.
+    Validate the core ECP protocol contract against an agent.
     """
     runner = ECPRunner(type("Manifest", (), {"target": target, "scenarios": []})())
     agent = runner._create_agent(target, rpc_timeout=float(os.environ.get("ECP_RPC_TIMEOUT", "30")))
-    agent.start()
+    checks: List[Dict[str, Any]] = []
+    started = False
     try:
-        init_resp = agent.send_rpc("agent/initialize", {"config": {}})
-        _assert_rpc_result(init_resp, "agent/initialize")
-        step_resp = agent.send_rpc("agent/step", {"input": step_input})
-        _assert_rpc_result(step_resp, "agent/step")
-        result = step_resp.get("result", {})
-        if not isinstance(result, dict):
-            raise ValueError("agent/step result must be an object")
-        if "public_output" not in result and "evaluation_context" not in result and "tool_calls" not in result:
-            raise ValueError("agent/step result should expose public_output, evaluation_context, or tool_calls")
-        reset_resp = agent.send_rpc("agent/reset", {})
-        _assert_rpc_result(reset_resp, "agent/reset")
+        agent.start()
+        started = True
+        initialize = _run_conformance_call(
+            agent,
+            "initialize response",
+            "agent/initialize",
+            {"config": {}},
+            result_validator=validate_initialize_result,
+        )
+        checks.append(initialize)
+        if initialize["passed"]:
+            checks.append(
+                _run_conformance_call(
+                    agent,
+                    "step result contract",
+                    "agent/step",
+                    {"input": step_input},
+                    result_validator=validate_step_result,
+                )
+            )
+        else:
+            checks.append(_skipped_conformance_check("step result contract", "agent/step"))
     except Exception as exc:
-        typer.echo(f"Conformance failed: {exc}", err=True)
-        raise typer.Exit(code=1)
+        checks.append(
+            {
+                "name": "initialize response",
+                "method": "agent/initialize",
+                "passed": False,
+                "message": f"agent could not start: {exc}",
+            }
+        )
+        checks.append(_skipped_conformance_check("step result contract", "agent/step"))
     finally:
-        agent.stop()
+        if started:
+            checks.append(
+                _run_conformance_call(
+                    agent,
+                    "reset response",
+                    "agent/reset",
+                    {},
+                    result_validator=validate_reset_result,
+                )
+            )
+            agent.stop()
+        else:
+            checks.append(_skipped_conformance_check("reset response", "agent/reset"))
 
-    typer.echo("Conformance smoke test passed")
+    report = build_conformance_report(target, checks)
+    rendered = json.dumps(report, indent=2)
+    if json_out:
+        json_out.write_text(rendered + "\n", encoding="utf-8")
+    if print_json:
+        typer.echo(rendered)
+    else:
+        for check in checks:
+            marker = "PASS" if check["passed"] else "FAIL"
+            typer.echo(f"{marker} | {check['name']} | {check['message']}")
+        typer.echo(f"Conformance: {report['passed']}/{report['total']} checks passed")
+
+    if not report["conformant"]:
+        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -325,14 +388,31 @@ def trend(
 
 
 def _assert_rpc_result(response: Dict[str, Any], method: str) -> None:
-    if not isinstance(response, dict):
-        raise ValueError(f"{method} response must be a JSON-RPC object")
-    if response.get("jsonrpc") != "2.0":
-        raise ValueError(f"{method} response must include jsonrpc='2.0'")
-    if "error" in response:
-        raise ValueError(f"{method} returned error: {response['error']}")
-    if "result" not in response:
-        raise ValueError(f"{method} response must include result")
+    validate_rpc_response(response, method)
+
+
+def _run_conformance_call(
+    agent: Any,
+    name: str,
+    method: str,
+    params: Dict[str, Any],
+    *,
+    result_validator: Optional[Callable[[Any], Any]] = None,
+) -> Dict[str, Any]:
+    try:
+        response = agent.send_rpc(method, params)
+    except Exception as exc:
+        return {"name": name, "method": method, "passed": False, "message": str(exc)}
+    return conformance_check(name, method, response, result_validator=result_validator)
+
+
+def _skipped_conformance_check(name: str, method: str) -> Dict[str, Any]:
+    return {
+        "name": name,
+        "method": method,
+        "passed": False,
+        "message": "skipped because a prerequisite failed",
+    }
 
 
 def _starter_agent() -> str:

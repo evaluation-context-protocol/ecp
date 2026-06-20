@@ -1,11 +1,17 @@
 from typing import Any, Dict, List, Literal, Optional
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class StrictModel(BaseModel):
+    """Base class that keeps runtime validation aligned with the JSON schema."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 # --- The Grader (Assertion) Schema ---
-class GraderConfig(BaseModel):
+class GraderConfig(StrictModel):
     type: Literal["text_match", "llm_judge", "tool_usage"]
     field: Literal["public_output", "evaluation_context", "private_thought"] = "public_output"
     # For text_match
@@ -41,20 +47,20 @@ class GraderConfig(BaseModel):
         return self
 
 # --- The Step (Scenario) Schema ---
-class StepConfig(BaseModel):
+class StepConfig(StrictModel):
     input: str
     constraints: Dict[str, Any] = Field(default_factory=dict)
     graders: List[GraderConfig] = Field(default_factory=list)
 
-class ScenarioConfig(BaseModel):
-    name: str
+class ScenarioConfig(StrictModel):
+    name: str = Field(min_length=1)
     steps: List[StepConfig]
 
 # --- The Root Manifest Schema ---
-class ECPManifest(BaseModel):
-    manifest_version: Literal["v1"] = "v1"
-    name: str
-    target: str
+class ECPManifest(StrictModel):
+    manifest_version: Literal["v1"]
+    name: str = Field(min_length=1)
+    target: str = Field(min_length=1)
     scenarios: List[ScenarioConfig]
 
     @classmethod

@@ -3,6 +3,7 @@ import sys
 import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 from urllib import error, request
 
 SDK_SRC = Path(__file__).resolve().parents[1] / "src"
@@ -72,6 +73,25 @@ class StreamableHTTPServerTests(unittest.TestCase):
         result = Result(public_output="ok", private_thought="legacy")
 
         self.assertEqual(result.evaluation_context, "legacy")
+
+    def test_result_rejects_invalid_status(self) -> None:
+        with self.assertRaisesRegex(ValueError, "status"):
+            Result(status="complete", public_output="ok")
+
+    def test_result_rejects_invalid_tool_call(self) -> None:
+        with self.assertRaisesRegex(ValueError, "name"):
+            Result(tool_calls=[{"arguments": {}}])
+
+    def test_server_serializes_logs(self) -> None:
+        result = Result(public_output="ok", logs="trace")
+
+        with mock.patch.object(HTTPTestAgent, "step", return_value=result):
+            status, body, _headers = self._post(
+                {"jsonrpc": "2.0", "id": 1, "method": "agent/step", "params": {"input": "hello"}}
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["result"]["logs"], "trace")
 
     def test_post_json_rpc_notification_returns_accepted(self) -> None:
         status, body, _headers = self._post(
