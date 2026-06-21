@@ -2,11 +2,11 @@
 Docstring for runtime.python.src.ecp_runtime.runner
 
 Simplified Version. V0.1
-AsyncIO Pending
 """
 
 import json
 import logging
+import math
 import os
 import queue
 import subprocess
@@ -235,8 +235,9 @@ class HTTPAgentClient:
 class ECPRunner:
     """The Orchestrator."""
 
-    def __init__(self, manifest):
+    def __init__(self, manifest, rpc_timeout: Optional[float] = None):
         self.manifest = manifest
+        self.rpc_timeout = resolve_rpc_timeout(rpc_timeout)
 
     def run_scenarios(self):
         total_passed = 0
@@ -246,13 +247,17 @@ class ECPRunner:
         for scenario in self.manifest.scenarios:
             logger.info("Scenario: %s", scenario.name)
 
-            rpc_timeout = float(os.environ.get("ECP_RPC_TIMEOUT", "30"))
-            agent = self._create_agent(self.manifest.target, rpc_timeout=rpc_timeout)
+            agent = self._create_agent(self.manifest.target, rpc_timeout=self.rpc_timeout)
             agent.start()
 
             try:
-                init_resp = agent.send_rpc("agent/initialize", {"config": {}})
-                self._ensure_rpc_success(init_resp, scenario.name, step_idx=None, method="agent/initialize")
+                init_resp = self._call_rpc(
+                    agent,
+                    "agent/initialize",
+                    {"config": {}},
+                    scenario.name,
+                    step_idx=None,
+                )
                 try:
                     validate_initialize_result(init_resp["result"])
                 except ValueError as exc:
@@ -263,8 +268,13 @@ class ECPRunner:
 
                 for i, step in enumerate(scenario.steps):
                     # Execute
-                    rpc_resp = agent.send_rpc("agent/step", {"input": step.input})
-                    self._ensure_rpc_success(rpc_resp, scenario.name, step_idx=i + 1, method="agent/step")
+                    rpc_resp = self._call_rpc(
+                        agent,
+                        "agent/step",
+                        {"input": step.input},
+                        scenario.name,
+                        step_idx=i + 1,
+                    )
                     result_data = validate_step_result(rpc_resp["result"])
 
                     # Map to internal object
@@ -339,6 +349,38 @@ class ECPRunner:
             validate_rpc_response(rpc_resp, method)
         except ValueError as exc:
             raise RuntimeError(f"RPC call failed ({method}) at {where}: {exc}") from exc
+
+    def _call_rpc(
+        self,
+        agent: Any,
+        method: str,
+        params: Dict[str, Any],
+        scenario_name: str,
+        step_idx: Optional[int],
+    ) -> Dict[str, Any]:
+        where = f"scenario='{scenario_name}'"
+        if step_idx is not None:
+            where += f", step={step_idx}"
+        try:
+            response = agent.send_rpc(method, params)
+        except Exception as exc:
+            raise RuntimeError(f"RPC call failed ({method}) at {where}: {exc}") from exc
+        self._ensure_rpc_success(response, scenario_name, step_idx, method)
+        return response
+
+
+def resolve_rpc_timeout(value: Optional[float] = None) -> float:
+    """Resolve and validate an explicit timeout or the ECP_RPC_TIMEOUT fallback."""
+    raw_value: Any = value if value is not None else os.environ.get("ECP_RPC_TIMEOUT", "30")
+    try:
+        timeout = float(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"RPC timeout must be a positive number; received {raw_value!r}"
+        ) from exc
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError(f"RPC timeout must be a positive finite number; received {raw_value!r}")
+    return timeout
 
 
 def _is_http_url(target: str) -> bool:
