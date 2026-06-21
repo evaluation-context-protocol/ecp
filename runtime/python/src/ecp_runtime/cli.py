@@ -6,10 +6,8 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 import typer
 from pydantic import ValidationError
-
 from .manifest import ECPManifest
 from .reporter import HTMLReporter
 from .runner import ECPRunner
