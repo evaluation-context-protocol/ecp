@@ -10,7 +10,12 @@ if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
 from ecp_runtime.manifest import StepConfig
-from ecp_runtime.runner import ECPRunner, HTTPAgentClient, _ensure_response_id, resolve_rpc_timeout
+from ecp_runtime.runner import (
+    ECPRunner,
+    HTTPAgentClient,
+    _ensure_response_id,
+    resolve_rpc_timeout,
+)
 
 
 class RunnerTests(unittest.TestCase):
