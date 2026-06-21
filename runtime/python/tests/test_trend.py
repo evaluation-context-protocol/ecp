@@ -65,6 +65,9 @@ class RunTrendAnalyzerTests(unittest.TestCase):
         self.assertEqual(report.direction, "stable")
         self.assertEqual(report.pass_rate_slope, 0.0)
 
+    def test_slope_matches_expected_least_squares_result(self) -> None:
+        self.assertAlmostEqual(RunTrendAnalyzer._compute_slope([0.1, 0.5, 0.9]), 0.4)
+
 
 class RunTrendAnalyzerFileTests(unittest.TestCase):
     def test_load_run_point_from_file(self) -> None:
