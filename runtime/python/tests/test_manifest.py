@@ -29,6 +29,9 @@ class ManifestValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             GraderConfig(type="llm_judge")
 
+        with self.assertRaises(ValidationError):
+            GraderConfig(type="llm_judge", prompt="   ")
+
     def test_invalid_grader_type_rejected(self) -> None:
         with self.assertRaises(ValidationError):
             GraderConfig(type="unknown")  # type: ignore[arg-type]

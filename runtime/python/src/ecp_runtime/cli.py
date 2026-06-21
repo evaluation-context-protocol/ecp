@@ -15,7 +15,6 @@ from .conformance import (
     conformance_check,
     validate_initialize_result,
     validate_reset_result,
-    validate_rpc_response,
     validate_step_result,
 )
 from .reporter import HTMLReporter
@@ -385,10 +384,6 @@ def trend(
     if report.any_regression and exit_on_regression:
         typer.echo("Regression detected. Exiting with code 2 (--exit-on-regression).", err=True)
         raise typer.Exit(code=2)
-
-
-def _assert_rpc_result(response: Dict[str, Any], method: str) -> None:
-    validate_rpc_response(response, method)
 
 
 def _run_conformance_call(

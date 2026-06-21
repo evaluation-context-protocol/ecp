@@ -60,7 +60,11 @@
                       },
                       "value": {"type": ["string", "null"]},
                       "pattern": {"type": ["string", "null"], "minLength": 1},
-                      "prompt": {"type": ["string", "null"], "minLength": 1},
+                      "prompt": {
+                        "type": ["string", "null"],
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
                       "assertion": {"type": ["string", "null"]},
                       "tool_name": {"type": ["string", "null"]},
                       "arguments": {
@@ -94,7 +98,9 @@
                         "if": {"properties": {"type": {"const": "llm_judge"}}},
                         "then": {
                           "required": ["prompt"],
-                          "properties": {"prompt": {"type": "string", "minLength": 1}}
+                          "properties": {
+                            "prompt": {"type": "string", "minLength": 1, "pattern": "\\S"}
+                          }
                         }
                       }
                     ]

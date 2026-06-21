@@ -144,6 +144,9 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "id mismatch"):
             _ensure_response_id({"jsonrpc": "2.0", "id": 2, "result": {}}, 1)
 
+        with self.assertRaisesRegex(RuntimeError, "id mismatch"):
+            _ensure_response_id({"jsonrpc": "2.0", "id": True, "result": {}}, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

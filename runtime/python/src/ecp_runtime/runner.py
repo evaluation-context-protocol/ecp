@@ -347,7 +347,8 @@ def _is_http_url(target: str) -> bool:
 
 
 def _ensure_response_id(response: Dict[str, Any], request_id: int) -> None:
-    if response.get("id") != request_id:
+    response_id = response.get("id")
+    if type(response_id) is not type(request_id) or response_id != request_id:
         raise RuntimeError(
-            f"JSON-RPC response id mismatch: expected {request_id}, got {response.get('id')}"
+            f"JSON-RPC response id mismatch: expected {request_id}, got {response_id}"
         )
