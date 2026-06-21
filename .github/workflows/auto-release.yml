@@ -1,0 +1,193 @@
+name: Auto Release on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  bump-and-publish:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We need to fetch all history and tags to ensure we can push back
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Parse PR Title and Determine Bump Type
+        id: parse
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $TITLE"
+          
+          if [[ "$TITLE" == major:* ]]; then
+            echo "bump_type=major" >> $GITHUB_OUTPUT
+          elif [[ "$TITLE" == minor:* ]]; then
+            echo "bump_type=minor" >> $GITHUB_OUTPUT
+          elif [[ "$TITLE" == hotfix:* ]]; then
+            echo "bump_type=patch" >> $GITHUB_OUTPUT
+          else
+            echo "bump_type=none" >> $GITHUB_OUTPUT
+            echo "No valid major/minor/hotfix prefix found. Skipping auto-release."
+          fi
+
+      - name: Bump Versions
+        id: bump
+        if: steps.parse.outputs.bump_type != 'none'
+        shell: python
+        run: |
+          import os
+          import re
+          from pathlib import Path
+          
+          bump_type = "${{ steps.parse.outputs.bump_type }}"
+          
+          # Read current version from runtime pyproject.toml
+          runtime_toml_path = Path("runtime/python/pyproject.toml")
+          content = runtime_toml_path.read_text(encoding="utf-8")
+          match = re.search(r'version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content)
+          
+          if not match:
+              print("Could not find version in pyproject.toml!")
+              exit(1)
+              
+          major, minor, patch = map(int, match.groups())
+          
+          if bump_type == "major":
+              major += 1
+              minor = 0
+              patch = 0
+          elif bump_type == "minor":
+              minor += 1
+              patch = 0
+          elif bump_type == "patch":
+              patch += 1
+              
+          new_version = f"{major}.{minor}.{patch}"
+          print(f"Bumping version to {new_version}")
+          
+          # 1. Update runtime/python/pyproject.toml
+          new_content = re.sub(
+              r'(version\s*=\s*)"\d+\.\d+\.\d+"',
+              f'\\g<1>"{new_version}"',
+              content
+          )
+          runtime_toml_path.write_text(new_content, encoding="utf-8")
+          
+          # 2. Update sdk/python/pyproject.toml
+          sdk_toml_path = Path("sdk/python/pyproject.toml")
+          sdk_content = sdk_toml_path.read_text(encoding="utf-8")
+          new_sdk_content = re.sub(
+              r'(version\s*=\s*)"\d+\.\d+\.\d+"',
+              f'\\g<1>"{new_version}"',
+              sdk_content
+          )
+          sdk_toml_path.write_text(new_sdk_content, encoding="utf-8")
+          
+          # 3. Update runtime/python/src/ecp_runtime/__init__.py
+          init_path = Path("runtime/python/src/ecp_runtime/__init__.py")
+          init_content = init_path.read_text(encoding="utf-8")
+          new_init_content = re.sub(
+              r'(__version__\s*=\s*)"\d+\.\d+\.\d+"',
+              f'\\g<1>"{new_version}"',
+              init_content
+          )
+          init_path.write_text(new_init_content, encoding="utf-8")
+          
+          # 4. Update runtime/python/README.md
+          readme_path = Path("runtime/python/README.md")
+          readme_content = readme_path.read_text(encoding="utf-8")
+          new_readme_content = re.sub(
+              r'(ecp-runtime==)\d+\.\d+\.\d+',
+              f'\\g<1>{new_version}',
+              readme_content
+          )
+          readme_path.write_text(new_readme_content, encoding="utf-8")
+          
+          # Output for next steps
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"new_version={new_version}\n")
+              f.write(f"new_tag=v{new_version}\n")
+
+      - name: Commit and Push Changes
+        if: steps.parse.outputs.bump_type != 'none'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add runtime/python/pyproject.toml sdk/python/pyproject.toml runtime/python/src/ecp_runtime/__init__.py runtime/python/README.md
+          
+          NEW_VERSION="${{ steps.bump.outputs.new_version }}"
+          NEW_TAG="${{ steps.bump.outputs.new_tag }}"
+          
+          git commit -m "chore: bump version to $NEW_TAG"
+          git tag $NEW_TAG
+          git push origin main
+          git push origin $NEW_TAG
+
+      - name: Install test dependencies
+        if: steps.parse.outputs.bump_type != 'none'
+        run: pip install -e runtime/python
+
+      - name: Run runtime tests
+        if: steps.parse.outputs.bump_type != 'none'
+        run: python -m unittest discover -s runtime/python/tests -p "test_*.py"
+
+      - name: Run sdk tests
+        if: steps.parse.outputs.bump_type != 'none'
+        run: python -m unittest discover -s sdk/python/tests -p "test_*.py"
+
+      - name: Run feature-agent spec tests
+        if: steps.parse.outputs.bump_type != 'none'
+        run: |
+          if ls tests/test_*.py 1> /dev/null 2>&1; then
+            python -m unittest discover -s tests -p "test_*.py"
+          fi
+
+      - name: Install build tool
+        if: steps.parse.outputs.bump_type != 'none'
+        run: python -m pip install --upgrade build
+
+      - name: Build runtime package
+        if: steps.parse.outputs.bump_type != 'none'
+        run: |
+          rm -rf runtime/python/dist
+          python -m build runtime/python
+
+      - name: Build sdk package
+        if: steps.parse.outputs.bump_type != 'none'
+        run: |
+          rm -rf sdk/python/dist
+          python -m build sdk/python
+
+      - name: Create GitHub release
+        if: steps.parse.outputs.bump_type != 'none'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          name: ${{ steps.bump.outputs.new_tag }}
+          prerelease: false
+          files: |
+            runtime/python/dist/*
+            sdk/python/dist/*
+
+      - name: Publish runtime to PyPI
+        if: steps.parse.outputs.bump_type != 'none'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: runtime/python/dist
+
+      - name: Publish sdk to PyPI
+        if: steps.parse.outputs.bump_type != 'none'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist
