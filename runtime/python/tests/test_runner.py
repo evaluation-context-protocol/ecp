@@ -10,7 +10,7 @@ if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
 from ecp_runtime.manifest import StepConfig
-from ecp_runtime.runner import ECPRunner, HTTPAgentClient
+from ecp_runtime.runner import ECPRunner, HTTPAgentClient, _ensure_response_id
 
 
 class RunnerTests(unittest.TestCase):
@@ -74,6 +74,24 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("step=1", msg)
         self.assertIn("boom", msg)
 
+    def test_runner_rejects_invalid_initialize_result(self) -> None:
+        class FakeAgentProcess:
+            def __init__(self, command, rpc_timeout=30.0):
+                pass
+
+            def start(self):
+                return None
+
+            def stop(self):
+                return None
+
+            def send_rpc(self, method, params=None):
+                return {"jsonrpc": "2.0", "id": 1, "result": {"name": "missing-capabilities"}}
+
+        with mock.patch("ecp_runtime.runner.AgentProcess", FakeAgentProcess):
+            with self.assertRaisesRegex(RuntimeError, "Invalid agent/initialize result"):
+                ECPRunner(self._manifest()).run_scenarios()
+
     def test_runner_uses_http_client_for_url_target(self) -> None:
         runner = ECPRunner(SimpleNamespace(target="http://127.0.0.1:8765/ecp", scenarios=[]))
 
@@ -121,6 +139,10 @@ class RunnerTests(unittest.TestCase):
         body = captured["body"].decode("utf-8")
         self.assertIn('"method": "agent/step"', body)
         self.assertIn('"input": "hi"', body)
+
+    def test_response_id_must_match_request(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "id mismatch"):
+            _ensure_response_id({"jsonrpc": "2.0", "id": 2, "result": {}}, 1)
 
 
 if __name__ == "__main__":

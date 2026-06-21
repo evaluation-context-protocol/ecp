@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 VALID_STATUSES = {"done", "paused"}
 
 
-def validate_rpc_response(response: Any, method: str) -> Dict[str, Any]:
+def validate_rpc_response(response: Any, method: str) -> Any:
     """Validate the JSON-RPC response envelope and return its result."""
     if not isinstance(response, dict):
         raise ValueError(f"{method} response must be a JSON-RPC object")

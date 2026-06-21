@@ -17,7 +17,11 @@ from typing import Any, Dict, List, Optional
 from urllib import error, request
 from urllib.parse import urlparse
 
-from .conformance import validate_rpc_response, validate_step_result
+from .conformance import (
+    validate_initialize_result,
+    validate_rpc_response,
+    validate_step_result,
+)
 from .graders import evaluate_step
 
 logger = logging.getLogger(__name__)
@@ -249,6 +253,12 @@ class ECPRunner:
             try:
                 init_resp = agent.send_rpc("agent/initialize", {"config": {}})
                 self._ensure_rpc_success(init_resp, scenario.name, step_idx=None, method="agent/initialize")
+                try:
+                    validate_initialize_result(init_resp["result"])
+                except ValueError as exc:
+                    raise RuntimeError(
+                        f"Invalid agent/initialize result at scenario='{scenario.name}': {exc}"
+                    ) from exc
                 scenario_steps: List[Dict[str, Any]] = []
 
                 for i, step in enumerate(scenario.steps):
