@@ -61,9 +61,35 @@
               },
               "required": ["input"]
             }
+          },
+          "dataset": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["csv", "jsonl"]
+              },
+              "source": {
+                "type": "string"
+              },
+              "input_column": {
+                "type": "string",
+                "default": "input"
+              },
+              "output_column": {
+                "type": "string",
+                "default": "output"
+              }
+            },
+            "required": ["type", "source"]
           }
         },
-        "required": ["name", "steps"]
+        "required": ["name"],
+        "anyOf": [
+          {"required": ["steps"]},
+          {"required": ["dataset"]}
+        ]
       }
     }
   },
