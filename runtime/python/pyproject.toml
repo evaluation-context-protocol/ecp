@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ecp-runtime"
-version = "0.3.1"
+version = "0.4.1"
 description = "Vendor-neutral runtime for portable AI agent evaluations with outputs, tool calls, and audit context."
 authors = [
   { name = "ECP Maintainers", email = "aniket.wattamwar17@gmail.com" },
@@ -28,5 +28,8 @@ Issues = "https://github.com/evaluation-context-protocol/ecp/issues"
 
 [project.scripts]
 ecp = "ecp_runtime.cli:app" 
+
+[project.entry-points.pytest11]
+ecp_runtime = "ecp_runtime.pytest_plugin"
 
 

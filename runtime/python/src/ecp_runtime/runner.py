@@ -1,4 +1,4 @@
-﻿"""
+"""
 Docstring for runtime.python.src.ecp_runtime.runner
 
 Simplified Version. V0.1
@@ -17,7 +17,12 @@ from typing import Any, Dict, List, Optional
 from urllib import error, request
 from urllib.parse import urlparse
 
-from .graders import evaluate_step
+try:
+    from .graders import evaluate_step
+except ImportError:
+    import sys, os
+    sys.path.append(os.path.dirname(__file__))
+    from graders import evaluate_step  # type: ignore
 
 logger = logging.getLogger(__name__)
 
