@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ecp-runtime"
-version = "0.3.3"
+version = "0.4.0"
 description = "Vendor-neutral runtime for portable AI agent evaluations with outputs, tool calls, and audit context."
 authors = [
   { name = "ECP Maintainers", email = "aniket.wattamwar17@gmail.com" },
