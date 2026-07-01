@@ -1,3 +1,4 @@
+import asyncio
 import json
 import sys
 import threading
@@ -11,7 +12,7 @@ if str(SDK_SRC) not in sys.path:
     sys.path.insert(0, str(SDK_SRC))
 
 import ecp.server as server
-from ecp import Result, agent, on_step
+from ecp import Result, agent, on_reset, on_step
 
 
 @agent(name="HTTPTestAgent")
@@ -19,6 +20,26 @@ class HTTPTestAgent:
     @on_step
     def step(self, user_input: str) -> Result:
         return Result(public_output=f"echo: {user_input}", evaluation_context="echoed input")
+
+
+@agent(name="AsyncHTTPTestAgent")
+class AsyncHTTPTestAgent:
+    def __init__(self) -> None:
+        self.loop_ids = []
+        self.reset_called = False
+
+    @on_step
+    async def step(self, user_input: str) -> Result:
+        await asyncio.sleep(0)
+        self.loop_ids.append(id(asyncio.get_running_loop()))
+        if user_input == "fail":
+            raise RuntimeError("async failure")
+        return Result(public_output=f"async: {user_input}", evaluation_context="awaited input")
+
+    @on_reset
+    async def reset(self) -> None:
+        await asyncio.sleep(0)
+        self.reset_called = True
 
 
 class StreamableHTTPServerTests(unittest.TestCase):
@@ -38,6 +59,7 @@ class StreamableHTTPServerTests(unittest.TestCase):
         self.httpd.shutdown()
         self.thread.join(timeout=2)
         self.httpd.server_close()
+        server._ASYNC_EXECUTOR.close()
 
     def _post(self, payload, headers=None):
         req = request.Request(
@@ -121,6 +143,46 @@ class StreamableHTTPServerTests(unittest.TestCase):
             )
 
         self.assertEqual(ctx.exception.code, 403)
+
+    def test_async_step_uses_persistent_event_loop_over_http(self) -> None:
+        async_agent = AsyncHTTPTestAgent()
+        server._CURRENT_AGENT_INSTANCE = async_agent
+
+        first_status, first_body, _headers = self._post(
+            {"jsonrpc": "2.0", "id": 1, "method": "agent/step", "params": {"input": "one"}}
+        )
+        second_status, second_body, _headers = self._post(
+            {"jsonrpc": "2.0", "id": 2, "method": "agent/step", "params": {"input": "two"}}
+        )
+
+        self.assertEqual(first_status, 200)
+        self.assertEqual(second_status, 200)
+        self.assertEqual(first_body["result"]["public_output"], "async: one")
+        self.assertEqual(second_body["result"]["public_output"], "async: two")
+        self.assertEqual(len(set(async_agent.loop_ids)), 1)
+
+    def test_async_reset_is_awaited(self) -> None:
+        async_agent = AsyncHTTPTestAgent()
+        server._CURRENT_AGENT_INSTANCE = async_agent
+
+        status, body, _headers = self._post(
+            {"jsonrpc": "2.0", "id": 3, "method": "agent/reset", "params": {}}
+        )
+
+        self.assertEqual(status, 200)
+        self.assertTrue(body["result"])
+        self.assertTrue(async_agent.reset_called)
+
+    def test_async_exception_returns_json_rpc_error(self) -> None:
+        server._CURRENT_AGENT_INSTANCE = AsyncHTTPTestAgent()
+
+        status, body, _headers = self._post(
+            {"jsonrpc": "2.0", "id": 4, "method": "agent/step", "params": {"input": "fail"}}
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["error"]["code"], -32000)
+        self.assertIn("async failure", body["error"]["message"])
 
 
 if __name__ == "__main__":

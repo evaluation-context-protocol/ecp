@@ -1,5 +1,9 @@
+import asyncio
+import inspect
 import json
 import sys
+import threading
+from concurrent.futures import Future
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -11,6 +15,61 @@ JSON_RPC_VERSION = "2.0"
 JSON_CONTENT_TYPE = "application/json"
 
 
+class _AwaitableExecutor:
+    """Runs async hooks on one persistent event loop without changing the sync API."""
+
+    def __init__(self) -> None:
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._thread: Optional[threading.Thread] = None
+        self._lock = threading.Lock()
+
+    def run(self, value: Any) -> Any:
+        if not inspect.isawaitable(value):
+            return value
+        loop = self._ensure_loop()
+        future: Future = asyncio.run_coroutine_threadsafe(self._await_value(value), loop)
+        return future.result()
+
+    def close(self) -> None:
+        with self._lock:
+            loop = self._loop
+            thread = self._thread
+            self._loop = None
+            self._thread = None
+        if loop is None or thread is None:
+            return
+        loop.call_soon_threadsafe(loop.stop)
+        thread.join()
+        loop.close()
+
+    def _ensure_loop(self) -> asyncio.AbstractEventLoop:
+        with self._lock:
+            if self._loop is not None and self._thread is not None and self._thread.is_alive():
+                return self._loop
+
+            ready = threading.Event()
+            loop = asyncio.new_event_loop()
+
+            def _run_loop() -> None:
+                asyncio.set_event_loop(loop)
+                ready.set()
+                loop.run_forever()
+
+            thread = threading.Thread(target=_run_loop, name="ecp-async-hooks", daemon=True)
+            thread.start()
+            ready.wait()
+            self._loop = loop
+            self._thread = thread
+            return loop
+
+    @staticmethod
+    async def _await_value(value: Any) -> Any:
+        return await value
+
+
+_ASYNC_EXECUTOR = _AwaitableExecutor()
+
+
 def serve(agent_instance):
     """
     Starts the ECP Server loop. 
@@ -20,24 +79,27 @@ def serve(agent_instance):
     _CURRENT_AGENT_INSTANCE = agent_instance
     
     # 1. Input Loop (Reads 1 line at a time from the Runtime)
-    for line in sys.stdin:
-        if not line.strip():
-            continue
-        req_id = None
-            
-        try:
-            request = json.loads(line)
-            if isinstance(request, dict):
-                req_id = request.get("id")
-            response = _dispatch_json_rpc(request)
-            if response is not None:
-                _write_json_rpc(response)
+    try:
+        for line in sys.stdin:
+            if not line.strip():
+                continue
+            req_id = None
 
-        except Exception as e:
-            # If the agent crashes, we must tell the Runtime why
-            error_msg = f"{type(e).__name__}: {str(e)}"
-            # traceback.print_exc(file=sys.stderr) # Debugging help
-            _send_error(req_id if 'req_id' in locals() else None, -32000, error_msg)
+            try:
+                request = json.loads(line)
+                if isinstance(request, dict):
+                    req_id = request.get("id")
+                response = _dispatch_json_rpc(request)
+                if response is not None:
+                    _write_json_rpc(response)
+
+            except Exception as e:
+                # If the agent crashes, we must tell the Runtime why
+                error_msg = f"{type(e).__name__}: {str(e)}"
+                # traceback.print_exc(file=sys.stderr) # Debugging help
+                _send_error(req_id if 'req_id' in locals() else None, -32000, error_msg)
+    finally:
+        _ASYNC_EXECUTOR.close()
 
 
 def serve_http(
@@ -59,7 +121,11 @@ def serve_http(
     _CURRENT_AGENT_INSTANCE = agent_instance
     server = _build_http_server(host, port, path, allowed_origins)
     print(f"ECP Streamable HTTP listening on http://{host}:{server.server_port}{_normalize_path(path)}", file=sys.stderr)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+        _ASYNC_EXECUTOR.close()
 
 
 def _build_http_server(
@@ -182,7 +248,7 @@ def _handle_step(params):
     user_input = params.get("input")
     
     # Execute User Logic
-    result = handler(user_input)
+    result = _invoke_handler(handler, user_input)
     
     # Ensure it returns a Result object
     if not isinstance(result, Result):
@@ -202,8 +268,12 @@ def _handle_reset():
     method_name = _HOOKS["reset"]
     if method_name:
         handler = getattr(_CURRENT_AGENT_INSTANCE, method_name)
-        handler()
+        _invoke_handler(handler)
     return True
+
+
+def _invoke_handler(handler, *args):
+    return _ASYNC_EXECUTOR.run(handler(*args))
 
 
 def _dispatch_http_payload(payload: Any) -> Optional[Any]:

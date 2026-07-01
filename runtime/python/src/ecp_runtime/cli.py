@@ -19,7 +19,7 @@ from .conformance import (
 )
 from .manifest import ECPManifest
 from .reporter import HTMLReporter
-from .runner import ECPRunner
+from .runner import ECPRunner, resolve_rpc_timeout
 from .trend import RunTrendAnalyzer
 
 app = typer.Typer(
@@ -85,6 +85,11 @@ def run(
         "--fail-on-error/--no-fail-on-error",
         help="Exit non-zero if any checks fail (useful for CI)",
     ),
+    timeout: Optional[float] = typer.Option(
+        None,
+        "--timeout",
+        help="RPC timeout in seconds (overrides ECP_RPC_TIMEOUT)",
+    ),
 ):
     """
     Execute an evaluation run based on a manifest file.
@@ -99,7 +104,7 @@ def run(
         config = ECPManifest.from_yaml(str(manifest))
 
         # Run the Tests
-        runner = ECPRunner(config)
+        runner = ECPRunner(config, rpc_timeout=timeout)
         result_summary = runner.run_scenarios()
         total = int(result_summary.get("total", 0) or 0)
         passed = int(result_summary.get("passed", 0) or 0)
@@ -245,12 +250,21 @@ def conformance(
         "--json",
         help="Print only the machine-readable conformance report",
     ),
+    timeout: Optional[float] = typer.Option(
+        None,
+        "--timeout",
+        help="RPC timeout in seconds (overrides ECP_RPC_TIMEOUT)",
+    ),
 ):
     """
     Validate the core ECP protocol contract against an agent.
     """
-    runner = ECPRunner(type("Manifest", (), {"target": target, "scenarios": []})())
-    agent = runner._create_agent(target, rpc_timeout=float(os.environ.get("ECP_RPC_TIMEOUT", "30")))
+    rpc_timeout = resolve_rpc_timeout(timeout)
+    runner = ECPRunner(
+        type("Manifest", (), {"target": target, "scenarios": []})(),
+        rpc_timeout=rpc_timeout,
+    )
+    agent = runner._create_agent(target, rpc_timeout=rpc_timeout)
     checks: List[Dict[str, Any]] = []
     started = False
     try:
