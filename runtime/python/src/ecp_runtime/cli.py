@@ -17,18 +17,10 @@ from .conformance import (
     validate_reset_result,
     validate_step_result,
 )
+from .manifest import ECPManifest
 from .reporter import HTMLReporter
+from .runner import ECPRunner, resolve_rpc_timeout
 from .trend import RunTrendAnalyzer
-
-# Import local modules (Using relative imports)
-try:
-    from .manifest import ECPManifest
-    from .runner import ECPRunner, resolve_rpc_timeout
-except ImportError:
-    # Fallback for direct execution debugging
-    sys.path.append(os.path.dirname(__file__))
-    from manifest import ECPManifest
-    from runner import ECPRunner, resolve_rpc_timeout
 
 app = typer.Typer(
     name="ecp",
