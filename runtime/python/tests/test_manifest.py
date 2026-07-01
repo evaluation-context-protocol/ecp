@@ -29,6 +29,9 @@ class ManifestValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             GraderConfig(type="llm_judge")
 
+        with self.assertRaises(ValidationError):
+            GraderConfig(type="llm_judge", prompt="   ")
+
     def test_invalid_grader_type_rejected(self) -> None:
         with self.assertRaises(ValidationError):
             GraderConfig(type="unknown")  # type: ignore[arg-type]
@@ -50,6 +53,25 @@ class ManifestValidationTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             ECPManifest.from_yaml(tmp_path)
+
+    def test_unknown_manifest_fields_are_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            ECPManifest(
+                manifest_version="v1",
+                name="test",
+                target="python agent.py",
+                scenarios=[],
+                unexpected=True,
+            )
+
+    def test_unknown_grader_fields_are_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            GraderConfig(
+                type="text_match",
+                condition="contains",
+                value="ok",
+                unexpected=True,
+            )
 
 
 if __name__ == "__main__":

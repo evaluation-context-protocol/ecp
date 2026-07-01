@@ -9,6 +9,7 @@ RUNTIME_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
+import ecp_runtime.cli as cli_module
 from ecp_runtime.cli import app
 from typer.testing import CliRunner
 
@@ -72,6 +73,26 @@ class CLISmokeTests(unittest.TestCase):
             result = self.runner.invoke(app, ["run", "--manifest", self.manifest_path, "--no-fail-on-error"])
         self.assertEqual(result.exit_code, 0, msg=result.output)
 
+    def test_run_passes_explicit_timeout_to_runner(self) -> None:
+        fake_config = object()
+        runtime_class = mock.Mock(
+            return_value=mock.Mock(
+                run_scenarios=mock.Mock(return_value={"passed": 0, "total": 0, "scenarios": []})
+            )
+        )
+        with mock.patch("ecp_runtime.cli._configure_logging"), mock.patch.object(
+            cli_module.ECPManifest,
+            "from_yaml",
+            return_value=fake_config,
+        ), mock.patch("ecp_runtime.cli.ECPRunner", runtime_class):
+            result = self.runner.invoke(
+                app,
+                ["run", "--manifest", self.manifest_path, "--timeout", "4.5"],
+            )
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        runtime_class.assert_called_once_with(fake_config, rpc_timeout=4.5)
+
     def test_validate_command(self) -> None:
         result = self.runner.invoke(app, ["validate", self.manifest_path])
 
@@ -94,6 +115,61 @@ class CLISmokeTests(unittest.TestCase):
             manifest = target / "manifest.yaml"
             self.assertTrue(manifest.exists())
             self.assertIn("evaluation_context", manifest.read_text(encoding="utf-8"))
+
+    def test_conformance_json_report(self) -> None:
+        fake_agent = mock.Mock()
+        fake_agent.send_rpc.side_effect = [
+            {"jsonrpc": "2.0", "id": 1, "result": {"name": "test", "capabilities": {}}},
+            {"jsonrpc": "2.0", "id": 2, "result": {"status": "done", "public_output": "ok"}},
+            {"jsonrpc": "2.0", "id": 3, "result": True},
+        ]
+        fake_runtime = mock.Mock()
+        fake_runtime._create_agent.return_value = fake_agent
+
+        with mock.patch("ecp_runtime.cli.ECPRunner", return_value=fake_runtime):
+            result = self.runner.invoke(app, ["conformance", "--target", "python agent.py", "--json"])
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["conformant"])
+        self.assertEqual(payload["total"], 3)
+        fake_agent.stop.assert_called_once()
+
+    def test_conformance_passes_explicit_timeout_to_transport(self) -> None:
+        fake_agent = mock.Mock()
+        fake_agent.send_rpc.side_effect = [
+            {"jsonrpc": "2.0", "id": 1, "result": {"name": "test", "capabilities": {}}},
+            {"jsonrpc": "2.0", "id": 2, "result": {"status": "done"}},
+            {"jsonrpc": "2.0", "id": 3, "result": True},
+        ]
+        fake_runtime = mock.Mock()
+        fake_runtime._create_agent.return_value = fake_agent
+        runtime_class = mock.Mock(return_value=fake_runtime)
+
+        with mock.patch("ecp_runtime.cli.ECPRunner", runtime_class):
+            result = self.runner.invoke(
+                app,
+                ["conformance", "--target", "python agent.py", "--timeout", "6", "--json"],
+            )
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        fake_runtime._create_agent.assert_called_once_with("python agent.py", rpc_timeout=6.0)
+
+    def test_conformance_rejects_invalid_step_result(self) -> None:
+        fake_agent = mock.Mock()
+        fake_agent.send_rpc.side_effect = [
+            {"jsonrpc": "2.0", "id": 1, "result": {}},
+            {"jsonrpc": "2.0", "id": 2, "result": {"status": "invalid"}},
+            {"jsonrpc": "2.0", "id": 3, "result": True},
+        ]
+        fake_runtime = mock.Mock()
+        fake_runtime._create_agent.return_value = fake_agent
+
+        with mock.patch("ecp_runtime.cli.ECPRunner", return_value=fake_runtime):
+            result = self.runner.invoke(app, ["conformance", "--target", "python agent.py"])
+
+        self.assertEqual(result.exit_code, 1, msg=result.output)
+        self.assertIn("FAIL | step result contract", result.output)
 
 
 if __name__ == "__main__":

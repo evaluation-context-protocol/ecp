@@ -1,0 +1,23 @@
+manifest_version: "v1"
+name: "Async Python Agent Validation"
+target: "python examples/async_python_demo/agent.py"
+
+scenarios:
+  - name: "Awaited Research"
+    steps:
+      - input: "ECP async lifecycle support"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "Async research complete"
+
+          - type: text_match
+            field: evaluation_context
+            condition: contains
+            value: "completed request #1"
+
+          - type: tool_usage
+            tool_name: "async_research"
+            arguments:
+              query: "ECP async lifecycle support"

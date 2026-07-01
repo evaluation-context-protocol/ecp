@@ -70,6 +70,7 @@ The reference Python SDK currently returns JSON responses for `POST` requests an
 - `evaluation_context` (string | null): evaluator-safe audit context, reasoning summary, policy evidence, or trace summary.
 - `private_thought` (string | null): deprecated compatibility alias for `evaluation_context`.
 - `tool_calls` (array | null): tools the agent invoked.
+- `logs` (string | null): optional evaluator-visible execution logs.
 
 ECP does not require raw chain-of-thought. New agents should use `evaluation_context` for concise evaluator-safe evidence.
 
@@ -143,4 +144,3 @@ JSON Schemas live in `schema/`. Protocol implementers can run:
 ```bash
 ecp conformance --target "python examples/customer_support_demo/agent.py"
 ```
-

@@ -2,11 +2,11 @@
 Docstring for runtime.python.src.ecp_runtime.runner
 
 Simplified Version. V0.1
-AsyncIO Pending
 """
 
 import json
 import logging
+import math
 import os
 import queue
 import subprocess
@@ -17,6 +17,11 @@ from typing import Any, Dict, List, Optional
 from urllib import error, request
 from urllib.parse import urlparse
 
+from .conformance import (
+    validate_initialize_result,
+    validate_rpc_response,
+    validate_step_result,
+)
 from .graders import evaluate_step
 
 logger = logging.getLogger(__name__)
@@ -67,11 +72,12 @@ class AgentProcess:
         if not params:
             params = {}
 
+        request_id = int(time.time() * 1000)
         request = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
-            "id": int(time.time() * 1000)
+            "id": request_id
         }
 
         # Write to Agent's STDIN
@@ -79,7 +85,9 @@ class AgentProcess:
         self.process.stdin.write(json_str + "\n")
         self.process.stdin.flush()
 
-        return self._read_json_response()
+        response = self._read_json_response()
+        _ensure_response_id(response, request_id)
+        return response
 
     def _read_json_response(self) -> Dict[str, Any]:
         start_time = time.time()
@@ -168,11 +176,12 @@ class HTTPAgentClient:
         if not params:
             params = {}
 
+        request_id = int(time.time() * 1000)
         payload = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
-            "id": int(time.time() * 1000),
+            "id": request_id,
         }
         body = json.dumps(payload).encode("utf-8")
         req = request.Request(
@@ -198,12 +207,15 @@ class HTTPAgentClient:
             raise RuntimeError(f"HTTP RPC failed: {exc.reason}") from exc
 
         if "text/event-stream" in content_type:
-            return self._parse_sse_response(raw)
+            response = self._parse_sse_response(raw)
+            _ensure_response_id(response, request_id)
+            return response
         if not raw:
             raise RuntimeError("HTTP RPC response was empty")
         payload = json.loads(raw)
         if not isinstance(payload, dict):
             raise RuntimeError("HTTP RPC response must be a JSON object")
+        _ensure_response_id(payload, request_id)
         return payload
 
     def _parse_sse_response(self, raw: str) -> Dict[str, Any]:
@@ -223,8 +235,9 @@ class HTTPAgentClient:
 class ECPRunner:
     """The Orchestrator."""
 
-    def __init__(self, manifest):
+    def __init__(self, manifest, rpc_timeout: Optional[float] = None):
         self.manifest = manifest
+        self.rpc_timeout = resolve_rpc_timeout(rpc_timeout)
 
     def run_scenarios(self):
         total_passed = 0
@@ -234,20 +247,35 @@ class ECPRunner:
         for scenario in self.manifest.scenarios:
             logger.info("Scenario: %s", scenario.name)
 
-            rpc_timeout = float(os.environ.get("ECP_RPC_TIMEOUT", "30"))
-            agent = self._create_agent(self.manifest.target, rpc_timeout=rpc_timeout)
+            agent = self._create_agent(self.manifest.target, rpc_timeout=self.rpc_timeout)
             agent.start()
 
             try:
-                init_resp = agent.send_rpc("agent/initialize", {"config": {}})
-                self._ensure_rpc_success(init_resp, scenario.name, step_idx=None, method="agent/initialize")
+                init_resp = self._call_rpc(
+                    agent,
+                    "agent/initialize",
+                    {"config": {}},
+                    scenario.name,
+                    step_idx=None,
+                )
+                try:
+                    validate_initialize_result(init_resp["result"])
+                except ValueError as exc:
+                    raise RuntimeError(
+                        f"Invalid agent/initialize result at scenario='{scenario.name}': {exc}"
+                    ) from exc
                 scenario_steps: List[Dict[str, Any]] = []
 
                 for i, step in enumerate(scenario.steps):
                     # Execute
-                    rpc_resp = agent.send_rpc("agent/step", {"input": step.input})
-                    self._ensure_rpc_success(rpc_resp, scenario.name, step_idx=i + 1, method="agent/step")
-                    result_data = rpc_resp.get("result", {})
+                    rpc_resp = self._call_rpc(
+                        agent,
+                        "agent/step",
+                        {"input": step.input},
+                        scenario.name,
+                        step_idx=i + 1,
+                    )
+                    result_data = validate_step_result(rpc_resp["result"])
 
                     # Map to internal object
                     step_result = StepResult(
@@ -255,6 +283,7 @@ class ECPRunner:
                         public_output=result_data.get("public_output"),
                         evaluation_context=result_data.get("evaluation_context") or result_data.get("private_thought"),
                         private_thought=result_data.get("private_thought") or result_data.get("evaluation_context"),
+                        logs=result_data.get("logs"),
                         tool_calls=result_data.get("tool_calls") if isinstance(result_data.get("tool_calls"), list) else None
                     )
 
@@ -282,6 +311,7 @@ class ECPRunner:
                         "output": step_result.public_output,
                         "evaluation_context": step_result.evaluation_context,
                         "tool_calls": step_result.tool_calls or [],
+                        "logs": step_result.logs,
                         "checks": checks
                     })
 
@@ -312,20 +342,55 @@ class ECPRunner:
         step_idx: Optional[int],
         method: str,
     ) -> None:
-        if "error" not in rpc_resp:
-            return
-
-        error = rpc_resp.get("error") or {}
-        code = error.get("code")
-        message = error.get("message", "Unknown JSON-RPC error")
         where = f"scenario='{scenario_name}'"
         if step_idx is not None:
             where += f", step={step_idx}"
-        raise RuntimeError(
-            f"RPC call failed ({method}) at {where}: code={code}, message={message}"
-        )
+        try:
+            validate_rpc_response(rpc_resp, method)
+        except ValueError as exc:
+            raise RuntimeError(f"RPC call failed ({method}) at {where}: {exc}") from exc
+
+    def _call_rpc(
+        self,
+        agent: Any,
+        method: str,
+        params: Dict[str, Any],
+        scenario_name: str,
+        step_idx: Optional[int],
+    ) -> Dict[str, Any]:
+        where = f"scenario='{scenario_name}'"
+        if step_idx is not None:
+            where += f", step={step_idx}"
+        try:
+            response = agent.send_rpc(method, params)
+        except Exception as exc:
+            raise RuntimeError(f"RPC call failed ({method}) at {where}: {exc}") from exc
+        self._ensure_rpc_success(response, scenario_name, step_idx, method)
+        return response
+
+
+def resolve_rpc_timeout(value: Optional[float] = None) -> float:
+    """Resolve and validate an explicit timeout or the ECP_RPC_TIMEOUT fallback."""
+    raw_value: Any = value if value is not None else os.environ.get("ECP_RPC_TIMEOUT", "30")
+    try:
+        timeout = float(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"RPC timeout must be a positive number; received {raw_value!r}"
+        ) from exc
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError(f"RPC timeout must be a positive finite number; received {raw_value!r}")
+    return timeout
 
 
 def _is_http_url(target: str) -> bool:
     parsed = urlparse(target)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _ensure_response_id(response: Dict[str, Any], request_id: int) -> None:
+    response_id = response.get("id")
+    if type(response_id) is not type(request_id) or response_id != request_id:
+        raise RuntimeError(
+            f"JSON-RPC response id mismatch: expected {request_id}, got {response_id}"
+        )
