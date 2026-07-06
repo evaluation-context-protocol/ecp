@@ -154,10 +154,15 @@ Run it over stdio:
 ecp run --manifest examples/async_python_demo/manifest.yaml --timeout 10
 ```
 
-Or start the same agent over Streamable HTTP:
+Or start the same agent over Streamable HTTP in one terminal:
 
 ```bash
 ECP_TRANSPORT=http ECP_HTTP_PORT=8765 python examples/async_python_demo/agent.py
+```
+
+Run the conformance checks from another terminal:
+
+```bash
 ecp conformance --target http://127.0.0.1:8765/ecp --timeout 10
 ```
 

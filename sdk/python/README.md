@@ -7,16 +7,16 @@ ECP is a vendor-neutral protocol for testing agent outputs, tool calls, and eval
 ## Install
 
 ```bash
-pip install "ecp-sdk==0.3.1"
+pip install "ecp-sdk==0.4.1"
 ```
 
 Framework extras:
 
 ```bash
-pip install "ecp-sdk[langchain]==0.3.1"
-pip install "ecp-sdk[crewai]==0.3.1"
-pip install "ecp-sdk[llamaindex]==0.3.1"
-pip install "ecp-sdk[pydanticai]==0.3.1"
+pip install "ecp-sdk[langchain]==0.4.1"
+pip install "ecp-sdk[crewai]==0.4.1"
+pip install "ecp-sdk[llamaindex]==0.4.1"
+pip install "ecp-sdk[pydanticai]==0.4.1"
 ```
 
 ## Usage
