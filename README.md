@@ -92,6 +92,8 @@ ecp conformance --target "python examples/customer_support_demo/agent.py"
 ecp doctor
 ```
 
+Python agents may implement `@on_step` and `@on_reset` with regular functions or `async def`. See [`examples/async_python_demo`](examples/async_python_demo) for stdio and Streamable HTTP usage. For long-running calls, pass `--timeout` to `ecp run` or `ecp conformance`.
+
 ## Repo Layout
 
 - `sdk/` - Python SDK for implementing ECP agents
@@ -107,4 +109,3 @@ ecp doctor
 - Docs site: https://evaluationcontextprotocol.io/
 - Quickstart: https://evaluationcontextprotocol.io/quickstart/
 - Specification: https://evaluationcontextprotocol.io/spec/
-

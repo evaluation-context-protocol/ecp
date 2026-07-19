@@ -31,6 +31,7 @@ For Streamable HTTP, the agent runs as an HTTP server and exposes one endpoint, 
 - `evaluation_context`: string or null
 - `private_thought`: deprecated compatibility alias for `evaluation_context`
 - `tool_calls`: array or null
+- `logs`: optional evaluator-visible execution logs or null
 
 Tool call format:
 

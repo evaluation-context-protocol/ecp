@@ -44,7 +44,7 @@
                   "type": "array",
                   "items": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
                       "type": {
                         "type": "string",
@@ -53,9 +53,57 @@
                       "field": {
                         "type": "string",
                         "enum": ["public_output", "evaluation_context", "private_thought"]
+                      },
+                      "condition": {
+                        "type": ["string", "null"],
+                        "enum": ["contains", "equals", "does_not_contain", "regex", null]
+                      },
+                      "value": {"type": ["string", "null"]},
+                      "pattern": {"type": ["string", "null"], "minLength": 1},
+                      "prompt": {
+                        "type": ["string", "null"],
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
+                      "assertion": {"type": ["string", "null"]},
+                      "tool_name": {"type": ["string", "null"]},
+                      "arguments": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
-                    "required": ["type"]
+                    "required": ["type"],
+                    "allOf": [
+                      {
+                        "if": {"properties": {"type": {"const": "text_match"}}},
+                        "then": {
+                          "required": ["condition"],
+                          "properties": {"condition": {"type": "string"}},
+                          "allOf": [
+                            {
+                              "if": {"properties": {"condition": {"const": "regex"}}},
+                              "then": {
+                                "required": ["pattern"],
+                                "properties": {"pattern": {"type": "string", "minLength": 1}}
+                              },
+                              "else": {
+                                "required": ["value"],
+                                "properties": {"value": {"type": "string"}}
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "if": {"properties": {"type": {"const": "llm_judge"}}},
+                        "then": {
+                          "required": ["prompt"],
+                          "properties": {
+                            "prompt": {"type": "string", "minLength": 1, "pattern": "\\S"}
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               },

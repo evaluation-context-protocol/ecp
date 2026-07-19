@@ -8,10 +8,9 @@ RunTrendAnalyzer - reads a sequence of saved JSON report files produced by
 from __future__ import annotations
 
 import json
-import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 
 @dataclass
@@ -81,7 +80,7 @@ class RunTrendAnalyzer:
         )
 
     @staticmethod
-    def _load_run_point(path: Path) -> RunPoint | None:
+    def _load_run_point(path: Path) -> Optional[RunPoint]:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -101,9 +100,17 @@ class RunTrendAnalyzer:
 
     @staticmethod
     def _compute_slope(pass_rates: List[float]) -> float:
-        x = list(range(len(pass_rates)))
-        slope, _intercept = statistics.linear_regression(x, pass_rates)
-        return slope
+        count = len(pass_rates)
+        if count < 2:
+            return 0.0
+        mean_x = (count - 1) / 2
+        mean_y = sum(pass_rates) / count
+        numerator = sum(
+            (index - mean_x) * (rate - mean_y)
+            for index, rate in enumerate(pass_rates)
+        )
+        denominator = sum((index - mean_x) ** 2 for index in range(count))
+        return numerator / denominator if denominator else 0.0
 
     def _classify(self, slope: float) -> Literal["improving", "degrading", "stable"]:
         if slope > self._IMPROVING_THRESHOLD:

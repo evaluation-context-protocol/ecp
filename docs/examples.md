@@ -142,6 +142,25 @@ scenarios:
               message: "transport is online"
 ```
 
+## Async Python Agent Example
+
+Agent file: `examples/async_python_demo/agent.py`
+
+This example uses `async def` for both `@on_step` and `@on_reset`. The SDK awaits both hooks on a persistent event loop, allowing async clients to be reused safely between requests.
+
+Run it over stdio:
+
+```bash
+ecp run --manifest examples/async_python_demo/manifest.yaml --timeout 10
+```
+
+Or start the same agent over Streamable HTTP:
+
+```bash
+ECP_TRANSPORT=http ECP_HTTP_PORT=8765 python examples/async_python_demo/agent.py
+ecp conformance --target http://127.0.0.1:8765/ecp --timeout 10
+```
+
 ## LangChain Example
 
 Agent file: `examples/langchain_demo/agent.py`
