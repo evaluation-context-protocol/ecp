@@ -1,3 +1,6 @@
+import csv
+import json
+import os
 from typing import Any, Dict, List, Literal, Optional
 
 import yaml
@@ -52,9 +55,22 @@ class StepConfig(StrictModel):
     constraints: Dict[str, Any] = Field(default_factory=dict)
     graders: List[GraderConfig] = Field(default_factory=list)
 
-class ScenarioConfig(StrictModel):
-    name: str = Field(min_length=1)
-    steps: List[StepConfig]
+class DatasetConfig(BaseModel):
+    type: Literal["csv", "jsonl"]
+    source: str
+    input_column: str = "input"
+    output_column: str = "output"
+
+class ScenarioConfig(BaseModel):
+    name: str
+    steps: List[StepConfig] = Field(default_factory=list)
+    dataset: Optional[DatasetConfig] = None
+    
+    @model_validator(mode="after")
+    def _validate_steps_or_dataset(self) -> "ScenarioConfig":
+        if not self.steps and not self.dataset:
+            raise ValueError("Scenario requires either 'steps' or 'dataset'")
+        return self
 
 # --- The Root Manifest Schema ---
 class ECPManifest(StrictModel):
@@ -69,4 +85,45 @@ class ECPManifest(StrictModel):
             data = yaml.safe_load(f)
         if not isinstance(data, dict):
             raise ValueError("Manifest YAML root must be an object")
-        return cls(**data)
+        manifest = cls(**data)
+        base_dir = os.path.dirname(os.path.abspath(path))
+        manifest._resolve_datasets(base_dir)
+        return manifest
+
+    def _resolve_datasets(self, base_dir: str):
+        for scenario in self.scenarios:
+            if scenario.dataset and not scenario.steps:
+                source_path = os.path.join(base_dir, scenario.dataset.source)
+                if not os.path.exists(source_path):
+                    raise ValueError(f"Dataset file not found: {source_path}")
+                
+                if scenario.dataset.type == "csv":
+                    with open(source_path, "r", encoding="utf-8") as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            input_text = row.get(scenario.dataset.input_column, "")
+                            output_text = row.get(scenario.dataset.output_column, "")
+                            scenario.steps.append(StepConfig(
+                                input=input_text,
+                                graders=[GraderConfig(
+                                    type="text_match",
+                                    condition="equals",
+                                    value=output_text
+                                )] if output_text else []
+                            ))
+                elif scenario.dataset.type == "jsonl":
+                    with open(source_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if not line.strip():
+                                continue
+                            row = json.loads(line)
+                            input_text = row.get(scenario.dataset.input_column, "")
+                            output_text = row.get(scenario.dataset.output_column, "")
+                            scenario.steps.append(StepConfig(
+                                input=input_text,
+                                graders=[GraderConfig(
+                                    type="text_match",
+                                    condition="equals",
+                                    value=output_text
+                                )] if output_text else []
+                            ))

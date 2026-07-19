@@ -2,13 +2,19 @@ import os
 import re
 from typing import Any, Dict, List, Tuple
 
-from .manifest import GraderConfig, StepConfig
+try:
+    from .manifest import GraderConfig, StepConfig
+except ImportError:
+    import os
+    import sys
+    sys.path.append(os.path.dirname(__file__))
+    from manifest import GraderConfig, StepConfig  # type: ignore
 
 # Try importing OpenAI, but don't crash if it's missing (unless used)
 try:
-    from openai import OpenAI
+    from openai import OpenAI  # type: ignore
 except ImportError:
-    OpenAI = None
+    OpenAI = None  # type: ignore
 
 
 def _llm_judge_model() -> str:

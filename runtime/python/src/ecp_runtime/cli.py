@@ -1,4 +1,4 @@
-﻿import glob
+import glob
 import json
 import logging
 import os
@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 import typer
 from pydantic import ValidationError
 
+# Import local modules (Using relative imports)
 from .conformance import (
     build_conformance_report,
     conformance_check,
@@ -80,6 +81,11 @@ def run(
         "--json",
         help="Print the JSON report to stdout",
     ),
+    export: Optional[str] = typer.Option(
+        None,
+        "--export",
+        help="Export evaluation results to an external platform (e.g., langsmith)",
+    ),
     fail_on_error: bool = typer.Option(
         True,
         "--fail-on-error/--no-fail-on-error",
@@ -133,6 +139,30 @@ def run(
 
         if print_json:
             typer.echo(json.dumps(report_payload, indent=2))
+
+        if export:
+            if export.lower() == "langsmith":
+                logger.info("Exporting results to LangSmith...")
+                try:
+                    from langsmith import Client  # type: ignore
+                    client = Client()
+                    project_name = config.name
+                    for scenario in result_summary.get("scenarios", []):
+                        for step in scenario.get("steps", []):
+                            client.create_run(
+                                name=scenario.get("name"),
+                                run_type="chain",
+                                inputs={"input": step.get("input")},
+                                outputs={"output": step.get("output")},
+                                project_name=project_name
+                            )
+                    logger.info("Successfully exported to LangSmith.")
+                except ImportError:
+                    logger.warning("langsmith package not installed. Skipping export.")
+                except Exception as e:
+                    logger.error("Failed to export to LangSmith: %s", e)
+            else:
+                logger.warning("Unsupported export target: %s", export)
 
         if fail_on_error and failed > 0:
             raise typer.Exit(code=2)
