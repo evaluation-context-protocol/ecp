@@ -26,6 +26,10 @@
       "items": {
         "$ref": "./tool-call.schema.json"
       }
+    },
+    "logs": {
+      "type": ["string", "null"],
+      "description": "Optional evaluator-visible execution logs."
     }
   },
   "required": ["status"]

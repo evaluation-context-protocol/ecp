@@ -50,6 +50,62 @@ class ExampleIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
         self.assertIn('"failed": 0', result.stdout)
 
+    def test_async_python_demo_manifest_passes(self) -> None:
+        manifest = REPO_ROOT / "examples" / "async_python_demo" / "manifest.yaml"
+        result = self._run_manifest(manifest)
+        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
+        self.assertIn('"failed": 0', result.stdout)
+
+    def test_async_python_demo_conforms_over_http(self) -> None:
+        port = self._free_port()
+        env = dict(os.environ)
+        existing = env.get("PYTHONPATH", "")
+        extra_paths = [str(RUNTIME_SRC), str(REPO_ROOT / "sdk" / "python" / "src")]
+        if existing:
+            extra_paths.append(existing)
+        env["PYTHONPATH"] = os.pathsep.join(extra_paths)
+        env["ECP_TRANSPORT"] = "http"
+        env["ECP_HTTP_PORT"] = str(port)
+
+        server = subprocess.Popen(
+            [sys.executable, str(REPO_ROOT / "examples" / "async_python_demo" / "agent.py")],
+            cwd=REPO_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+
+        try:
+            self._wait_for_port("127.0.0.1", port)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "ecp_runtime.cli",
+                    "conformance",
+                    "--target",
+                    f"http://127.0.0.1:{port}/ecp",
+                    "--timeout",
+                    "5",
+                    "--json",
+                ],
+                cwd=REPO_ROOT,
+                text=True,
+                capture_output=True,
+                env=env,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
+            self.assertIn('"conformant": true', result.stdout)
+        finally:
+            server.terminate()
+            try:
+                server.communicate(timeout=2)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.communicate()
+
     def test_streamable_http_demo_manifest_passes(self) -> None:
         port = self._free_port()
         server_env = dict(os.environ)

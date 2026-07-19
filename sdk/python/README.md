@@ -42,6 +42,34 @@ if __name__ == "__main__":
 
 `evaluation_context` is the preferred field for evaluator-safe audit evidence. `private_thought` is still accepted as a deprecated compatibility alias.
 
+## Async lifecycle hooks
+
+`@on_step` and `@on_reset` may be synchronous functions or `async def` coroutines. The SDK awaits async hooks on one persistent event loop, so loop-bound clients and other async resources can be reused across requests.
+
+```python
+import asyncio
+
+from ecp import Result, agent, on_reset, on_step, serve
+
+
+@agent(name="AsyncAgent")
+class AsyncAgent:
+    @on_step
+    async def step(self, user_input: str) -> Result:
+        await asyncio.sleep(0.01)
+        return Result(public_output=f"Processed: {user_input}")
+
+    @on_reset
+    async def reset(self) -> None:
+        await asyncio.sleep(0)
+
+
+if __name__ == "__main__":
+    serve(AsyncAgent())
+```
+
+The same hooks work with `serve_http(...)`. See `examples/async_python_demo` for a runnable agent that supports either transport.
+
 ## Streamable HTTP
 
 Agents can also run as an ECP Streamable HTTP server:
@@ -58,4 +86,3 @@ The endpoint accepts JSON-RPC `POST` requests at `/ecp`. It returns JSON for req
 - Documentation: https://evaluationcontextprotocol.io/
 - Repository: https://github.com/evaluation-context-protocol/ecp
 - Issues: https://github.com/evaluation-context-protocol/ecp/issues
-

@@ -15,6 +15,22 @@ class Result:
     logs: Optional[str] = None
 
     def __post_init__(self):
+        if self.status not in {"done", "paused"}:
+            raise ValueError("status must be 'done' or 'paused'")
+        for field_name in ("public_output", "evaluation_context", "private_thought", "logs"):
+            value = getattr(self, field_name)
+            if value is not None and not isinstance(value, str):
+                raise TypeError(f"{field_name} must be a string or None")
+        if self.tool_calls is not None:
+            if not isinstance(self.tool_calls, list):
+                raise TypeError("tool_calls must be a list or None")
+            for index, tool_call in enumerate(self.tool_calls):
+                if not isinstance(tool_call, dict):
+                    raise TypeError(f"tool_calls[{index}] must be a dictionary")
+                if not isinstance(tool_call.get("name"), str) or not tool_call["name"]:
+                    raise ValueError(f"tool_calls[{index}].name must be a non-empty string")
+                if "arguments" in tool_call and not isinstance(tool_call["arguments"], dict):
+                    raise TypeError(f"tool_calls[{index}].arguments must be a dictionary")
         if self.evaluation_context is None and self.private_thought is not None:
             self.evaluation_context = self.private_thought
         elif self.private_thought is None and self.evaluation_context is not None:

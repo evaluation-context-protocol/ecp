@@ -6,7 +6,8 @@
   "additionalProperties": true,
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "arguments": {
       "type": "object",

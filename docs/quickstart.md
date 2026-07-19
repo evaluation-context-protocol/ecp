@@ -106,9 +106,16 @@ For protocol implementers:
 ecp conformance --target "python examples/customer_support_demo/agent.py"
 ```
 
+For long-running agent calls, set a timeout explicitly:
+
+```bash
+ecp run --manifest manifest.yaml --timeout 60
+ecp conformance --target "python agent.py" --timeout 60
+```
+
 ## Notes
 
 - The current release line is `0.3.1`.
 - New agents should use `evaluation_context`; `private_thought` remains a deprecated compatibility alias.
-- Use `ECP_RPC_TIMEOUT` to control step timeouts. The default is 30 seconds.
-
+- `--timeout` controls the RPC timeout for `run` and `conformance`. It overrides `ECP_RPC_TIMEOUT`; the default is 30 seconds.
+- Python SDK `@on_step` and `@on_reset` hooks may be synchronous or `async def` functions.
