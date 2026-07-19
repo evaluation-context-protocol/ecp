@@ -2,10 +2,11 @@
 __pycache__/
 *.py[codz]
 *$py.class
-
+ECPBrain/
+ECPBrain.zip
 # C extensions
 *.so
-
+logs/
 # Distribution / packaging
 .Python
 build/
