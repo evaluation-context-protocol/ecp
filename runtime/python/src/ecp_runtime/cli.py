@@ -10,9 +10,15 @@ from typing import Any, Callable, Dict, List, Optional
 import typer
 from pydantic import ValidationError
 
-from .manifest import ECPManifest
-
 # Import local modules (Using relative imports)
+from .conformance import (
+    build_conformance_report,
+    conformance_check,
+    validate_initialize_result,
+    validate_reset_result,
+    validate_step_result,
+)
+from .manifest import ECPManifest
 from .reporter import HTMLReporter
 from .runner import ECPRunner, resolve_rpc_timeout
 from .trend import RunTrendAnalyzer
