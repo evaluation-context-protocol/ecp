@@ -10,11 +10,12 @@ from typing import Any, Dict, List, Optional
 import typer
 from pydantic import ValidationError
 
+from .manifest import ECPManifest
+
 # Import local modules (Using relative imports)
 from .reporter import HTMLReporter
+from .runner import ECPRunner
 from .trend import RunTrendAnalyzer
-from .manifest import ECPManifest
-from .runner import ECPRunner 
 
 app = typer.Typer(
     name="ecp",

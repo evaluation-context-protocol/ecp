@@ -20,7 +20,8 @@ from urllib.parse import urlparse
 try:
     from .graders import evaluate_step
 except ImportError:
-    import sys, os
+    import os
+    import sys
     sys.path.append(os.path.dirname(__file__))
     from graders import evaluate_step  # type: ignore
 
