@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ecp-runtime"
-version = "0.4.1"
+version = "0.6.0"
 description = "Vendor-neutral runtime for portable AI agent evaluations with outputs, tool calls, and audit context."
 authors = [
   { name = "ECP Maintainers", email = "aniket.wattamwar17@gmail.com" },
@@ -16,7 +16,7 @@ dependencies = [
     "pyyaml>=6.0",          # For reading Manifests
     "pydantic>=2.0",        # For validating Schemas
     "rich>=13.0",           # For pretty terminal output
-    "openai>=1.0.0",        # For the LLM Judge
+    "litellm>=1.0.0,<1.50.0", # For universal LLM support in graders (avoid rust ring on arm64)
   "Jinja2>=3.1.0",        # For HTML report rendering
 ]
 

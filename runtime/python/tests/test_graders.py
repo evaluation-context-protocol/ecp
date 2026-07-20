@@ -35,28 +35,19 @@ class LLMJudgeTests(unittest.TestCase):
             passed, reason, score = check_llm_judge(grader, "hello")
         self.assertFalse(passed)
         self.assertEqual(score, 0.0)
-        self.assertIn("OPENAI_API_KEY not set", reason)
+        self.assertIn("OPENAI_API_KEY", reason)
 
     def test_llm_judge_uses_configured_model(self) -> None:
         calls = {}
 
-        class _FakeCompletions:
-            def create(self, **kwargs):
-                calls["kwargs"] = kwargs
-                msg = SimpleNamespace(content="Looks good. RESULT: PASS")
-                choice = SimpleNamespace(message=msg)
-                return SimpleNamespace(choices=[choice])
-
-        class _FakeChat:
-            completions = _FakeCompletions()
-
-        class _FakeOpenAIClient:
-            def __init__(self, api_key):
-                self.api_key = api_key
-                self.chat = _FakeChat()
+        def _fake_completion(**kwargs):
+            calls["kwargs"] = kwargs
+            msg = SimpleNamespace(content="Looks good. RESULT: PASS")
+            choice = SimpleNamespace(message=msg)
+            return SimpleNamespace(choices=[choice])
 
         grader = GraderConfig(type="llm_judge", prompt="Check quality.")
-        with mock.patch("ecp_runtime.graders.OpenAI", _FakeOpenAIClient):
+        with mock.patch("ecp_runtime.graders.completion", side_effect=_fake_completion):
             with mock.patch.dict(
                 os.environ,
                 {"OPENAI_API_KEY": "test", "ECP_LLM_JUDGE_MODEL": "gpt-test-model"},
