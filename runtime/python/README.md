@@ -7,7 +7,7 @@ ECP is a vendor-neutral protocol for testing agent outputs, tool calls, and eval
 ## Install
 
 ```bash
-pip install "ecp-runtime==0.5.0"
+pip install "ecp-runtime==0.7.0"
 ```
 
 ## Usage
