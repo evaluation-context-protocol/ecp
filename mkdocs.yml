@@ -5,14 +5,17 @@ repo_url: https://github.com/evaluation-context-protocol/ecp
 repo_name: evaluation-context-protocol/ecp
 
 nav:
-  - Home: index.md
-  - Why ECP: why-ecp.md
-  - Quickstart: quickstart.md
-  - CI: ci.md
-  - Inspector: inspector.md
-  - Examples: examples.md
-  - DX Validation: dev-experience.md
-  - Specification: spec.md
+  - Introduction:
+      - Home: index.md
+      - Why ECP: why-ecp.md
+  - Protocol Specification: spec.md
+  - Python SDK:
+      - Quickstart: quickstart.md
+      - Examples: examples.md
+  - CLI Tool (YAML):
+      - CI: ci.md
+      - Inspector: inspector.md
+      - DX Validation: dev-experience.md
 
 theme:
   name: material

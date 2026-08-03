@@ -10,11 +10,12 @@ except ImportError:
     sys.path.append(os.path.dirname(__file__))
     from manifest import GraderConfig, StepConfig  # type: ignore
 
-# Try importing OpenAI, but don't crash if it's missing (unless used)
+# Try importing litellm, but don't crash if it's missing (unless used)
 try:
-    from openai import OpenAI  # type: ignore
+    import litellm
+    from litellm import completion  # type: ignore
 except ImportError:
-    OpenAI = None  # type: ignore
+    litellm = None  # type: ignore
 
 
 def _llm_judge_model() -> str:
@@ -52,19 +53,13 @@ def check_text_match(grader: GraderConfig, text: str) -> Tuple[bool, str]:
 
 def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     """
-    Uses an LLM to evaluate the text.
+    Uses an LLM to evaluate the text via LiteLLM.
     Returns: (passed, reasoning, score)
     """
     if not grader.prompt:
         return False, "No prompt provided for llm_judge", 0.0
-    if OpenAI is None:
-        return False, "LLM judge unavailable: OpenAI library not installed", 0.0
-    
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        return False, "OPENAI_API_KEY not set in environment", 0.0
-
-    client = OpenAI(api_key=api_key)
+    if litellm is None:
+        return False, "LLM judge unavailable: litellm library not installed. Install with `pip install litellm`.", 0.0
     
     # 1. Construct the Prompt for the Judge
     system_prompt = "You are an impartial AI Judge. You evaluate outputs based on specific criteria."
@@ -84,9 +79,9 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     Provide a short reasoning before the result.
     """
 
-    # 2. Call the Judge (using a cheap, smart model)
+    # 2. Call the Judge via LiteLLM
     try:
-        response = client.chat.completions.create(
+        response = completion(
             model=_llm_judge_model(),
             messages=[
                 {"role": "system", "content": system_prompt},

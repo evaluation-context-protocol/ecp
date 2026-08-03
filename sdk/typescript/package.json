@@ -1,0 +1,17 @@
+{
+  "name": "@ecp/sdk",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "author": "ECP Maintainers",
+  "license": "MIT",
+  "description": "Evaluation Context Protocol SDK for TypeScript/Node.js",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
