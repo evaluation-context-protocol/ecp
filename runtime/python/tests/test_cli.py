@@ -91,7 +91,52 @@ class CLISmokeTests(unittest.TestCase):
             )
 
         self.assertEqual(result.exit_code, 0, msg=result.output)
-        runtime_class.assert_called_once_with(fake_config, rpc_timeout=4.5)
+        runtime_class.assert_called_once_with(
+            fake_config,
+            rpc_timeout=4.5,
+            max_duration=None,
+            manifest_path=self.manifest_path,
+        )
+
+    def test_run_passes_max_duration_to_runner(self) -> None:
+        fake_config = object()
+        runtime_class = mock.Mock(
+            return_value=mock.Mock(
+                run_scenarios=mock.Mock(return_value={"passed": 0, "total": 0, "scenarios": []})
+            )
+        )
+        with mock.patch("ecp_runtime.cli._configure_logging"), mock.patch.object(
+            cli_module.ECPManifest,
+            "from_yaml",
+            return_value=fake_config,
+        ), mock.patch("ecp_runtime.cli.ECPRunner", runtime_class):
+            result = self.runner.invoke(
+                app,
+                ["run", "--manifest", self.manifest_path, "--max-duration", "90"],
+            )
+
+        self.assertEqual(result.exit_code, 0, msg=result.output)
+        self.assertEqual(runtime_class.call_args.kwargs["max_duration"], 90.0)
+
+    def test_audit_out_flag_writes_audit_payload(self) -> None:
+        audit = {"audit_version": "1", "run_id": "abc", "exit_reason": "ok"}
+        summary = {"passed": 1, "total": 1, "scenarios": [], "exit_reason": "ok", "audit": audit}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_path = Path(tmpdir) / "ecp_audit.json"
+            with mock.patch.multiple(
+                "ecp_runtime.cli",
+                _configure_logging=mock.Mock(return_value=None),
+                ECPManifest=mock.Mock(from_yaml=mock.Mock(return_value=object())),
+                ECPRunner=mock.Mock(
+                    return_value=mock.Mock(run_scenarios=mock.Mock(return_value=summary))
+                ),
+            ):
+                result = self.runner.invoke(
+                    app, ["run", "--manifest", self.manifest_path, "--audit-out", str(out_path)]
+                )
+
+            self.assertEqual(result.exit_code, 0, msg=result.output)
+            self.assertEqual(json.loads(out_path.read_text(encoding="utf-8")), audit)
 
     def test_validate_command(self) -> None:
         result = self.runner.invoke(app, ["validate", self.manifest_path])

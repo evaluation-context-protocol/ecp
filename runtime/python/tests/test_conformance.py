@@ -28,6 +28,25 @@ class ConformanceTests(unittest.TestCase):
 
         self.assertIs(validate_step_result(result), result)
 
+    def test_usage_is_optional_but_validated_when_present(self) -> None:
+        for usage in (None, {}, {"input_tokens": 0}, {"input_tokens": 12, "output_tokens": 3}):
+            with self.subTest(usage=usage):
+                result = {"status": "done", "usage": usage}
+                self.assertIs(validate_step_result(result), result)
+
+    def test_invalid_usage_is_rejected(self) -> None:
+        for usage, expected in (
+            ("100", "must be an object"),
+            ({"input_tokens": "12"}, "must be an integer"),
+            ({"output_tokens": 1.5}, "must be an integer"),
+            # bool is an int subclass in Python; the contract still rejects it.
+            ({"total_tokens": True}, "must be an integer"),
+            ({"input_tokens": -1}, "must not be negative"),
+        ):
+            with self.subTest(usage=usage):
+                with self.assertRaisesRegex(ValueError, expected):
+                    validate_step_result({"status": "done", "usage": usage})
+
     def test_initialize_contract(self) -> None:
         result = {"name": "agent", "capabilities": {}}
         self.assertIs(validate_initialize_result(result), result)

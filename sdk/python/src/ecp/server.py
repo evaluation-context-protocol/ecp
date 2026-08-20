@@ -262,6 +262,7 @@ def _handle_step(params):
         "private_thought": result.private_thought,
         "tool_calls": result.tool_calls,
         "logs": result.logs,
+        "usage": result.usage,
     }
 
 def _handle_reset():

@@ -1,6 +1,6 @@
 # Evaluation Context Protocol (ECP) Specification
 
-Version: 0.3.1-draft
+Version: 0.7.0-draft
 Status: Experimental
 
 ## 1. Overview
@@ -71,8 +71,17 @@ The reference Python SDK currently returns JSON responses for `POST` requests an
 - `private_thought` (string | null): deprecated compatibility alias for `evaluation_context`.
 - `tool_calls` (array | null): tools the agent invoked.
 - `logs` (string | null): optional evaluator-visible execution logs.
+- `usage` (object | null): optional token accounting for this step.
 
 ECP does not require raw chain-of-thought. New agents should use `evaluation_context` for concise evaluator-safe evidence.
+
+**Usage format**:
+
+```json
+{ "input_tokens": 1204, "output_tokens": 88, "total_tokens": 1292 }
+```
+
+All three fields are optional and MUST be non-negative integers when present. Agents that cannot observe token counts SHOULD omit `usage` entirely rather than reporting zeros; the runtime distinguishes "not reported" from "reported as zero" in its audit record.
 
 **Tool call format**:
 
@@ -137,7 +146,38 @@ Supported graders:
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or deprecated `private_thought`.
 
-## 6. Schemas And Conformance
+## 6. Execution Boundaries
+
+A runtime MUST bound agent execution so a hung or looping agent cannot pin a CI pipeline indefinitely. Two independent limits apply:
+
+- **Per-RPC timeout**: the maximum time to wait for a single response. The reference runtime defaults to 30s (`--timeout`, `ECP_RPC_TIMEOUT`).
+- **Wall-clock budget**: an optional ceiling on the total run (`--max-duration`, `ECP_MAX_DURATION`). This is not redundant with the per-RPC timeout: an agent that answers just inside the timeout on every step can still run for hours.
+
+When either limit is breached, or the agent crashes or violates the contract, the runtime MUST **degrade rather than abort**. The affected step is recorded as failed, remaining steps in that scenario are recorded as skipped, and the run continues with the next scenario. A step that did not produce a result MUST still contribute at least one failed check, so a timeout can never be counted as a pass.
+
+Each step carries an `exit_reason`:
+
+| `exit_reason` | Meaning |
+| --- | --- |
+| `ok` | The agent answered and graders ran. |
+| `timeout` | No response inside the per-RPC timeout. |
+| `transport_error` | The agent crashed, closed the stream, or was unreachable. |
+| `protocol_error` | The agent replied, but the reply violates this specification. |
+| `agent_error` | The agent returned a JSON-RPC error response. |
+| `max_duration_exceeded` | The wall-clock budget was exhausted. |
+| `skipped` | The step never ran because an earlier step in the scenario failed. |
+
+Because each scenario gets a fresh agent, a failure in one scenario does not contaminate the next.
+
+## 7. Audit Record
+
+After every run, a runtime SHOULD emit a structured audit record describing what was executed. The reference runtime writes it with `ecp run --audit-out ecp_audit.json`, and also embeds it under the `audit` key of the JSON report.
+
+The record covers: a unique `run_id`, start/finish timestamps, the manifest path and its SHA-256 digest, the resolved `target`, agent metadata from `agent/initialize`, the configured limits, per-step latency and `exit_reason`, aggregated token `usage`, and pass/fail totals. The schema is `schema/audit.schema.json`.
+
+Two properties make it auditable rather than merely informative: the manifest digest ties results to exact inputs, and `steps_planned` versus `steps_executed` reveals a run that degraded instead of silently reporting a high pass rate over fewer steps.
+
+## 8. Schemas And Conformance
 
 JSON Schemas live in `schema/`. Protocol implementers can run:
 
