@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install "ecp-runtime==0.7.0" "ecp-sdk==0.7.0"
+      - run: pip install "ecp-runtime==0.8.0" "ecp-sdk==0.8.0"
       - run: ecp validate examples/customer_support_demo/manifest.yaml
       - run: |
           ecp run --manifest examples/customer_support_demo/manifest.yaml \
