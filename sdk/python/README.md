@@ -81,6 +81,31 @@ if __name__ == "__main__":
 
 The endpoint accepts JSON-RPC `POST` requests at `/ecp`. It returns JSON for requests, `202 Accepted` for notifications, and `405 Method Not Allowed` for `GET` SSE streams until ECP defines server-initiated messages.
 
+## Testing Your Own Adapter
+
+The bundled adaptors are a convenience, not a requirement - any framework works
+if you return a `Result`. If you write your own, `ecp.testing` is the same
+harness the built-in adaptors use, so you can pin its behaviour without
+installing your framework in CI or holding API keys:
+
+```python
+from ecp.testing import record_fixture, replay
+
+# Once, with the framework installed and credentials set:
+fixture = record_fixture("crewai", crew, "What is 15 multiplied by 8?")
+fixture.save("tests/fixtures/crew_calculator.json")
+
+# Then in CI, offline:
+from ecp.testing import AdapterFixture, diff_expected
+assert diff_expected(AdapterFixture.load("tests/fixtures/crew_calculator.json")) == []
+```
+
+`record_fixture` captures the framework's real response object and the `Result`
+your adapter produced from it. `replay` re-runs the adapter against that capture.
+When a framework reshapes its internals, your `tool_calls` would otherwise go
+quietly empty and every `tool_usage` grader would fail as if the agent had
+regressed - this turns that into a clear test failure.
+
 ## Links
 
 - Documentation: https://evaluationcontextprotocol.io/
