@@ -1,0 +1,79 @@
+{
+  "adapter": "langchain",
+  "input": "What is 15 multiplied by 8?",
+  "response": "The answer is 120.",
+  "expected": {
+    "status": "done",
+    "public_output": "The answer is 120.",
+    "evaluation_context": "I should use the calculator tool for this.",
+    "tool_calls": [
+      {
+        "name": "calculator",
+        "arguments": {
+          "expression": "15*8"
+        }
+      }
+    ],
+    "usage": null
+  },
+  "events": [
+    {
+      "method": "on_llm_end",
+      "payload": {
+        "__kind__": "object",
+        "type": "SimpleNamespace",
+        "attrs": {
+          "generations": [
+            [
+              {
+                "__kind__": "object",
+                "type": "SimpleNamespace",
+                "attrs": {
+                  "text": "I should use the calculator tool for this.",
+                  "message": {
+                    "__kind__": "object",
+                    "type": "SimpleNamespace",
+                    "attrs": {
+                      "content": "",
+                      "tool_calls": [
+                        {
+                          "__kind__": "dict",
+                          "items": {
+                            "name": "calculator",
+                            "args": {
+                              "__kind__": "dict",
+                              "items": {
+                                "expression": "15*8"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "methods": {},
+                    "has_model_dump": false,
+                    "has_dict": false
+                  }
+                },
+                "methods": {},
+                "has_model_dump": false,
+                "has_dict": false
+              }
+            ]
+          ]
+        },
+        "methods": {},
+        "has_model_dump": false,
+        "has_dict": false
+      }
+    }
+  ],
+  "adapter_kwargs": {
+    "name": "LangChainMathBot"
+  },
+  "framework_version": null,
+  "recorded_at": null,
+  "source": "seeded",
+  "fixture_version": "1",
+  "description": "Tool calls arrive out-of-band via the on_llm_end callback, not the invoke() return value."
+}

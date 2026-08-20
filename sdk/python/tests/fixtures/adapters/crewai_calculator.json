@@ -1,0 +1,93 @@
+{
+  "adapter": "crewai",
+  "input": "What is 15 multiplied by 8?",
+  "response": {
+    "__kind__": "object",
+    "type": "SimpleNamespace",
+    "attrs": {
+      "raw": "The answer is 120.",
+      "tasks_output": [
+        {
+          "__kind__": "object",
+          "type": "SimpleNamespace",
+          "attrs": {
+            "messages": [
+              {
+                "__kind__": "dict",
+                "items": {
+                  "role": "user",
+                  "content": "What is 15 multiplied by 8?"
+                }
+              },
+              {
+                "__kind__": "dict",
+                "items": {
+                  "role": "assistant",
+                  "content": "I should use the calculator tool for this.",
+                  "tool_calls": [
+                    {
+                      "__kind__": "dict",
+                      "items": {
+                        "type": "function",
+                        "function": {
+                          "__kind__": "dict",
+                          "items": {
+                            "name": "calculator",
+                            "arguments": "{\"expression\": \"15*8\"}"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "__kind__": "dict",
+                "items": {
+                  "role": "tool",
+                  "content": "120"
+                }
+              },
+              {
+                "__kind__": "dict",
+                "items": {
+                  "role": "assistant",
+                  "content": "The answer is 120."
+                }
+              }
+            ]
+          },
+          "methods": {},
+          "has_model_dump": false,
+          "has_dict": false
+        }
+      ]
+    },
+    "methods": {},
+    "has_model_dump": false,
+    "has_dict": false
+  },
+  "expected": {
+    "status": "done",
+    "public_output": "The answer is 120.",
+    "evaluation_context": "I should use the calculator tool for this.\nThe answer is 120.",
+    "tool_calls": [
+      {
+        "name": "calculator",
+        "arguments": {
+          "expression": "15*8"
+        }
+      }
+    ],
+    "usage": null
+  },
+  "events": [],
+  "adapter_kwargs": {
+    "name": "CrewMathBot"
+  },
+  "framework_version": null,
+  "recorded_at": null,
+  "source": "seeded",
+  "fixture_version": "1",
+  "description": "Tool calls nested in tasks_output[].messages[] as OpenAI-format function calls with stringified JSON arguments."
+}

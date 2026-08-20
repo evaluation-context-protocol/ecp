@@ -75,6 +75,59 @@ python -m ecp_runtime.cli validate examples/customer_support_demo/manifest.yaml
 python -m ecp_runtime.cli run --manifest examples/customer_support_demo/manifest.yaml --json
 ```
 
+## Adapter Conformance
+
+Adapters translate framework-specific response objects into an ECP `Result` by
+walking framework internals - CrewAI's `tasks_output[].messages[]`, LangChain's
+`on_llm_end` callback. When a framework reshapes those internals the translation
+breaks *silently*: `tool_calls` comes back empty and every `tool_usage` grader
+fails, which reads as an agent regression rather than an adapter bug.
+
+Two suites cover that, and neither substitutes for the other.
+
+**Replay (every PR, no API keys, no framework installs).** Each adapter is
+driven against a recorded framework exchange in
+`sdk/python/tests/fixtures/adapters/` and its `Result` compared exactly:
+
+```bash
+$env:PYTHONPATH="sdk/python/src;runtime/python/src"
+python -m unittest discover sdk/python/tests -p "test_adapter_conformance.py"
+```
+
+This catches regressions in adapter code. It cannot catch a framework changing
+shape, because it never talks to one.
+
+**Nightly (`.github/workflows/adapter-nightly.yml`).** Installs the real
+frameworks and runs the real demos against live models. This is what catches
+framework drift. It calls live LLMs, so it flakes occasionally - a failure means
+"look today", not "main is broken".
+
+### Fixtures
+
+Seeded fixtures encode the shapes the adapters are written against. Regenerate:
+
+```bash
+python scripts/seed_adapter_fixtures.py
+```
+
+Capture a real exchange instead, with the framework installed and credentials set:
+
+```python
+from ecp.testing import record_fixture
+
+fixture = record_fixture("crewai", crew, "What is 15 multiplied by 8?",
+                         adapter_kwargs={"name": "CrewMathBot"},
+                         framework_version="crewai 0.86.0")
+fixture.save("sdk/python/tests/fixtures/adapters/crewai_calculator.json")
+```
+
+A shape change then shows up as a fixture diff instead of a mystery. Fixtures
+carry a `source` of `seeded` or `recorded` so a green replay suite is never
+mistaken for evidence that a framework has not changed.
+
+**Adding an adapter requires adding a fixture** - `test_every_adapter_has_at_least_one_fixture`
+fails otherwise, because an adapter with no fixture is an adapter nothing tests.
+
 ## Contribution Priorities
 
 Good first contributions:
