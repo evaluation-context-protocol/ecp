@@ -36,7 +36,7 @@ Most evals start with the final answer. ECP also checks the behavior behind that
 ## Developer Path
 
 ```bash
-pip install "ecp-runtime==0.3.1" "ecp-sdk==0.3.1"
+pip install "ecp-runtime==0.7.0" "ecp-sdk==0.7.0"
 ecp init
 ecp validate ecp_eval/manifest.yaml
 ecp run --manifest ecp_eval/manifest.yaml --json

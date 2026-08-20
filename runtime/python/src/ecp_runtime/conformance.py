@@ -3,6 +3,7 @@
 from typing import Any, Callable, Dict, List, Optional
 
 VALID_STATUSES = {"done", "paused"}
+USAGE_FIELDS = ("input_tokens", "output_tokens", "total_tokens")
 
 
 def validate_rpc_response(response: Any, method: str) -> Any:
@@ -48,6 +49,8 @@ def validate_step_result(result: Any) -> Dict[str, Any]:
             raise ValueError("agent/step result tool_calls must be an array or null")
         for index, tool_call in enumerate(tool_calls):
             _validate_tool_call(tool_call, index)
+
+    _validate_usage(result.get("usage"))
 
     return result
 
@@ -96,6 +99,22 @@ def build_conformance_report(target: str, checks: List[Dict[str, Any]]) -> Dict[
         "total": total,
         "checks": checks,
     }
+
+
+def _validate_usage(usage: Any) -> None:
+    """Validate the optional token accounting block on a step result."""
+    if usage is None:
+        return
+    if not isinstance(usage, dict):
+        raise ValueError("agent/step result usage must be an object or null")
+    for field in USAGE_FIELDS:
+        value = usage.get(field)
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"agent/step result usage.{field} must be an integer or null")
+        if value < 0:
+            raise ValueError(f"agent/step result usage.{field} must not be negative")
 
 
 def _validate_tool_call(tool_call: Any, index: Optional[int] = None) -> None:

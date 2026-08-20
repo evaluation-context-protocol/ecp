@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/audit.schema.json",
+  "title": "ECP Run Audit Record",
+  "description": "Structured telemetry emitted after an evaluation run. Records what was executed, how long it took, what it consumed, and whether every step actually ran.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "audit_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "started_at": { "type": ["string", "null"], "format": "date-time" },
+    "finished_at": { "type": ["string", "null"], "format": "date-time" },
+    "duration_ms": { "type": "number", "minimum": 0 },
+    "exit_reason": {
+      "type": "string",
+      "description": "Why the run ended.",
+      "enum": [
+        "ok",
+        "timeout",
+        "transport_error",
+        "protocol_error",
+        "agent_error",
+        "max_duration_exceeded",
+        "error"
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "python": { "type": "string" },
+        "platform": { "type": "string" }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "path": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "digest": {
+          "type": ["string", "null"],
+          "description": "sha256:<hex> of the manifest file, tying the record to exact inputs."
+        },
+        "target": { "type": "string" }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Metadata returned by agent/initialize.",
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "capabilities": { "type": "object" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "rpc_timeout_s": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "max_duration_s": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "scenarios": { "type": "integer", "minimum": 0 },
+        "steps_planned": { "type": "integer", "minimum": 0 },
+        "steps_executed": { "type": "integer", "minimum": 0 },
+        "steps_failed": { "type": "integer", "minimum": 0 },
+        "steps_skipped": { "type": "integer", "minimum": 0 },
+        "checks_passed": { "type": "integer", "minimum": 0 },
+        "checks_failed": { "type": "integer", "minimum": 0 },
+        "checks_total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "latency": {
+      "type": "object",
+      "description": "Aggregated over steps that actually executed.",
+      "additionalProperties": true,
+      "properties": {
+        "total_ms": { "type": "number", "minimum": 0 },
+        "mean_ms": { "type": "number", "minimum": 0 },
+        "max_ms": { "type": "number", "minimum": 0 },
+        "p95_ms": { "type": "number", "minimum": 0 }
+      }
+    },
+    "usage": {
+      "type": ["object", "null"],
+      "description": "Summed token usage across steps. Null when no step reported usage.",
+      "additionalProperties": true,
+      "properties": {
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "total_tokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["ok", "failed", "skipped"] },
+          "exit_reason": { "type": "string" },
+          "duration_ms": { "type": "number", "minimum": 0 },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "index": { "type": "integer", "minimum": 1 },
+                "input": { "type": ["string", "null"] },
+                "status": { "type": "string", "enum": ["ok", "failed", "skipped"] },
+                "exit_reason": { "type": "string" },
+                "duration_ms": { "type": "number", "minimum": 0 },
+                "usage": { "type": ["object", "null"] },
+                "tool_calls": { "type": "integer", "minimum": 0 },
+                "checks_passed": { "type": "integer", "minimum": 0 },
+                "checks_total": { "type": "integer", "minimum": 0 },
+                "error": { "type": ["string", "null"] }
+              },
+              "required": ["index", "status", "exit_reason", "duration_ms"]
+            }
+          }
+        },
+        "required": ["name", "status", "exit_reason", "steps"]
+      }
+    }
+  },
+  "required": [
+    "audit_version",
+    "run_id",
+    "exit_reason",
+    "runtime",
+    "manifest",
+    "limits",
+    "totals",
+    "latency",
+    "scenarios"
+  ]
+}

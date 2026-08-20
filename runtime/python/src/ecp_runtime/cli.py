@@ -94,7 +94,18 @@ def run(
     timeout: Optional[float] = typer.Option(
         None,
         "--timeout",
-        help="RPC timeout in seconds (overrides ECP_RPC_TIMEOUT)",
+        help="Per-RPC timeout in seconds (overrides ECP_RPC_TIMEOUT)",
+    ),
+    max_duration: Optional[float] = typer.Option(
+        None,
+        "--max-duration",
+        help="Wall-clock budget in seconds for the whole run (overrides ECP_MAX_DURATION)",
+    ),
+    audit_out: Optional[Path] = typer.Option(
+        None,
+        "--audit-out",
+        help="Path to save the structured audit payload (e.g., ecp_audit.json)",
+        resolve_path=True,
     ),
 ):
     """
@@ -110,18 +121,26 @@ def run(
         config = ECPManifest.from_yaml(str(manifest))
 
         # Run the Tests
-        runner = ECPRunner(config, rpc_timeout=timeout)
+        runner = ECPRunner(
+            config,
+            rpc_timeout=timeout,
+            max_duration=max_duration,
+            manifest_path=str(manifest),
+        )
         result_summary = runner.run_scenarios()
         total = int(result_summary.get("total", 0) or 0)
         passed = int(result_summary.get("passed", 0) or 0)
         failed = max(total - passed, 0)
+        exit_reason = result_summary.get("exit_reason", "ok")
 
         report_payload: Dict[str, Any] = {
             "manifest": str(manifest),
             "passed": passed,
             "total": total,
             "failed": failed,
+            "exit_reason": exit_reason,
             "scenarios": result_summary.get("scenarios", []),
+            "audit": result_summary.get("audit", {}),
         }
 
         if report:
@@ -136,6 +155,12 @@ def run(
         if json_out:
             json_out.write_text(json.dumps(report_payload, indent=2), encoding="utf-8")
             logger.info("JSON report saved to %s", json_out)
+
+        if audit_out:
+            audit_out.write_text(
+                json.dumps(result_summary.get("audit", {}), indent=2) + "\n", encoding="utf-8"
+            )
+            logger.info("Audit payload saved to %s", audit_out)
 
         if print_json:
             typer.echo(json.dumps(report_payload, indent=2))
@@ -163,6 +188,12 @@ def run(
                     logger.error("Failed to export to LangSmith: %s", e)
             else:
                 logger.warning("Unsupported export target: %s", export)
+
+        if exit_reason != "ok":
+            logger.error(
+                "Run did not complete cleanly (exit_reason=%s). See the audit payload for details.",
+                exit_reason,
+            )
 
         if fail_on_error and failed > 0:
             raise typer.Exit(code=2)

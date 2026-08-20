@@ -9,7 +9,7 @@ ECP is a vendor-neutral protocol and reference runtime for testing agent outputs
 
 MCP gives agents a common way to use tools. ECP gives evaluators a common way to inspect what an agent returned, what tools it used, and what audit evidence it exposed.
 
-> Status: experimental but usable. The current package line is `0.3.1`.
+> Status: experimental but usable. The current package line is `0.7.0`.
 
 ## Why ECP
 
@@ -28,7 +28,7 @@ Use ECP when you want to:
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install "ecp-runtime==0.3.1" "ecp-sdk==0.3.1"
+pip install "ecp-runtime==0.7.0" "ecp-sdk==0.7.0"
 ecp init
 ecp validate ecp_eval/manifest.yaml
 ecp run --manifest ecp_eval/manifest.yaml --json
@@ -88,9 +88,16 @@ ecp validate examples/customer_support_demo/manifest.yaml
 ecp run --manifest examples/customer_support_demo/manifest.yaml --json
 ecp run --manifest examples/customer_support_demo/manifest.yaml --json-out report.json
 ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.html
+ecp run --manifest examples/customer_support_demo/manifest.yaml --audit-out ecp_audit.json
 ecp conformance --target "python examples/customer_support_demo/agent.py"
 ecp doctor
 ```
+
+## Execution Boundaries And Audit
+
+A hung agent never pins a CI job. `--timeout` bounds each RPC and `--max-duration` bounds the whole run; when either trips, the failing step is recorded as failed, the rest of that scenario is skipped, and the next scenario runs with a fresh agent. A step that never answered still counts as a failed check, so a timeout can't be read as a pass.
+
+Every run emits a structured audit record - run id, manifest digest, agent metadata, per-step latency and `exit_reason`, token usage, and totals - embedded in the JSON report and writable with `--audit-out`. Comparing `steps_planned` to `steps_executed` shows at a glance whether a run completed or degraded.
 
 Python agents may implement `@on_step` and `@on_reset` with regular functions or `async def`. See [`examples/async_python_demo`](examples/async_python_demo) for stdio and Streamable HTTP usage. For long-running calls, pass `--timeout` to `ecp run` or `ecp conformance`.
 

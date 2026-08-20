@@ -105,16 +105,34 @@ jobs:
           )
           init_path.write_text(new_init_content, encoding="utf-8")
           
-          # 4. Update runtime/python/README.md
-          readme_path = Path("runtime/python/README.md")
-          readme_content = readme_path.read_text(encoding="utf-8")
-          new_readme_content = re.sub(
-              r'(ecp-runtime==)\d+\.\d+\.\d+',
-              f'\\g<1>{new_version}',
-              readme_content
-          )
-          readme_path.write_text(new_readme_content, encoding="utf-8")
-          
+          # 4. Update every doc that pins a version.
+          # These drifted four releases behind when only runtime/README.md was
+          # rewritten here, so users were told to install versions that predated
+          # most of the features documented on the same page.
+          doc_paths = [
+              Path("runtime/python/README.md"),
+              Path("sdk/python/README.md"),
+              Path("README.md"),
+              Path("docs/index.md"),
+              Path("docs/quickstart.md"),
+              Path("docs/ci.md"),
+          ]
+          doc_patterns = [
+              # pip pins, including SDK extras: ecp-sdk[langchain]==X.Y.Z
+              (r'(ecp-(?:runtime|sdk)(?:\[[a-z,]+\])?==)\d+\.\d+\.\d+', f'\\g<1>{new_version}'),
+              # prose: "The current release line is `X.Y.Z`."
+              (r'((?:release|package) line is `)\d+\.\d+\.\d+`', f'\\g<1>{new_version}`'),
+          ]
+          for doc_path in doc_paths:
+              if not doc_path.exists():
+                  print(f"Skipping missing {doc_path}")
+                  continue
+              doc_content = doc_path.read_text(encoding="utf-8")
+              for pattern, replacement in doc_patterns:
+                  doc_content = re.sub(pattern, replacement, doc_content)
+              doc_path.write_text(doc_content, encoding="utf-8")
+              print(f"Updated version pins in {doc_path}")
+
           # Output for next steps
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"new_version={new_version}\n")
@@ -125,7 +143,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add runtime/python/pyproject.toml sdk/python/pyproject.toml runtime/python/src/ecp_runtime/__init__.py runtime/python/README.md
+          git add runtime/python/pyproject.toml sdk/python/pyproject.toml runtime/python/src/ecp_runtime/__init__.py runtime/python/README.md sdk/python/README.md README.md docs/index.md docs/quickstart.md docs/ci.md
           
           NEW_VERSION="${{ steps.bump.outputs.new_version }}"
           NEW_TAG="${{ steps.bump.outputs.new_tag }}"

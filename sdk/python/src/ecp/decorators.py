@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
+
+USAGE_FIELDS = ("input_tokens", "output_tokens", "total_tokens")
 
 
 # --- Public Types ---
@@ -13,6 +15,8 @@ class Result:
     private_thought: Optional[str] = None
     tool_calls: Optional[list] = None
     logs: Optional[str] = None
+    # Optional token accounting, surfaced in the runtime's audit payload.
+    usage: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.status not in {"done", "paused"}:
@@ -31,6 +35,17 @@ class Result:
                     raise ValueError(f"tool_calls[{index}].name must be a non-empty string")
                 if "arguments" in tool_call and not isinstance(tool_call["arguments"], dict):
                     raise TypeError(f"tool_calls[{index}].arguments must be a dictionary")
+        if self.usage is not None:
+            if not isinstance(self.usage, dict):
+                raise TypeError("usage must be a dictionary or None")
+            for field_name in USAGE_FIELDS:
+                value = self.usage.get(field_name)
+                if value is None:
+                    continue
+                if isinstance(value, bool) or not isinstance(value, int):
+                    raise TypeError(f"usage.{field_name} must be an integer or None")
+                if value < 0:
+                    raise ValueError(f"usage.{field_name} must not be negative")
         if self.evaluation_context is None and self.private_thought is not None:
             self.evaluation_context = self.private_thought
         elif self.private_thought is None and self.evaluation_context is not None:

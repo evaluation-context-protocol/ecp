@@ -115,6 +115,35 @@ class StreamableHTTPServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["result"]["logs"], "trace")
 
+    def test_server_serializes_usage(self) -> None:
+        result = Result(public_output="ok", usage={"input_tokens": 12, "output_tokens": 3})
+
+        with mock.patch.object(HTTPTestAgent, "step", return_value=result):
+            status, body, _headers = self._post(
+                {"jsonrpc": "2.0", "id": 1, "method": "agent/step", "params": {"input": "hello"}}
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["result"]["usage"], {"input_tokens": 12, "output_tokens": 3})
+
+    def test_usage_defaults_to_null_when_not_reported(self) -> None:
+        with mock.patch.object(HTTPTestAgent, "step", return_value=Result(public_output="ok")):
+            _status, body, _headers = self._post(
+                {"jsonrpc": "2.0", "id": 1, "method": "agent/step", "params": {"input": "hello"}}
+            )
+
+        self.assertIsNone(body["result"]["usage"])
+
+    def test_result_rejects_invalid_usage(self) -> None:
+        with self.assertRaisesRegex(TypeError, "usage must be a dictionary"):
+            Result(usage=[1, 2])
+
+        with self.assertRaisesRegex(TypeError, "usage.input_tokens must be an integer"):
+            Result(usage={"input_tokens": "12"})
+
+        with self.assertRaisesRegex(ValueError, "must not be negative"):
+            Result(usage={"output_tokens": -1})
+
     def test_post_json_rpc_notification_returns_accepted(self) -> None:
         status, body, _headers = self._post(
             {"jsonrpc": "2.0", "method": "agent/initialize", "params": {}}

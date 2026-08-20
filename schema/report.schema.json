@@ -20,8 +20,15 @@
       "type": "integer",
       "minimum": 0
     },
+    "exit_reason": {
+      "type": "string",
+      "description": "Why the run ended. 'ok' means every scenario executed to completion."
+    },
     "scenarios": {
       "type": "array"
+    },
+    "audit": {
+      "$ref": "./audit.schema.json"
     }
   },
   "required": ["manifest", "passed", "total", "failed", "scenarios"]
