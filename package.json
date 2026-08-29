@@ -1,0 +1,11 @@
+{
+  "name": "evaluation-context-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "inspector": "node server/src/server.js",
+    "inspector:dev": "node server/src/server.js"
+  },
+  "dependencies": {}
+}

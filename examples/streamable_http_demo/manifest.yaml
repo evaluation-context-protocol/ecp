@@ -1,0 +1,18 @@
+manifest_version: "v1"
+name: "Streamable HTTP Transport Validation"
+target: "http://127.0.0.1:8765/ecp"
+
+scenarios:
+  - name: "HTTP Echo"
+    steps:
+      - input: "echo: transport is online"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "transport is online"
+
+          - type: tool_usage
+            tool_name: "http_echo"
+            arguments:
+              message: "transport is online"

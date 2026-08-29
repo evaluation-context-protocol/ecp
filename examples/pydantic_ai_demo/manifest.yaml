@@ -1,0 +1,30 @@
+manifest_version: "v1"
+name: "PydanticAI Integration Test"
+target: "python agent.py"
+
+scenarios:
+  - name: "Basic Math"
+    steps:
+      - input: "What is 123 * 456?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: regex
+            pattern: "56,?088"
+          
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Word Problem"
+    steps:
+      - input: "If I have 15 Apples and I give 7 to my friend, how many do I have left?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "8"
+          
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}

@@ -1,0 +1,40 @@
+site_name: Evaluation Context Protocol (ECP)
+site_description: Lightweight protocol and runtime for agent evaluation
+site_url: https://evaluationcontextprotocol.io
+repo_url: https://github.com/evaluation-context-protocol/ecp
+repo_name: evaluation-context-protocol/ecp
+
+nav:
+  - Introduction:
+      - Home: index.md
+      - Why ECP: why-ecp.md
+  - Protocol Specification: spec.md
+  - Python SDK:
+      - Quickstart: quickstart.md
+      - Examples: examples.md
+  - CLI Tool (YAML):
+      - CI: ci.md
+      - Inspector: inspector.md
+      - DX Validation: dev-experience.md
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: slate
+      accent: indigo
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+markdown_extensions:
+  - fenced_code
+  - tables
+
+extra_javascript:
+  - javascripts/gtag.js

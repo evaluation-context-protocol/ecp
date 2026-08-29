@@ -1,0 +1,44 @@
+manifest_version: "v1"
+name: "CrewAI Docs Integration Test"
+target: "python agent.py"
+
+scenarios:
+  - name: "Simple Arithmetic"
+    steps:
+      - input: "What is 15 multiplied by 8?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "120"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Ratio Word Problem"
+    steps:
+      - input: "Katy makes coffee using teaspoons of sugar and cups of water in the ratio of 7:13. If she used a total of 120 teaspoons of sugar and cups of water, calculate the number of teaspoonfuls of sugar she used."
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "42"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+
+  - name: "Multi-Step Calculation"
+    steps:
+      - input: "James writes a 3-page letter to each of 2 different friends, and he does this 2 times every week. How many total pages does he write in a year (52 weeks)?"
+        graders:
+          - type: text_match
+            field: public_output
+            condition: contains
+            value: "624"
+
+          - type: tool_usage
+            tool_name: "calculator"
+            arguments: {}
+

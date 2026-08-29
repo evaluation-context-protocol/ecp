@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/report.schema.json",
+  "title": "ECP Runtime Report",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "manifest": {
+      "type": "string"
+    },
+    "passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exit_reason": {
+      "type": "string",
+      "description": "Why the run ended. 'ok' means every scenario executed to completion."
+    },
+    "scenarios": {
+      "type": "array"
+    },
+    "audit": {
+      "$ref": "./audit.schema.json"
+    }
+  },
+  "required": ["manifest", "passed", "total", "failed", "scenarios"]
+}

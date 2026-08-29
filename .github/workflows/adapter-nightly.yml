@@ -1,0 +1,121 @@
+name: Adapter Nightly
+
+# The replay suite in PR CI proves adapter *parsing* is stable against recorded
+# shapes. It cannot prove a framework still emits those shapes, because it never
+# talks to one. This job does: it installs the real frameworks and runs the real
+# demos against real models.
+#
+# Expect occasional flakes - these call live LLMs. A failure here means "look at
+# it today", not "main is broken".
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      adapter:
+        description: "Run a single adapter (crewai, langchain, llamaindex, pydanticai) or 'all'"
+        required: false
+        default: "all"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  real-frameworks:
+    runs-on: ubuntu-latest
+    # Without credentials every demo fails for the same boring reason, which
+    # trains maintainers to ignore this job.
+    if: github.repository == 'evaluation-context-protocol/ecp'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - adapter: crewai
+            extra: crewai
+            manifest: examples/crewai_demo/manifest.yaml
+          - adapter: langchain
+            extra: langchain
+            manifest: examples/langchain_demo/manifest.yaml
+          - adapter: llamaindex
+            extra: llamaindex
+            manifest: examples/llamaindex_demo/manifest.yaml
+          - adapter: pydanticai
+            extra: pydanticai
+            manifest: examples/pydantic_ai_demo/manifest.yaml
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime, SDK, and the real framework
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e runtime/python
+          python -m pip install -e "sdk/python[${{ matrix.extra }}]"
+
+      - name: Record installed framework versions
+        run: python -m pip freeze | grep -iE "crewai|langchain|llama|pydantic" || true
+
+      - name: Protocol conformance against the real agent
+        if: ${{ github.event.inputs.adapter == '' || github.event.inputs.adapter == 'all' || github.event.inputs.adapter == matrix.adapter }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          agent_dir="$(dirname '${{ matrix.manifest }}')"
+          ecp conformance --target "python $agent_dir/agent.py" --timeout 120
+
+      - name: Run the real demo manifest
+        if: ${{ github.event.inputs.adapter == '' || github.event.inputs.adapter == 'all' || github.event.inputs.adapter == matrix.adapter }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd "$(dirname '${{ matrix.manifest }}')"
+          ecp run --manifest manifest.yaml \
+            --timeout 120 --max-duration 900 \
+            --json-out report.json --audit-out audit.json
+
+      - name: Upload report and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ matrix.adapter }}
+          path: |
+            examples/**/report.json
+            examples/**/audit.json
+          if-no-files-found: ignore
+
+  report-failure:
+    needs: real-frameworks
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open or update the drift issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Adapter nightly failed"
+          body="The nightly real-framework run failed: $RUN_URL
+
+          A failure here usually means one of:
+
+          - a framework reshaped the internals an adapter traverses (regenerate
+            fixtures with \`ecp.testing.record_fixture\` and review the diff)
+          - a framework changed behaviour so the demo no longer satisfies its graders
+          - a live model call flaked
+
+          The replay suite in PR CI will still be green in the first two cases,
+          because it replays recorded shapes. That gap is what this job covers."
+
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body" --label "adapters"
+          fi
