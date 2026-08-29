@@ -108,6 +108,6 @@ regressed - this turns that into a clear test failure.
 
 ## Links
 
-- Documentation: https://evaluationcontextprotocol.io/
-- Repository: https://github.com/evaluation-context-protocol/ecp
-- Issues: https://github.com/evaluation-context-protocol/ecp/issues
+- Documentation: https://ecp-protocol.example.org/
+- Repository: https://github.com/anonymous/ecp
+- Issues: https://github.com/anonymous/ecp/issues

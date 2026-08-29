@@ -1,6 +1,6 @@
 # Specification
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Protocol Source](https://github.com/evaluation-context-protocol/ecp/blob/main/spec/protocol.md)
+[View on GitHub](https://github.com/anonymous/ecp) | [Protocol Source](https://github.com/anonymous/ecp/blob/main/spec/protocol.md)
 
 ## Overview
 

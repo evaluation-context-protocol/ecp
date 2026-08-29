@@ -7,17 +7,17 @@ name = "ecp-sdk"
 version = "0.9.0"
 description = "Python SDK for portable AI agent evaluations with outputs, tool calls, and audit context."
 authors = [
-  { name = "ECP Maintainers", email = "aniket.wattamwar17@gmail.com" },
+  { name = "ECP Maintainers", email = "anonymous@example.com" },
 ]
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [] # Zero dependencies! Keep it lightweight.
 
 [project.urls]
-Homepage = "https://github.com/evaluation-context-protocol/ecp"
-Documentation = "https://evaluationcontextprotocol.io/"
-Repository = "https://github.com/evaluation-context-protocol/ecp"
-Issues = "https://github.com/evaluation-context-protocol/ecp/issues"
+Homepage = "https://github.com/anonymous/ecp"
+Documentation = "https://ecp-protocol.example.org/"
+Repository = "https://github.com/anonymous/ecp"
+Issues = "https://github.com/anonymous/ecp/issues"
 
 [project.optional-dependencies]
 # We will add framework support here later

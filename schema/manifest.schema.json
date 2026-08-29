@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evaluationcontextprotocol.io/schema/manifest.schema.json",
+  "$id": "https://ecp-protocol.example.org/schema/manifest.schema.json",
   "title": "ECP Manifest",
   "type": "object",
   "additionalProperties": false,

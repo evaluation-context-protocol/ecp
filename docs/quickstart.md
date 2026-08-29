@@ -1,6 +1,6 @@
 # Quickstart
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
+[View on GitHub](https://github.com/anonymous/ecp) | [Docs Home](https://ecp-protocol.example.org/)
 
 ## 1. Install
 

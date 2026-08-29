@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evaluationcontextprotocol.io/schema/agent-result.schema.json",
+  "$id": "https://ecp-protocol.example.org/schema/agent-result.schema.json",
   "title": "ECP Agent Step Result",
   "type": "object",
   "additionalProperties": true,

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evaluationcontextprotocol.io/schema/tool-call.schema.json",
+  "$id": "https://ecp-protocol.example.org/schema/tool-call.schema.json",
   "title": "ECP Tool Call",
   "type": "object",
   "additionalProperties": true,

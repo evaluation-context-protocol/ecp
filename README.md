@@ -113,6 +113,6 @@ Python agents may implement `@on_step` and `@on_reset` with regular functions or
 
 ## Documentation
 
-- Docs site: https://evaluationcontextprotocol.io/
-- Quickstart: https://evaluationcontextprotocol.io/quickstart/
-- Specification: https://evaluationcontextprotocol.io/spec/
+- Docs site: https://ecp-protocol.example.org/
+- Quickstart: https://ecp-protocol.example.org/quickstart/
+- Specification: https://ecp-protocol.example.org/spec/

@@ -1,6 +1,6 @@
 # Evaluation Context Protocol (ECP)
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Quickstart](quickstart.md) | [Specification](spec.md)
+[View on GitHub](https://github.com/anonymous/ecp) | [Quickstart](quickstart.md) | [Specification](spec.md)
 
 **Portable evaluations for AI agents.**
 

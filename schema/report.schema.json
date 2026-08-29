@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evaluationcontextprotocol.io/schema/report.schema.json",
+  "$id": "https://ecp-protocol.example.org/schema/report.schema.json",
   "title": "ECP Runtime Report",
   "type": "object",
   "additionalProperties": true,

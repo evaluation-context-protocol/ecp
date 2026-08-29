@@ -1,6 +1,6 @@
 # ECP Inspector
 
-[View on GitHub](https://github.com/evaluation-context-protocol/ecp) | [Docs Home](https://evaluationcontextprotocol.io/)
+[View on GitHub](https://github.com/anonymous/ecp) | [Docs Home](https://ecp-protocol.example.org/)
 
 ECP Inspector is a local developer UI for testing and debugging ECP agents. It follows the same workflow shape as MCP Inspector: connect to a target, inspect capabilities, send protocol requests, run scenarios, and watch logs.
 

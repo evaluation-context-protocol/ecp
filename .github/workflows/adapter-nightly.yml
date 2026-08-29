@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     # Without credentials every demo fails for the same boring reason, which
     # trains maintainers to ignore this job.
-    if: github.repository == 'evaluation-context-protocol/ecp'
+    if: github.repository == 'anonymous/ecp'
     strategy:
       fail-fast: false
       matrix:

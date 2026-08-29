@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evaluationcontextprotocol.io/schema/audit.schema.json",
+  "$id": "https://ecp-protocol.example.org/schema/audit.schema.json",
   "title": "ECP Run Audit Record",
   "description": "Structured telemetry emitted after an evaluation run. Records what was executed, how long it took, what it consumed, and whether every step actually ran.",
   "type": "object",
