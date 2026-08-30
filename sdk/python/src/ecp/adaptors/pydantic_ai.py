@@ -46,12 +46,16 @@ class ECPPydanticAIAdapter:
         # 1. Capture thoughts and tool calls from messages
         self._capture_from_result(result)
 
-        # 2. Capture usage metadata as a thought
+        usage_data = None
+
+        # 2. Preserve usage metadata as structured audit data
         try:
             usage = result.usage()
             if usage:
-                usage_str = f"Usage: {usage.input_tokens} input, {usage.output_tokens} output tokens ({usage.requests} requests)"
-                self.captured_thoughts.append(usage_str)
+                usage_data = {
+                    "input_tokens": usage.input_tokens,
+                    "output_tokens": usage.output_tokens,
+                }
         except Exception:
             pass
 
@@ -77,6 +81,7 @@ class ECPPydanticAIAdapter:
             public_output=public_output,
             evaluation_context="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
             tool_calls=self.captured_tool_calls or None,
+            usage=usage_data,
         )
 
     def _capture_from_result(self, result: Any) -> None:

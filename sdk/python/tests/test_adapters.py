@@ -93,6 +93,8 @@ class AdapterNormalizationTests(unittest.TestCase):
         result = adapter.step("2+2")
         self.assertEqual(result.tool_calls[0]["name"], "calculator")
         self.assertEqual(result.tool_calls[0]["arguments"]["expression"], "2+2")
+        self.assertEqual(result.usage, {"input_tokens": 1, "output_tokens": 1})
+        self.assertNotIn("Usage:", result.evaluation_context or "")
 
 
 if __name__ == "__main__":
