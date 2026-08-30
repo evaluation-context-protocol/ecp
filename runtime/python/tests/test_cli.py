@@ -91,11 +91,16 @@ class CLISmokeTests(unittest.TestCase):
             )
 
         self.assertEqual(result.exit_code, 0, msg=result.output)
+        # --manifest is declared with resolve_path=True, so the CLI hands the
+        # runner a fully resolved path. On macOS the temp directory sits behind
+        # the /var -> /private/var symlink, so the resolved form differs from
+        # what tempfile reported. Compare against the resolved path on every
+        # platform; this is a no-op where the temp directory is already real.
         runtime_class.assert_called_once_with(
             fake_config,
             rpc_timeout=4.5,
             max_duration=None,
-            manifest_path=self.manifest_path,
+            manifest_path=str(Path(self.manifest_path).resolve()),
         )
 
     def test_run_passes_max_duration_to_runner(self) -> None:
