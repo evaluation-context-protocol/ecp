@@ -1,5 +1,6 @@
 import asyncio
 import json
+import socket
 import sys
 import threading
 import unittest
@@ -212,6 +213,29 @@ class StreamableHTTPServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["error"]["code"], -32000)
         self.assertIn("async failure", body["error"]["message"])
+
+
+class HTTPServerBindTests(unittest.TestCase):
+    def test_bind_does_not_reverse_resolve_the_host(self) -> None:
+        """server_bind must not call socket.getfqdn.
+
+        HTTPServer.server_bind reverse-resolves the bound address to set
+        server_name. Where the resolver is slow or has no PTR record that call
+        blocks (35s for 127.0.0.1 on a GitHub macOS runner), and the socket is
+        bound but not yet listening for the whole window, so clients see
+        connection refused rather than a server that is merely slow.
+        """
+        with mock.patch.object(
+            socket, "getfqdn", side_effect=AssertionError("server_bind called getfqdn")
+        ) as getfqdn:
+            httpd = server._build_http_server("127.0.0.1", 0, "/ecp")
+
+        try:
+            self.assertEqual(getfqdn.call_count, 0)
+            self.assertEqual(httpd.server_name, "127.0.0.1")
+            self.assertGreater(httpd.server_port, 0)
+        finally:
+            httpd.server_close()
 
 
 if __name__ == "__main__":
