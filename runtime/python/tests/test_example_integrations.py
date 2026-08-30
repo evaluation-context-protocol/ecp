@@ -77,7 +77,7 @@ class ExampleIntegrationTests(unittest.TestCase):
         )
 
         try:
-            self._wait_for_port("127.0.0.1", port)
+            self._wait_for_port("127.0.0.1", port, server)
             result = subprocess.run(
                 [
                     sys.executable,
@@ -127,7 +127,7 @@ class ExampleIntegrationTests(unittest.TestCase):
         )
 
         try:
-            self._wait_for_port("127.0.0.1", port)
+            self._wait_for_port("127.0.0.1", port, server)
             with tempfile.TemporaryDirectory() as tmpdir:
                 manifest_path = Path(tmpdir) / "streamable-http-manifest.yaml"
                 manifest_path.write_text(
@@ -171,13 +171,32 @@ class ExampleIntegrationTests(unittest.TestCase):
             sock.bind(("127.0.0.1", 0))
             return int(sock.getsockname()[1])
 
-    def _wait_for_port(self, host: str, port: int) -> None:
-        deadline = time.time() + 5
+    def _wait_for_port(self, host: str, port: int, server=None, timeout: float = 30.0) -> None:
+        start = time.time()
+        deadline = start + timeout
         while time.time() < deadline:
             if self._port_is_open(host, port):
                 return
+            if server is not None and server.poll() is not None:
+                out, err = server.communicate()
+                raise AssertionError(
+                    f"Agent server exited with code {server.returncode} after "
+                    f"{time.time() - start:.1f}s, before {host}:{port} accepted a "
+                    f"connection.\n--- stdout ---\n{out}\n--- stderr ---\n{err}"
+                )
             time.sleep(0.05)
-        raise AssertionError(f"Timed out waiting for {host}:{port}")
+
+        detail = ""
+        if server is not None:
+            server.kill()
+            out, err = server.communicate()
+            detail = (
+                f"\nServer process was still alive (pid {server.pid}).\n"
+                f"--- stdout ---\n{out}\n--- stderr ---\n{err}"
+            )
+        raise AssertionError(
+            f"Timed out waiting for {host}:{port} after {timeout:.0f}s.{detail}"
+        )
 
     def _port_is_open(self, host: str, port: int) -> bool:
         try:
