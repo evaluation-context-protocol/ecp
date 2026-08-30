@@ -93,6 +93,30 @@ class AdapterNormalizationTests(unittest.TestCase):
         result = adapter.step("2+2")
         self.assertEqual(result.tool_calls[0]["name"], "calculator")
         self.assertEqual(result.tool_calls[0]["arguments"]["expression"], "2+2")
+        self.assertEqual(result.usage, {"input_tokens": 1, "output_tokens": 1})
+        self.assertIsNone(result.evaluation_context)
+
+    def test_pydantic_ai_structured_usage_reported(self):
+        from ecp.adaptors.pydantic_ai import ECPPydanticAIAdapter
+
+        class _RunResult:
+            data = "done"
+            output = "done"
+
+            def new_messages(self):
+                return []
+
+            def usage(self):
+                return SimpleNamespace(input_tokens=100, output_tokens=50, total_tokens=150, requests=1)
+
+        fake_agent = SimpleNamespace(run_sync=lambda *_args, **_kwargs: _RunResult())
+        adapter = ECPPydanticAIAdapter(fake_agent)
+        result = adapter.step("hi")
+        self.assertEqual(
+            result.usage,
+            {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        )
+        self.assertIsNone(result.evaluation_context)
 
 
 if __name__ == "__main__":
