@@ -46,17 +46,29 @@ class ECPPydanticAIAdapter:
         # 1. Capture thoughts and tool calls from messages
         self._capture_from_result(result)
 
-        # 2. Capture usage metadata as a thought
+        # 2. Capture usage metadata
+        usage_payload = None
         try:
             usage = result.usage()
             if usage:
-                usage_str = f"Usage: {usage.input_tokens} input, {usage.output_tokens} output tokens ({usage.requests} requests)"
-                self.captured_thoughts.append(usage_str)
+                payload = {}
+                if getattr(usage, "input_tokens", None) is not None:
+                    payload["input_tokens"] = usage.input_tokens
+                elif getattr(usage, "request_tokens", None) is not None:
+                    payload["input_tokens"] = usage.request_tokens
+                if getattr(usage, "output_tokens", None) is not None:
+                    payload["output_tokens"] = usage.output_tokens
+                elif getattr(usage, "response_tokens", None) is not None:
+                    payload["output_tokens"] = usage.response_tokens
+                if getattr(usage, "total_tokens", None) is not None:
+                    payload["total_tokens"] = usage.total_tokens
+                if payload:
+                    usage_payload = payload
         except Exception:
             pass
 
         # 3. Format public output
-        # If the result has structured 'data', we prefer that. 
+        # If the result has structured 'data', we prefer that.
         # If it's a Pydantic model, dump it correctly.
         public_output = ""
         try:
@@ -77,6 +89,7 @@ class ECPPydanticAIAdapter:
             public_output=public_output,
             evaluation_context="\n".join(self.captured_thoughts) if self.captured_thoughts else None,
             tool_calls=self.captured_tool_calls or None,
+            usage=usage_payload,
         )
 
     def _capture_from_result(self, result: Any) -> None:
@@ -98,7 +111,7 @@ class ECPPydanticAIAdapter:
         # The last ModelResponse is the final one containing public_output
         responses = [m for m in messages if getattr(m, "kind", None) == "response"]
         last_response = responses[-1] if responses else None
-        
+
         for msg in responses:
             parts = getattr(msg, "parts", [])
             for part in parts:
@@ -109,7 +122,7 @@ class ECPPydanticAIAdapter:
                     content = getattr(part, "content", "")
                     if content:
                         self.captured_thoughts.append(content)
-                
+
                 # Capture reasoning TextParts
                 elif part_kind == "text":
                     content = getattr(part, "content", "")
@@ -117,16 +130,16 @@ class ECPPydanticAIAdapter:
                     # 1. It's in a message that also has tool calls
                     # 2. It's in a message that is NOT the very last response of the run
                     has_tool_calls = any(getattr(p, "part_kind", "") in ("tool-call", "tool_call") for p in parts)
-                    
+
                     if msg is not last_response or has_tool_calls:
                         if content and content.strip():
                             self.captured_thoughts.append(content.strip())
-                
+
                 # Capture tool calls
                 elif part_kind in ("tool-call", "tool_call"):
                     tool_name = getattr(part, "tool_name", None)
                     args = {}
-                    
+
                     if hasattr(part, "args_as_dict"):
                         try:
                             args = part.args_as_dict()
