@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 import json
+import re
 import sys
 import threading
 from concurrent.futures import Future
@@ -13,6 +14,18 @@ from .decorators import _CURRENT_AGENT_INSTANCE, _HOOKS, Result
 
 JSON_RPC_VERSION = "2.0"
 JSON_CONTENT_TYPE = "application/json"
+PROTOCOL_VERSION = "1.0"
+VERSION_UNSUPPORTED_CODE = -32001
+
+_PROTOCOL_VERSION_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
+
+
+class _JSONRPCError(Exception):
+    """Internal exception carrying a specific JSON-RPC error code."""
+
+    def __init__(self, code: int, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class _AwaitableExecutor:
@@ -236,7 +249,27 @@ def _build_http_server(
 
 def _handle_init(params):
     name = getattr(_CURRENT_AGENT_INSTANCE, "_ecp_meta", {}).get("name", "Unknown")
-    return {"name": name, "capabilities": {}}
+    selected_version = PROTOCOL_VERSION
+
+    # Versionless runtimes predate negotiation. Returning our current version is
+    # additive, and those runtimes already ignore unknown result fields.
+    if "protocol_version" in params:
+        requested_version = params["protocol_version"]
+        requested_major, requested_minor = _parse_protocol_version(requested_version)
+        supported_major, supported_minor = _parse_protocol_version(PROTOCOL_VERSION)
+        if requested_major != supported_major:
+            raise _JSONRPCError(
+                VERSION_UNSUPPORTED_CODE,
+                "VERSION_UNSUPPORTED: "
+                f"agent supports protocol {PROTOCOL_VERSION}, but the runtime requested {requested_version}",
+            )
+        selected_version = f"{supported_major}.{min(requested_minor, supported_minor)}"
+
+    return {
+        "name": name,
+        "protocol_version": selected_version,
+        "capabilities": {},
+    }
 
 def _handle_step(params):
     method_name = _HOOKS["step"]
@@ -313,6 +346,8 @@ def _dispatch_json_rpc(request: Any) -> Optional[Dict[str, Any]]:
             response_data = _handle_reset()
         else:
             return _json_rpc_error(req_id, -32601, f"Unknown method: {method}")
+    except _JSONRPCError as exc:
+        return _json_rpc_error(req_id, exc.code, str(exc))
     except Exception as exc:
         return _json_rpc_error(req_id, -32000, f"{type(exc).__name__}: {exc}")
 
@@ -346,6 +381,13 @@ def _json_rpc_error(req_id, code, message):
         "id": req_id,
         "error": {"code": code, "message": message}
     }
+
+
+def _parse_protocol_version(value: object) -> Tuple[int, int]:
+    if not isinstance(value, str) or _PROTOCOL_VERSION_PATTERN.fullmatch(value) is None:
+        raise _JSONRPCError(-32602, "protocol_version must be a MAJOR.MINOR string")
+    major, minor = value.split(".", 1)
+    return int(major), int(minor)
 
 def _accepts(header: str, media_type: str) -> bool:
     if not header:

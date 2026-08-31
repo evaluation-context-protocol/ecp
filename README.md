@@ -48,6 +48,8 @@ ECP is JSON-RPC 2.0 over stdio or Streamable HTTP. The runtime calls:
 - `agent/step`
 - `agent/reset`
 
+During `agent/initialize`, the runtime and agent negotiate an independent `MAJOR.MINOR` protocol version. Versionless agents remain supported as legacy protocol `0.1`.
+
 The agent returns:
 
 - `public_output` - user-visible answer

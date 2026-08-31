@@ -11,6 +11,7 @@ if str(RUNTIME_SRC) not in sys.path:
 
 import ecp_runtime.cli as cli_module
 from ecp_runtime.cli import app
+from ecp_runtime.protocol import PROTOCOL_VERSION
 from typer.testing import CliRunner
 
 
@@ -178,6 +179,13 @@ class CLISmokeTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertTrue(payload["conformant"])
         self.assertEqual(payload["total"], 3)
+        self.assertEqual(
+            fake_agent.send_rpc.call_args_list[0],
+            mock.call(
+                "agent/initialize",
+                {"protocol_version": PROTOCOL_VERSION, "config": {}},
+            ),
+        )
         fake_agent.stop.assert_called_once()
 
     def test_conformance_passes_explicit_timeout_to_transport(self) -> None:

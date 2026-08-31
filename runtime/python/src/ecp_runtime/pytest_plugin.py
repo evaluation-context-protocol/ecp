@@ -1,8 +1,11 @@
 import os
+import warnings
 from typing import Any, Dict
 
 import pytest
 
+from .conformance import validate_initialize_result
+from .protocol import initialize_params, negotiate_protocol_version
 from .runner import _create_agent
 
 
@@ -23,8 +26,16 @@ class ECPAgentFixture:
     def start(self):
         self._agent = _create_agent(self.target, self.rpc_timeout)
         self._agent.start()
-        resp = self._agent.send_rpc("agent/initialize", {"config": {}})
+        resp = self._agent.send_rpc("agent/initialize", initialize_params())
         self._ensure_rpc_success(resp, "agent/initialize")
+        result = validate_initialize_result(resp.get("result"))
+        negotiation = negotiate_protocol_version(result.get("protocol_version"))
+        if negotiation.legacy:
+            warnings.warn(
+                f"Agent omitted protocol_version; treating it as legacy protocol {negotiation.version}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         return self
 
     def stop(self):

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/initialize-result.schema.json",
+  "title": "ECP Agent Initialize Result",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "Negotiated ECP protocol version, formatted as MAJOR.MINOR. Optional only for legacy agents."
+    },
+    "capabilities": {
+      "type": "object"
+    }
+  },
+  "required": ["name", "capabilities"]
+}
