@@ -42,6 +42,8 @@ if __name__ == "__main__":
 
 `evaluation_context` is the preferred field for evaluator-safe audit evidence. `private_thought` is still accepted as a deprecated compatibility alias.
 
+The SDK automatically negotiates ECP protocol `1.0` during `agent/initialize`. Protocol versions are independent of the SDK package version; applications do not need to add negotiation code.
+
 ## Async lifecycle hooks
 
 `@on_step` and `@on_reset` may be synchronous functions or `async def` coroutines. The SDK awaits async hooks on one persistent event loop, so loop-bound clients and other async resources can be reused across requests.

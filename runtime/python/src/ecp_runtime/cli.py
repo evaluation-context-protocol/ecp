@@ -14,11 +14,12 @@ from pydantic import ValidationError
 from .conformance import (
     build_conformance_report,
     conformance_check,
-    validate_initialize_result,
+    validate_initialize_negotiation,
     validate_reset_result,
     validate_step_result,
 )
 from .manifest import ECPManifest
+from .protocol import initialize_params
 from .reporter import HTMLReporter
 from .runner import ECPRunner, resolve_rpc_timeout
 from .trend import RunTrendAnalyzer
@@ -335,8 +336,8 @@ def conformance(
             agent,
             "initialize response",
             "agent/initialize",
-            {"config": {}},
-            result_validator=validate_initialize_result,
+            initialize_params(),
+            result_validator=validate_initialize_negotiation,
         )
         checks.append(initialize)
         if initialize["passed"]:

@@ -144,6 +144,75 @@ class StreamableHTTPServerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must not be negative"):
             Result(usage={"output_tokens": -1})
 
+    def test_initialize_negotiates_protocol_version(self) -> None:
+        status, body, _headers = self._post(
+            {
+                "jsonrpc": "2.0",
+                "id": 10,
+                "method": "agent/initialize",
+                "params": {"protocol_version": "1.7", "config": {}},
+            }
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["result"]["name"], "HTTPTestAgent")
+        self.assertEqual(body["result"]["protocol_version"], server.PROTOCOL_VERSION)
+
+    def test_initialize_remains_compatible_with_versionless_runtime(self) -> None:
+        status, body, _headers = self._post(
+            {
+                "jsonrpc": "2.0",
+                "id": 11,
+                "method": "agent/initialize",
+                "params": {"config": {}},
+            }
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["result"]["protocol_version"], server.PROTOCOL_VERSION)
+
+    def test_initialize_rejects_incompatible_major_version(self) -> None:
+        status, body, _headers = self._post(
+            {
+                "jsonrpc": "2.0",
+                "id": 12,
+                "method": "agent/initialize",
+                "params": {"protocol_version": "2.0", "config": {}},
+            }
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["error"]["code"], server.VERSION_UNSUPPORTED_CODE)
+        self.assertIn("VERSION_UNSUPPORTED", body["error"]["message"])
+
+    def test_initialize_rejects_malformed_protocol_version(self) -> None:
+        status, body, _headers = self._post(
+            {
+                "jsonrpc": "2.0",
+                "id": 13,
+                "method": "agent/initialize",
+                "params": {"protocol_version": "v1", "config": {}},
+            }
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["error"]["code"], -32602)
+        self.assertIn("MAJOR.MINOR", body["error"]["message"])
+
+    def test_initialize_does_not_treat_null_protocol_version_as_absent(self) -> None:
+        status, body, _headers = self._post(
+            {
+                "jsonrpc": "2.0",
+                "id": 14,
+                "method": "agent/initialize",
+                "params": {"protocol_version": None, "config": {}},
+            }
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["error"]["code"], -32602)
+        self.assertIn("MAJOR.MINOR", body["error"]["message"])
+
     def test_post_json_rpc_notification_returns_accepted(self) -> None:
         status, body, _headers = self._post(
             {"jsonrpc": "2.0", "method": "agent/initialize", "params": {}}

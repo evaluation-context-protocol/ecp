@@ -32,6 +32,8 @@ ecp conformance --target "python examples/customer_support_demo/agent.py"
 ecp doctor
 ```
 
+The runtime negotiates protocol compatibility during `agent/initialize`. It sends protocol `1.0`, accepts lower minor versions within major `1`, and continues to support versionless agents as legacy protocol `0.1` with one warning per run.
+
 Manifest `target` values may be either a command for the default stdio transport or an ECP Streamable HTTP endpoint:
 
 ```yaml
@@ -79,4 +81,3 @@ $env:ECP_LLM_JUDGE_MODEL="gpt-4o-mini"
 - Documentation: https://evaluationcontextprotocol.io/
 - Repository: https://github.com/evaluation-context-protocol/ecp
 - Issues: https://github.com/evaluation-context-protocol/ecp/issues
-
