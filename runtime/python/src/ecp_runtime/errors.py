@@ -34,6 +34,12 @@ class ECPProtocolError(ECPExecutionError):
     exit_reason = "protocol_error"
 
 
+class ECPVersionUnsupported(ECPProtocolError):
+    """The runtime and agent do not share a compatible protocol major version."""
+
+    code = -32001
+
+
 class ECPAgentError(ECPExecutionError):
     """The agent returned a well-formed JSON-RPC error response."""
 

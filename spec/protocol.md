@@ -1,6 +1,6 @@
 # Evaluation Context Protocol (ECP) Specification
 
-Version: 0.7.0-draft
+Version: 1.0-draft
 Status: Experimental
 
 ## 1. Overview
@@ -46,12 +46,46 @@ The reference Python SDK currently returns JSON responses for `POST` requests an
 
 **Params**:
 
+- `protocol_version` (string): highest protocol version supported by the runtime, formatted as `MAJOR.MINOR`.
 - `config` (object, optional): configuration from the runtime.
 
 **Result**:
 
 - `name` (string): agent display name.
+- `protocol_version` (string): protocol version selected for this session, formatted as `MAJOR.MINOR`.
 - `capabilities` (object): reserved for future use.
+
+#### Protocol version negotiation
+
+Protocol versions are independent of SDK and runtime package versions. The runtime sends the highest protocol version it supports, and the agent responds with the version it will use for the session.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "agent/initialize",
+  "params": { "protocol_version": "1.0", "config": {} }
+}
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "name": "SupportAgent",
+    "protocol_version": "1.0",
+    "capabilities": {}
+  }
+}
+```
+
+The negotiation rules are:
+
+1. A different major version is incompatible. The agent returns JSON-RPC error `-32001` (`VERSION_UNSUPPORTED`), or the runtime aborts before executing steps if an incompatible result is received.
+2. When only minor versions differ, both sides use the lower minor version.
+3. A versionless agent is treated as legacy protocol `0.1`. The runtime continues with a single warning per run.
+4. A versionless runtime remains compatible with the reference SDK; the SDK returns its current protocol version as an additive result field.
 
 ### 3.2 `agent/step`
 
@@ -179,7 +213,17 @@ Two properties make it auditable rather than merely informative: the manifest di
 
 ## 8. Schemas And Conformance
 
-JSON Schemas live in `schema/`. Protocol implementers can run:
+Machine-readable contracts live in `schema/`:
+
+- `schema/initialize-params.schema.json`
+- `schema/initialize-result.schema.json`
+- `schema/agent-result.schema.json`
+- `schema/tool-call.schema.json`
+- `schema/manifest.schema.json`
+- `schema/report.schema.json`
+- `schema/audit.schema.json`
+
+Protocol implementers can run:
 
 ```bash
 ecp conformance --target "python examples/customer_support_demo/agent.py"

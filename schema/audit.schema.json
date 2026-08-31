@@ -50,9 +50,14 @@
     "agent": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Metadata returned by agent/initialize.",
+      "description": "Metadata returned by agent/initialize, including the negotiated protocol version.",
       "properties": {
         "name": { "type": ["string", "null"] },
+        "protocol_version": {
+          "type": ["string", "null"],
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+          "description": "Protocol version negotiated for this run. Legacy agents are recorded as 0.1."
+        },
         "capabilities": { "type": "object" }
       }
     },
