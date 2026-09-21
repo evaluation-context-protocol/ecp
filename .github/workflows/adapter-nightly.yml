@@ -25,8 +25,7 @@ permissions:
 jobs:
   real-frameworks:
     runs-on: ubuntu-latest
-    # Without credentials every demo fails for the same boring reason, which
-    # trains maintainers to ignore this job.
+    # Forks have neither the secrets nor a reason to burn tokens nightly.
     if: github.repository == 'evaluation-context-protocol/ecp'
     strategy:
       fail-fast: false
@@ -61,8 +60,32 @@ jobs:
       - name: Record installed framework versions
         run: python -m pip freeze | grep -iE "crewai|langchain|llama|pydantic" || true
 
+      # Every demo builds its LLM client at import time, so with no key all four
+      # legs die identically before the protocol is ever exercised - four red
+      # jobs and a nightly "adapter drift" issue that has nothing to do with
+      # drift. Decide up front whether this leg can say anything true today.
+      - name: Preflight
+        id: preflight
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REQUESTED: ${{ github.event.inputs.adapter }}
+          ADAPTER: ${{ matrix.adapter }}
+        run: |
+          if [ -n "$REQUESTED" ] && [ "$REQUESTED" != "all" ] && [ "$REQUESTED" != "$ADAPTER" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "\`$ADAPTER\` was not selected by this dispatch." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Nightly skipped::No OPENAI_API_KEY secret is configured, so the live-model run was skipped."
+            echo "Skipped: this job talks to real models and needs an \`OPENAI_API_KEY\` repository secret. Add one under Settings -> Secrets -> Actions to turn the nightly back on." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+
       - name: Protocol conformance against the real agent
-        if: ${{ github.event.inputs.adapter == '' || github.event.inputs.adapter == 'all' || github.event.inputs.adapter == matrix.adapter }}
+        if: steps.preflight.outputs.should_run == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -70,7 +93,7 @@ jobs:
           ecp conformance --target "python $agent_dir/agent.py" --timeout 120
 
       - name: Run the real demo manifest
-        if: ${{ github.event.inputs.adapter == '' || github.event.inputs.adapter == 'all' || github.event.inputs.adapter == matrix.adapter }}
+        if: steps.preflight.outputs.should_run == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
