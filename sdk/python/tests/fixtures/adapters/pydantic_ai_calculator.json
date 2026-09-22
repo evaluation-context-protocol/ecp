@@ -158,7 +158,7 @@
   "expected": {
     "status": "done",
     "public_output": "The answer is 120.",
-    "evaluation_context": "The user wants 15 times 8. Use the calculator tool.\nUsage: 61 input, 14 output tokens (2 requests)",
+    "evaluation_context": "The user wants 15 times 8. Use the calculator tool.",
     "tool_calls": [
       {
         "name": "calculator",
@@ -167,7 +167,10 @@
         }
       }
     ],
-    "usage": null
+    "usage": {
+      "input_tokens": 61,
+      "output_tokens": 14
+    }
   },
   "events": [],
   "adapter_kwargs": {
