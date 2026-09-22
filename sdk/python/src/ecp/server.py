@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 import json
+import socketserver
 import sys
 import threading
 from concurrent.futures import Future
@@ -128,6 +129,27 @@ def serve_http(
         _ASYNC_EXECUTOR.close()
 
 
+class _ECPThreadingHTTPServer(ThreadingHTTPServer):
+    """Threading HTTP server that does not reverse-resolve its own address.
+
+    `http.server.HTTPServer.server_bind` calls `socket.getfqdn()` on the bound
+    host to fill in `server_name`. That is a reverse DNS lookup, and where the
+    resolver is slow or has no PTR record it blocks: measured at 35 seconds for
+    `127.0.0.1` on a GitHub macOS runner. `TCPServer.__init__` binds the socket
+    before that lookup and only calls `listen()` after it, so for the whole
+    window the port is bound but refuses connections, and `serve_http` has not
+    yet printed its listening line.
+
+    `server_name` only ever reaches CGI-style headers, so use the host as given.
+    """
+
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        host, port = self.server_address[:2]
+        self.server_name = host
+        self.server_port = port
+
+
 def _build_http_server(
     host: str = "127.0.0.1",
     port: int = 8765,
@@ -229,7 +251,7 @@ def _build_http_server(
             self.end_headers()
             self.wfile.write(body)
 
-    return ThreadingHTTPServer((host, port), ECPStreamableHTTPRequestHandler)
+    return _ECPThreadingHTTPServer((host, port), ECPStreamableHTTPRequestHandler)
 
 
 # --- Handlers ---

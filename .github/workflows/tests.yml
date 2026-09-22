@@ -6,10 +6,21 @@ on:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      # Report every platform, rather than cancelling the rest on the first
+      # failure. A platform-specific break is the thing this matrix exists to
+      # surface, and it is easy to miss when siblings are cancelled.
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        include:
+          # macOS on a single interpreter rather than the full matrix. macOS
+          # runners bill at a multiple of Linux, and the platform differences
+          # that bite here are filesystem behaviour, not interpreter version.
+          - os: macos-latest
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v4

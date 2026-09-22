@@ -4,9 +4,23 @@
 
 ## 1. Install
 
+Create and activate a virtual environment. On macOS or Linux:
+
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows (PowerShell):
+
+```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
+```
+
+Then install the runtime and the SDK:
+
+```bash
 pip install "ecp-runtime==0.9.0" "ecp-sdk==0.9.0"
 ```
 

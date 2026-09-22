@@ -28,9 +28,27 @@ New protocol features should preserve that portability.
 
 ## Local Setup
 
+Create and activate a virtual environment. On macOS or Linux:
+
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows (PowerShell):
+
+```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
+```
+
+Then install the runtime, the SDK, and the docs dependencies. Both packages
+build with hatchling, so the editable installs need a pip new enough to support
+PEP 660. The Python that ships with macOS carries an older one, which reports
+`Directory cannot be installed in editable mode`:
+
+```bash
+python -m pip install --upgrade pip
 pip install -e runtime/python
 pip install -e sdk/python
 pip install -r docs/requirements.txt
@@ -50,15 +68,13 @@ pip install -e "sdk/python[llamaindex]"
 Runtime tests:
 
 ```bash
-$env:PYTHONPATH="runtime/python/src"
-python -m unittest discover runtime/python/tests
+PYTHONPATH=runtime/python/src python -m unittest discover runtime/python/tests
 ```
 
 SDK tests:
 
 ```bash
-$env:PYTHONPATH="sdk/python/src"
-python -m unittest discover sdk/python/tests
+PYTHONPATH=sdk/python/src python -m unittest discover sdk/python/tests
 ```
 
 Docs:
@@ -70,9 +86,17 @@ mkdocs build --strict
 Flagship demo smoke test:
 
 ```bash
-$env:PYTHONPATH="runtime/python/src;sdk/python/src"
+export PYTHONPATH=runtime/python/src:sdk/python/src
 python -m ecp_runtime.cli validate examples/customer_support_demo/manifest.yaml
 python -m ecp_runtime.cli run --manifest examples/customer_support_demo/manifest.yaml --json
+```
+
+The commands above set `PYTHONPATH` in the macOS and Linux form. In PowerShell,
+set it as its own statement and separate multiple paths with `;` rather than `:`:
+
+```powershell
+$env:PYTHONPATH="runtime/python/src"
+python -m unittest discover runtime/python/tests
 ```
 
 ## Adapter Conformance
@@ -90,8 +114,8 @@ driven against a recorded framework exchange in
 `sdk/python/tests/fixtures/adapters/` and its `Result` compared exactly:
 
 ```bash
-$env:PYTHONPATH="sdk/python/src;runtime/python/src"
-python -m unittest discover sdk/python/tests -p "test_adapter_conformance.py"
+PYTHONPATH=sdk/python/src:runtime/python/src \
+  python -m unittest discover sdk/python/tests -p "test_adapter_conformance.py"
 ```
 
 This catches regressions in adapter code. It cannot catch a framework changing
