@@ -15,6 +15,9 @@ Execution boundaries and auditable run telemetry.
 
 ### Changed
 
+- **Breaking (install):** `litellm` moved from a required dependency to the optional `judge` extra. `pip install ecp-runtime` no longer pulls it in; the `llm_judge` grader now needs `pip install "ecp-runtime[judge]"`. The base install is substantially lighter and the pin is no longer imposed on users who never use a judge.
+- `graders.py` now tolerates *any* exception while importing litellm, not just `ImportError`. A broken or partially-installed optional dependency no longer takes the whole runtime down, and the reason is reported in the grader message instead of being swallowed.
+
 - **Breaking (runtime behavior):** a timeout, crash, protocol violation, or JSON-RPC error no longer aborts the whole run. The failing step is recorded as failed, remaining steps in that scenario are marked skipped, and the next scenario proceeds with a fresh agent. Previously one hung agent killed the run and produced no report at all.
 - Steps that never produced a result now contribute a failed `execution` check, so a timed-out step can no longer be counted as a pass by CI.
 - `ECPRunner.run_scenarios()` returns two new keys, `exit_reason` and `audit`. Existing `passed` / `total` / `scenarios` keys are unchanged.

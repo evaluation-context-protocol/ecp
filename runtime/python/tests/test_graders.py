@@ -9,7 +9,7 @@ RUNTIME_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(RUNTIME_SRC) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SRC))
 
-from ecp_runtime.graders import check_llm_judge, check_tool_usage
+from ecp_runtime.graders import LITELLM_AVAILABLE, check_llm_judge, check_tool_usage
 from ecp_runtime.manifest import GraderConfig, StepConfig
 
 
@@ -28,6 +28,39 @@ class ToolUsageGraderTests(unittest.TestCase):
         self.assertIn("No tool_calls present", reason)
 
 
+class LLMJudgeUnavailableTests(unittest.TestCase):
+    """The judge path when litellm is absent - the default install."""
+
+    @unittest.skipIf(LITELLM_AVAILABLE, "litellm installed; unavailable path not exercised")
+    def test_llm_judge_reports_actionable_install_hint(self) -> None:
+        grader = GraderConfig(type="llm_judge", prompt="Check quality.")
+
+        passed, reason, score = check_llm_judge(grader, "hello")
+
+        self.assertFalse(passed)
+        self.assertEqual(score, 0.0)
+        # A grader that cannot run must say how to make it run.
+        self.assertIn("ecp-runtime[judge]", reason)
+
+    @unittest.skipIf(LITELLM_AVAILABLE, "litellm installed; unavailable path not exercised")
+    def test_unavailable_judge_does_not_crash_evaluate_step(self) -> None:
+        from ecp_runtime.graders import evaluate_step
+
+        step = StepConfig(
+            input="hi",
+            graders=[GraderConfig(type="llm_judge", prompt="Check quality.")],
+        )
+        result_obj = SimpleNamespace(
+            public_output="hello", evaluation_context=None, private_thought=None, tool_calls=None
+        )
+
+        checks = evaluate_step(step, result_obj)
+
+        self.assertEqual(len(checks), 1)
+        self.assertFalse(checks[0]["passed"])
+
+
+@unittest.skipUnless(LITELLM_AVAILABLE, "requires the optional 'judge' extra (litellm)")
 class LLMJudgeTests(unittest.TestCase):
     def test_llm_judge_fails_without_api_key(self) -> None:
         grader = GraderConfig(type="llm_judge", prompt="Check quality.")

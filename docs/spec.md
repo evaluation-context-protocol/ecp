@@ -59,7 +59,7 @@ The runtime reads a YAML manifest describing scenarios and graders.
 Supported graders:
 
 - `text_match` (contains, equals, does_not_contain, regex)
-- `llm_judge` (requires `OPENAI_API_KEY`)
+- `llm_judge` (requires the `ecp-runtime[judge]` extra and `OPENAI_API_KEY`)
 - `tool_usage` (name + argument subset match)
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or the deprecated `private_thought` alias.

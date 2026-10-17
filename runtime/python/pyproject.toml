@@ -16,9 +16,14 @@ dependencies = [
     "pyyaml>=6.0",          # For reading Manifests
     "pydantic>=2.0",        # For validating Schemas
     "rich>=13.0",           # For pretty terminal output
-    "litellm>=1.0.0,<1.50.0", # For universal LLM support in graders (avoid rust ring on arm64)
   "Jinja2>=3.1.0",        # For HTML report rendering
 ]
+
+[project.optional-dependencies]
+# The llm_judge grader is the only thing that needs litellm, and it is a heavy
+# transitive tree. Keeping it optional means `pip install ecp-runtime` stays
+# light and our version pin stops being imposed on every user.
+judge = ["litellm>=1.0.0,<1.50.0"]
 
 [project.urls]
 Homepage = "https://github.com/evaluation-context-protocol/ecp"
