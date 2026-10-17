@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from .manifest import GraderConfig, StepConfig
@@ -10,12 +10,26 @@ except ImportError:
     sys.path.append(os.path.dirname(__file__))
     from manifest import GraderConfig, StepConfig  # type: ignore
 
-# Try importing litellm, but don't crash if it's missing (unless used)
+# litellm backs the llm_judge grader and ships as the optional `judge` extra.
+#
+# Catch Exception, not ImportError: a broken or partially-installed litellm can
+# raise anything at import time, and the whole runtime should not die because an
+# optional grader's dependency is unhappy. `completion` is always bound so the
+# attribute exists for tests and introspection either way.
 try:
     import litellm
     from litellm import completion  # type: ignore
-except ImportError:
+except Exception as _litellm_import_error:  # noqa: BLE001
     litellm = None  # type: ignore
+    completion = None  # type: ignore
+    LITELLM_IMPORT_ERROR: Optional[str] = (
+        f"{type(_litellm_import_error).__name__}: {_litellm_import_error}"
+    )
+else:
+    LITELLM_IMPORT_ERROR = None
+
+#: True when the llm_judge grader can actually run.
+LITELLM_AVAILABLE = litellm is not None
 
 
 def _llm_judge_model() -> str:
@@ -59,7 +73,15 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     if not grader.prompt:
         return False, "No prompt provided for llm_judge", 0.0
     if litellm is None:
-        return False, "LLM judge unavailable: litellm library not installed. Install with `pip install litellm`.", 0.0
+        detail = ""
+        if LITELLM_IMPORT_ERROR:
+            detail = f" (import failed: {LITELLM_IMPORT_ERROR})"
+        return (
+            False,
+            "LLM judge unavailable: litellm is not installed. "
+            f"Install it with `pip install 'ecp-runtime[judge]'`.{detail}",
+            0.0,
+        )
     
     # 1. Construct the Prompt for the Judge
     system_prompt = "You are an impartial AI Judge. You evaluate outputs based on specific criteria."

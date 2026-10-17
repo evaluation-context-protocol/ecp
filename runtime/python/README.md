@@ -67,7 +67,13 @@ Agents can populate the token figures by returning `usage` from a step:
 Result(public_output="...", usage={"input_tokens": 1204, "output_tokens": 88})
 ```
 
-If your manifest includes `llm_judge`, set an API key and optional judge model:
+The `llm_judge` grader needs the optional `judge` extra, which pulls in litellm:
+
+```bash
+pip install "ecp-runtime[judge]"
+```
+
+Then set an API key and optional judge model:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"

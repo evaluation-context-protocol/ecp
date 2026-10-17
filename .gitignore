@@ -213,3 +213,6 @@ __marimo__/
 /worktrees
 /logs
 /worktrees
+
+# litellm writes this on import; it is not project content
+litellm_uuid.txt

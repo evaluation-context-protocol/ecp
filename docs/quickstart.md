@@ -82,7 +82,13 @@ By default, `ecp run` exits non-zero when checks fail. Use `--no-fail-on-error` 
 
 ## 6. Optional LLM Judge
 
-If your manifest uses `llm_judge`, set:
+The `llm_judge` grader ships as an optional extra so the base install stays light:
+
+```bash
+pip install "ecp-runtime[judge]"
+```
+
+Then set:
 
 ```bash
 $env:OPENAI_API_KEY="your_key_here"

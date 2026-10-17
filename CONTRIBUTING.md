@@ -54,6 +54,13 @@ pip install -e sdk/python
 pip install -r docs/requirements.txt
 ```
 
+To work on the `llm_judge` grader, add the runtime's `judge` extra. Without it
+the judge tests skip rather than fail, so the suite is green either way:
+
+```bash
+pip install -e "runtime/python[judge]"
+```
+
 For framework-specific examples, install the relevant SDK extra:
 
 ```bash
