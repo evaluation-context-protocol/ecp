@@ -34,6 +34,7 @@ from .conformance import (
 from .errors import (
     ECPAgentError,
     ECPBudgetExceeded,
+    ECPCapabilityRequired,
     ECPExecutionError,
     ECPProtocolError,
     ECPTimeoutError,
@@ -45,7 +46,9 @@ from .graders import evaluate_step
 from .protocol import (
     VERSION_UNSUPPORTED_CODE,
     initialize_params,
+    missing_capabilities,
     negotiate_protocol_version,
+    required_capabilities,
 )
 
 logger = logging.getLogger(__name__)
@@ -285,12 +288,14 @@ class ECPRunner:
         self.manifest_path = manifest_path
         self.agent_info: Dict[str, Any] = {}
         self._legacy_version_warned = False
+        self._undeclared_capabilities_warned = False
 
     def run_scenarios(self):
         # A runner can be reused by API consumers. Negotiation metadata and
         # warning suppression are scoped to one run, not to the object lifetime.
         self.agent_info = {}
         self._legacy_version_warned = False
+        self._undeclared_capabilities_warned = False
         started_at = audit_module.utc_now()
         run_start = time.perf_counter()
         deadline = run_start + self.max_duration if self.max_duration else None
@@ -318,7 +323,7 @@ class ECPRunner:
             logger.info("Scenario: %s", scenario.name)
             try:
                 record = self._run_scenario(scenario, deadline)
-            except ECPVersionUnsupported as exc:
+            except (ECPVersionUnsupported, ECPCapabilityRequired) as exc:
                 message = str(exc)
                 logger.error("Run aborted before execution: %s", message)
                 report_data.append(
@@ -404,13 +409,15 @@ class ECPRunner:
                     negotiation.version,
                 )
                 self._legacy_version_warned = True
+            declared = init_result.get("capabilities") or {}
+            self._check_capabilities(declared, agent_name=init_result.get("name"))
             if not self.agent_info:
                 self.agent_info = {
                     "name": init_result.get("name"),
                     "protocol_version": negotiation.version,
-                    "capabilities": init_result.get("capabilities", {}),
+                    "capabilities": declared,
                 }
-        except ECPVersionUnsupported:
+        except (ECPVersionUnsupported, ECPCapabilityRequired):
             if started and agent is not None:
                 agent.stop()
             raise
@@ -460,6 +467,41 @@ class ECPRunner:
             "exit_reason": scenario_exit_reason,
             "steps": steps,
         }
+
+    def _check_capabilities(self, declared: Dict[str, Any], *, agent_name: Optional[str]) -> None:
+        """Compare what the manifest asks for against what the agent declares.
+
+        An agent that declares nothing is treated as undeclared, not
+        unsupported: every agent written before capabilities existed reports
+        {}, and failing those would break the installed base. Those get one
+        warning explaining why a tool_usage failure may be ambiguous.
+        """
+        needed = required_capabilities(self.manifest)
+        if not needed:
+            return
+
+        missing = missing_capabilities(declared, needed)
+        if not missing:
+            return
+
+        detail = "; ".join(f"{name} (needed by {why})" for name, why in sorted(missing.items()))
+
+        if getattr(self.manifest, "require_capabilities", False):
+            raise ECPCapabilityRequired(
+                f"Agent {agent_name!r} does not declare: {detail}. "
+                f"It declares {sorted(declared) or 'nothing'}. "
+                "This manifest sets require_capabilities: true."
+            )
+
+        if not self._undeclared_capabilities_warned:
+            self._undeclared_capabilities_warned = True
+            logger.warning(
+                "Agent %r does not declare: %s. A failure there may mean the agent did not "
+                "report it, rather than did not do it. Set require_capabilities: true to make "
+                "this fatal.",
+                agent_name,
+                detail,
+            )
 
     def _run_step(self, agent, scenario, step, step_idx: int):
         """Execute one step. Returns (step_record, failure_exit_reason|None)."""

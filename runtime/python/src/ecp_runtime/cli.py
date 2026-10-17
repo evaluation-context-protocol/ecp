@@ -329,18 +329,23 @@ def conformance(
     agent = runner._create_agent(target, rpc_timeout=rpc_timeout)
     checks: List[Dict[str, Any]] = []
     started = False
+    declared_capabilities: Dict[str, Any] = {}
     try:
         agent.start()
         started = True
+        initialize_result: Dict[str, Any] = {}
         initialize = _run_conformance_call(
             agent,
             "initialize response",
             "agent/initialize",
             initialize_params(),
             result_validator=validate_initialize_negotiation,
+            capture=initialize_result,
         )
         checks.append(initialize)
         if initialize["passed"]:
+            caps = initialize_result.get("capabilities")
+            declared_capabilities = caps if isinstance(caps, dict) else {}
             checks.append(
                 _run_conformance_call(
                     agent,
@@ -364,15 +369,22 @@ def conformance(
         checks.append(_skipped_conformance_check("step result contract", "agent/step"))
     finally:
         if started:
-            checks.append(
-                _run_conformance_call(
-                    agent,
-                    "reset response",
-                    "agent/reset",
-                    {},
-                    result_validator=validate_reset_result,
-                )
+            reset_check = _run_conformance_call(
+                agent,
+                "reset response",
+                "agent/reset",
+                {},
+                result_validator=validate_reset_result,
             )
+            # agent/reset must return true to be conformant, so an agent with no
+            # reset hook still "passes". Say so, rather than letting a no-op read
+            # as working state isolation.
+            if reset_check["passed"] and "reset" not in declared_capabilities:
+                reset_check["message"] = (
+                    "passed, but the agent does not declare the 'reset' capability - "
+                    "the call returns true and may be a no-op"
+                )
+            checks.append(reset_check)
             agent.stop()
         else:
             checks.append(_skipped_conformance_check("reset response", "agent/reset"))
@@ -461,11 +473,16 @@ def _run_conformance_call(
     params: Dict[str, Any],
     *,
     result_validator: Optional[Callable[[Any], Any]] = None,
+    capture: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     try:
         response = agent.send_rpc(method, params)
     except Exception as exc:
         return {"name": name, "method": method, "passed": False, "message": str(exc)}
+    if capture is not None and isinstance(response, dict):
+        # Hand the raw result back so the caller can inspect it without paying
+        # for a second round trip.
+        capture.update(response.get("result") or {})
     return conformance_check(name, method, response, result_validator=result_validator)
 
 

@@ -5,6 +5,7 @@ import sys
 import threading
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 from urllib import error, request
 
@@ -305,6 +306,49 @@ class HTTPServerBindTests(unittest.TestCase):
             self.assertGreater(httpd.server_port, 0)
         finally:
             httpd.server_close()
+
+
+class CapabilityDeclarationTests(unittest.TestCase):
+    """@agent(capabilities=...) plus the one capability the SDK can infer."""
+
+    def test_declared_capabilities_land_in_meta(self) -> None:
+        @agent(name="A", capabilities={"tool_calls": {}, "multi_turn": {"max_turns": 5}})
+        class A:
+            pass
+
+        self.assertEqual(
+            A._ecp_meta["capabilities"],
+            {"tool_calls": {}, "multi_turn": {"max_turns": 5}},
+        )
+
+    def test_declaring_nothing_keeps_the_set_empty(self) -> None:
+        @agent(name="B")
+        class B:
+            pass
+
+        self.assertEqual(B._ecp_meta["capabilities"], {})
+
+    def test_capability_values_must_be_option_objects(self) -> None:
+        with self.assertRaisesRegex(TypeError, "options object"):
+            agent(name="C", capabilities={"tool_calls": True})
+
+    def test_reset_is_inferred_from_the_hook_not_the_declaration(self) -> None:
+        """Claiming reset without a hook is what made conformance lie."""
+        instance = SimpleNamespace(_ecp_meta={"name": "D", "capabilities": {"usage": {}}})
+
+        with mock.patch.object(server, "_CURRENT_AGENT_INSTANCE", instance):
+            with mock.patch.dict(server._HOOKS, {"reset": "reset"}):
+                self.assertIn("reset", server._declared_capabilities())
+            with mock.patch.dict(server._HOOKS, {"reset": None}):
+                self.assertNotIn("reset", server._declared_capabilities())
+
+    def test_declaring_reset_without_a_hook_is_stripped(self) -> None:
+        instance = SimpleNamespace(_ecp_meta={"name": "E", "capabilities": {"reset": {}}})
+
+        with mock.patch.object(server, "_CURRENT_AGENT_INSTANCE", instance):
+            with mock.patch.dict(server._HOOKS, {"reset": None}):
+                self.assertEqual(server._declared_capabilities(), {})
+
 
 
 if __name__ == "__main__":
