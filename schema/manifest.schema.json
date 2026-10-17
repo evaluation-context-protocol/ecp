@@ -60,6 +60,16 @@
                       },
                       "value": {"type": ["string", "null"]},
                       "pattern": {"type": ["string", "null"], "minLength": 1},
+                      "ignore_case": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "text_match only. Case-insensitive comparison, applied to both operands."
+                      },
+                      "strip": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "text_match only. Trim surrounding whitespace from both operands."
+                      },
                       "prompt": {
                         "type": ["string", "null"],
                         "minLength": 1,
@@ -116,7 +126,8 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["csv", "jsonl"]
+                "enum": ["csv", "jsonl", "evalport"],
+                "description": "csv/jsonl read tabular rows. 'evalport' loads an EvalPort EvalSuite (https://github.com/adhabnr-ux/evalport); input_column/output_column do not apply."
               },
               "source": {
                 "type": "string"

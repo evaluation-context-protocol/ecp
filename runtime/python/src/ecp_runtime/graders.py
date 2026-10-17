@@ -44,6 +44,23 @@ def _llm_judge_temperature() -> float:
         return 0.0
 
 
+def _apply_text_options(grader: GraderConfig, *values: Optional[str]) -> List[str]:
+    """Apply a grader's comparison options to every operand consistently.
+
+    Both sides must be normalized the same way, otherwise `ignore_case` would
+    compare a lowered haystack against an un-lowered needle and never match.
+    """
+    out = []
+    for value in values:
+        value = "" if value is None else value
+        if grader.strip:
+            value = value.strip()
+        if grader.ignore_case:
+            value = value.casefold()
+        out.append(value)
+    return out
+
+
 def check_text_match(grader: GraderConfig, text: str) -> Tuple[bool, str]:
     """Handles simple string assertions."""
     if not text:
@@ -55,12 +72,13 @@ def check_text_match(grader: GraderConfig, text: str) -> Tuple[bool, str]:
     if grader.condition == "regex" and not grader.pattern:
         return False, "No 'pattern' provided for regex condition"
     
-    if grader.condition == "contains":
-        return val in text, f"Expected to contain '{val}'"
-    elif grader.condition == "equals":
-        return val == text, f"Expected to equal '{val}'"
-    elif grader.condition == "does_not_contain":
-        return val not in text, f"Expected NOT to contain '{val}'"
+    if grader.condition in {"contains", "equals", "does_not_contain"}:
+        needle, haystack = _apply_text_options(grader, val, text)
+        if grader.condition == "contains":
+            return needle in haystack, f"Expected to contain '{val}'"
+        if grader.condition == "equals":
+            return needle == haystack, f"Expected to equal '{val}'"
+        return needle not in haystack, f"Expected NOT to contain '{val}'"
     elif grader.condition == "regex":
         return bool(re.search(grader.pattern, text)), f"Regex '{grader.pattern}' failed"
     return False, "Unknown condition"

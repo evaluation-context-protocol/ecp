@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "id": "suite_unsupported",
+  "graders": [
+    { "id": "gr_sim", "type": "semantic_similarity", "params": { "threshold": 0.8 } },
+    { "id": "gr_code", "type": "code", "params": { "handler": "run_tests" } }
+  ],
+  "test_cases": [
+    { "id": "tc_sim", "input": "Describe photosynthesis", "expected_output": "...", "graders": ["gr_sim"] },
+    { "id": "tc_code", "input": "Write fizzbuzz", "graders": ["gr_code"] }
+  ]
+}

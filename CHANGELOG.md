@@ -6,6 +6,10 @@ Execution boundaries and auditable run telemetry.
 
 ### Added
 
+- Added `dataset.type: evalport`, loading an [EvalPort](https://github.com/adhabnr-ux/evalport) `EvalSuite` as ECP scenarios so eval corpora authored for other tools can run against a live agent. `exact_match`, `contains`, `regex`, `llm_judge` and `expected_tools` are mapped; graders ECP cannot run are rejected at load time rather than silently dropped.
+- Added `ignore_case` and `strip` options to the `text_match` grader, both defaulting to `false`. Required for a faithful EvalPort mapping and independently useful.
+- Added `examples/evalport_demo`, a runnable EvalPort suite executed by the ECP runtime.
+
 - Added `MAJOR.MINOR` protocol version negotiation to `agent/initialize`, independent of package versions.
 - Added initialize request/result schemas and recorded the negotiated protocol version in audit metadata.
 - Added a run-level wall-clock budget via `--max-duration` / `ECP_MAX_DURATION`, separate from the existing per-RPC `--timeout`.

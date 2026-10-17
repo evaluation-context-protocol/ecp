@@ -90,6 +90,24 @@ Supported graders:
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or the deprecated `private_thought` alias.
 
+`text_match` accepts `ignore_case` and `strip` (both default `false`), applied to both operands.
+
+### External suites
+
+A scenario can draw steps from a dataset instead of inline `steps`. `dataset.type` may be `csv`, `jsonl`, or `evalport`.
+
+`evalport` loads an [EvalPort](https://github.com/adhabnr-ux/evalport) `EvalSuite`, letting an eval corpus authored for other tools run against a live ECP agent:
+
+```yaml
+scenarios:
+  - name: "GSM8K"
+    dataset:
+      type: "evalport"
+      source: "suites/gsm8k.json"
+```
+
+`exact_match`, `contains`, `regex`, `llm_judge` and `expected_tools` map onto ECP graders. Graders ECP cannot run - `semantic_similarity`, `code`, `json_path` and the rest - are rejected at load time rather than silently skipped, since omitting a grader would report a pass rate for a check that never ran.
+
 `llm_judge` model can be configured with `ECP_LLM_JUDGE_MODEL` (default: `gpt-4o-mini`). `llm_judge` temperature can be configured with `ECP_LLM_JUDGE_TEMPERATURE` (default: `0`).
 
 Validate a manifest without running an agent:

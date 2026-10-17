@@ -1,0 +1,25 @@
+{
+  "$schema": "https://evalport.org/schema/suite.json",
+  "version": "1.0.0",
+  "id": "suite_refund_policy",
+  "name": "Refund policy checks (EvalPort format)",
+  "description": "An EvalPort suite run through the ECP runtime against a live agent.",
+  "graders": [
+    { "id": "gr_eligible", "type": "contains", "params": { "substring": "eligible", "ignore_case": true } },
+    { "id": "gr_amount", "type": "exact_match", "params": { "strip": true } }
+  ],
+  "test_cases": [
+    {
+      "id": "tc_within_window",
+      "input": "I want a refund for order A100, bought 5 days ago",
+      "graders": ["gr_eligible"],
+      "expected_tools": ["lookup_order", "check_refund_policy"]
+    },
+    {
+      "id": "tc_amount",
+      "input": "How much was order A100?",
+      "expected_output": "42.00",
+      "graders": ["gr_amount"]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+manifest_version: "v1"
+name: "EvalPort Suite Import"
+target: "python examples/evalport_demo/agent.py"
+
+# Instead of hand-written steps, point at an EvalPort EvalSuite. Test cases,
+# graders, and expected_tools are mapped onto ECP scenarios at load time.
+scenarios:
+  - name: "Refund policy (from EvalPort)"
+    dataset:
+      type: "evalport"
+      source: "suite.json"

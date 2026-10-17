@@ -1,0 +1,31 @@
+{
+  "$schema": "https://evalport.org/schema/suite.json",
+  "version": "1.0.0",
+  "id": "suite_ecp_mapping",
+  "name": "Every EvalPort grader ECP can map",
+  "graders": [
+    { "id": "gr_exact", "type": "exact_match", "params": { "ignore_case": true, "strip": true } },
+    { "id": "gr_contains", "type": "contains", "params": { "substring": "eligible" } },
+    { "id": "gr_regex", "type": "regex", "params": { "pattern": "ORDER-[0-9]+", "flags": "i" } },
+    { "id": "gr_judge", "type": "llm_judge", "params": { "model": "gpt-4o-mini", "prompt": "Does it cite a policy?" } }
+  ],
+  "test_cases": [
+    { "id": "tc_exact", "input": "What is 15 times 8?", "expected_output": "120", "graders": ["gr_exact"] },
+    { "id": "tc_contains", "input": "Refund for A100?", "graders": ["gr_contains"] },
+    { "id": "tc_regex", "input": "Which order?", "graders": ["gr_regex"] },
+    { "id": "tc_judge", "input": "Explain the policy", "graders": ["gr_judge"] },
+    {
+      "id": "tc_inline_and_tools",
+      "input": "Refund order A100",
+      "graders": [{ "id": "gr_inline", "type": "contains", "params": { "substring": "refund" } }],
+      "expected_tools": ["lookup_order", "check_refund_policy"]
+    },
+    {
+      "id": "tc_multiturn",
+      "input": ["Hello", "I want a refund", "Order A100"],
+      "expected_output": "done",
+      "graders": ["gr_exact"]
+    }
+  ],
+  "metadata": { "note": "hand-written fixture; not derived from any benchmark dataset" }
+}

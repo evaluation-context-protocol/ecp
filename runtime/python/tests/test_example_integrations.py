@@ -44,6 +44,13 @@ class ExampleIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
         self.assertIn('"failed": 0', result.stdout)
 
+    def test_evalport_demo_manifest_passes(self) -> None:
+        """An EvalPort suite, loaded and run against a live ECP agent."""
+        manifest = REPO_ROOT / "examples" / "evalport_demo" / "manifest.yaml"
+        result = self._run_manifest(manifest)
+        self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
+        self.assertIn('"failed": 0', result.stdout)
+
     def test_two_agent_demo_manifest_passes(self) -> None:
         manifest = REPO_ROOT / "examples" / "two_agent_demo" / "manifest.yaml"
         result = self._run_manifest(manifest)

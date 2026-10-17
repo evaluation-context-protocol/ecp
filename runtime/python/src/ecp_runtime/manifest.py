@@ -1,10 +1,17 @@
 import csv
 import json
+import logging
 import os
 from typing import Any, Dict, List, Literal, Optional
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from .evalport import describe_unmapped_fields
+from .evalport import load_suite as load_evalport_suite
+from .evalport import suite_to_steps as evalport_suite_to_steps
+
+logger = logging.getLogger(__name__)
 
 
 class StrictModel(BaseModel):
@@ -21,6 +28,10 @@ class GraderConfig(StrictModel):
     condition: Optional[Literal["contains", "equals", "does_not_contain", "regex"]] = None
     value: Optional[str] = None
     pattern: Optional[str] = None
+    # Comparison options for text_match. Both default off so existing manifests
+    # keep byte-exact semantics.
+    ignore_case: bool = False
+    strip: bool = False
     # For llm_judge
     prompt: Optional[str] = None
     assertion: Optional[str] = None
@@ -56,8 +67,9 @@ class StepConfig(StrictModel):
     graders: List[GraderConfig] = Field(default_factory=list)
 
 class DatasetConfig(BaseModel):
-    type: Literal["csv", "jsonl"]
+    type: Literal["csv", "jsonl", "evalport"]
     source: str
+    # Column names apply to csv/jsonl only; EvalPort suites are self-describing.
     input_column: str = "input"
     output_column: str = "output"
 
@@ -97,7 +109,20 @@ class ECPManifest(StrictModel):
                 if not os.path.exists(source_path):
                     raise ValueError(f"Dataset file not found: {source_path}")
                 
-                if scenario.dataset.type == "csv":
+                if scenario.dataset.type == "evalport":
+                    suite = load_evalport_suite(source_path)
+                    for note in describe_unmapped_fields(suite):
+                        logger.warning("EvalPort suite %s: %s", scenario.dataset.source, note)
+                    for step in evalport_suite_to_steps(
+                        suite, source=scenario.dataset.source
+                    ):
+                        scenario.steps.append(
+                            StepConfig(
+                                input=step["input"],
+                                graders=[GraderConfig(**g) for g in step["graders"]],
+                            )
+                        )
+                elif scenario.dataset.type == "csv":
                     with open(source_path, "r", encoding="utf-8") as f:
                         reader = csv.DictReader(f)
                         for row in reader:

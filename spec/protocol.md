@@ -180,6 +180,26 @@ Supported graders:
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or deprecated `private_thought`.
 
+`text_match` accepts `ignore_case` and `strip`, both default `false`, applied to both operands.
+
+### 5.1 External Suites
+
+A scenario may draw its steps from an external dataset instead of inline `steps`. Supported `dataset.type` values are `csv`, `jsonl`, and `evalport`.
+
+`evalport` loads an [EvalPort](https://github.com/adhabnr-ux/evalport) `EvalSuite` - a portable JSON interchange format for eval datasets whose own specification declines to define a runner or trace format. The two formats sit at adjacent layers: EvalPort describes *what* to test, ECP runs it against a live agent.
+
+| EvalPort | ECP |
+| --- | --- |
+| `test_cases[].input` (string) | one step |
+| `test_cases[].input` (array) | one step per turn; graders attach to the final turn |
+| grader `exact_match` | `text_match` / `equals` against `expected_output`, carrying `ignore_case` and `strip` |
+| grader `contains` | `text_match` / `contains` |
+| grader `regex` | `text_match` / `regex`, with flags folded into the pattern |
+| grader `llm_judge` | `llm_judge` |
+| `expected_tools[]` | one `tool_usage` grader per tool |
+
+A suite using a grader ECP cannot run (`semantic_similarity`, `json_schema`, `json_path`, `code`, `human`, `model_graded`, `custom`, or any framework-specific type) MUST be rejected at load time rather than loaded with that grader omitted. Dropping it would report a pass rate for a check that never executed.
+
 ## 6. Execution Boundaries
 
 A runtime MUST bound agent execution so a hung or looping agent cannot pin a CI pipeline indefinitely. Two independent limits apply:
