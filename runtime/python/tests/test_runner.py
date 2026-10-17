@@ -12,6 +12,7 @@ if str(RUNTIME_SRC) not in sys.path:
 
 from ecp_runtime.errors import ECPTimeoutError
 from ecp_runtime.manifest import StepConfig
+from ecp_runtime.protocol import PROTOCOL_VERSION
 from ecp_runtime.runner import (
     ECPRunner,
     HTTPAgentClient,
@@ -31,6 +32,8 @@ class RunnerTests(unittest.TestCase):
         return SimpleNamespace(target="python agent.py", name="Test Manifest", scenarios=scenarios)
 
     def test_runner_collects_results(self) -> None:
+        initialize_params = []
+
         class FakeAgentProcess:
             def __init__(self, command, rpc_timeout=30.0):
                 self.command = command
@@ -44,7 +47,16 @@ class RunnerTests(unittest.TestCase):
 
             def send_rpc(self, method, params=None):
                 if method == "agent/initialize":
-                    return {"jsonrpc": "2.0", "id": 1, "result": {"name": "x", "capabilities": {}}}
+                    initialize_params.append(params)
+                    return {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {
+                            "name": "x",
+                            "protocol_version": PROTOCOL_VERSION,
+                            "capabilities": {},
+                        },
+                    }
                 return {
                     "jsonrpc": "2.0",
                     "id": 2,
@@ -58,6 +70,132 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(output["scenarios"]), 1)
         self.assertEqual(output["scenarios"][0]["name"], "Scenario A")
         self.assertEqual(output["scenarios"][0]["steps"][0]["evaluation_context"], "checked")
+        self.assertEqual(
+            initialize_params,
+            [{"protocol_version": PROTOCOL_VERSION, "config": {}}],
+        )
+
+    def test_legacy_agent_warns_once_and_records_legacy_version(self) -> None:
+        class LegacyAgentProcess:
+            def __init__(self, command, rpc_timeout=30.0):
+                pass
+
+            def start(self):
+                return None
+
+            def stop(self):
+                return None
+
+            def send_rpc(self, method, params=None):
+                if method == "agent/initialize":
+                    return {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {"name": "LegacyAgent", "capabilities": {}},
+                    }
+                return {"jsonrpc": "2.0", "id": 2, "result": {"status": "done"}}
+
+        with mock.patch("ecp_runtime.runner.AgentProcess", LegacyAgentProcess):
+            with self.assertLogs("ecp_runtime.runner", level="WARNING") as captured:
+                output = ECPRunner(self._manifest(scenario_count=2)).run_scenarios()
+
+        warnings = [line for line in captured.output if "legacy protocol 0.1" in line]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(output["audit"]["agent"]["protocol_version"], "0.1")
+
+    def test_legacy_warning_is_emitted_once_for_each_reused_runner_run(self) -> None:
+        class LegacyAgentProcess:
+            def __init__(self, command, rpc_timeout=30.0):
+                pass
+
+            def start(self):
+                return None
+
+            def stop(self):
+                return None
+
+            def send_rpc(self, method, params=None):
+                if method == "agent/initialize":
+                    return {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {"name": "LegacyAgent", "capabilities": {}},
+                    }
+                return {"jsonrpc": "2.0", "id": 2, "result": {"status": "done"}}
+
+        runner = ECPRunner(self._manifest())
+        with mock.patch("ecp_runtime.runner.AgentProcess", LegacyAgentProcess):
+            with self.assertLogs("ecp_runtime.runner", level="WARNING") as captured:
+                runner.run_scenarios()
+                runner.run_scenarios()
+
+        warnings = [line for line in captured.output if "legacy protocol 0.1" in line]
+        self.assertEqual(len(warnings), 2)
+
+    def test_major_version_mismatch_aborts_before_any_step(self) -> None:
+        instances = []
+
+        class IncompatibleAgentProcess:
+            def __init__(self, command, rpc_timeout=30.0):
+                self.step_calls = 0
+                instances.append(self)
+
+            def start(self):
+                return None
+
+            def stop(self):
+                return None
+
+            def send_rpc(self, method, params=None):
+                if method == "agent/initialize":
+                    return {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {
+                            "name": "FutureAgent",
+                            "protocol_version": "2.0",
+                            "capabilities": {},
+                        },
+                    }
+                self.step_calls += 1
+                raise AssertionError("agent/step must not run after a version mismatch")
+
+        with mock.patch("ecp_runtime.runner.AgentProcess", IncompatibleAgentProcess):
+            output = ECPRunner(self._manifest(scenario_count=2)).run_scenarios()
+
+        self.assertEqual(output["exit_reason"], "protocol_error")
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].step_calls, 0)
+        self.assertTrue(
+            all(step["status"] == "skipped" for scenario in output["scenarios"] for step in scenario["steps"])
+        )
+        self.assertIn("-32001", output["scenarios"][0]["steps"][0]["error"])
+
+    def test_version_unsupported_rpc_error_aborts_before_any_step(self) -> None:
+        class RejectingAgentProcess:
+            def __init__(self, command, rpc_timeout=30.0):
+                pass
+
+            def start(self):
+                return None
+
+            def stop(self):
+                return None
+
+            def send_rpc(self, method, params=None):
+                if method == "agent/initialize":
+                    return {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "error": {"code": -32001, "message": "VERSION_UNSUPPORTED"},
+                    }
+                raise AssertionError("agent/step must not run after a version mismatch")
+
+        with mock.patch("ecp_runtime.runner.AgentProcess", RejectingAgentProcess):
+            output = ECPRunner(self._manifest(scenario_count=2)).run_scenarios()
+
+        self.assertEqual(output["exit_reason"], "protocol_error")
+        self.assertIn("-32001", output["scenarios"][0]["steps"][0]["error"])
 
     def test_rpc_error_fails_the_step_instead_of_aborting_the_run(self) -> None:
         class FakeAgentProcess:
@@ -274,7 +412,11 @@ class RunnerTests(unittest.TestCase):
                     return {
                         "jsonrpc": "2.0",
                         "id": 1,
-                        "result": {"name": "SupportAgent", "capabilities": {}},
+                        "result": {
+                            "name": "SupportAgent",
+                            "protocol_version": PROTOCOL_VERSION,
+                            "capabilities": {},
+                        },
                     }
                 return {
                     "jsonrpc": "2.0",
@@ -292,6 +434,7 @@ class RunnerTests(unittest.TestCase):
         audit = output["audit"]
         self.assertEqual(output["exit_reason"], "ok")
         self.assertEqual(audit["agent"]["name"], "SupportAgent")
+        self.assertEqual(audit["agent"]["protocol_version"], PROTOCOL_VERSION)
         self.assertEqual(audit["manifest"]["target"], "python agent.py")
         self.assertEqual(audit["usage"], {"input_tokens": 20, "output_tokens": 8, "total_tokens": 28})
         self.assertEqual(audit["totals"]["steps_executed"], 2)

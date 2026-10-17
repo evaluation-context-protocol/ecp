@@ -13,7 +13,7 @@ import json
 import subprocess
 import sys
 import threading
-from typing import Dict, Any
+from typing import Any, Dict
 
 # We'll use the existing customer support demo agent as our server
 AGENT_CMD = [sys.executable, "examples/customer_support_demo/agent.py"]
@@ -70,7 +70,12 @@ def main() -> None:
     
     try:
         # 3. Send the Initialization message
-        send_rpc(process, "agent/initialize", {"config": {}}, msg_id=1)
+        send_rpc(
+            process,
+            "agent/initialize",
+            {"protocol_version": "1.0", "config": {}},
+            msg_id=1,
+        )
         
         # 4. Wait a moment, then send the Step message (the actual evaluation task)
         import time

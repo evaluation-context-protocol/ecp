@@ -38,9 +38,15 @@ from .errors import (
     ECPProtocolError,
     ECPTimeoutError,
     ECPTransportError,
+    ECPVersionUnsupported,
     exit_reason_for,
 )
 from .graders import evaluate_step
+from .protocol import (
+    VERSION_UNSUPPORTED_CODE,
+    initialize_params,
+    negotiate_protocol_version,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -278,8 +284,13 @@ class ECPRunner:
         self.max_duration = resolve_max_duration(max_duration)
         self.manifest_path = manifest_path
         self.agent_info: Dict[str, Any] = {}
+        self._legacy_version_warned = False
 
     def run_scenarios(self):
+        # A runner can be reused by API consumers. Negotiation metadata and
+        # warning suppression are scoped to one run, not to the object lifetime.
+        self.agent_info = {}
+        self._legacy_version_warned = False
         started_at = audit_module.utc_now()
         run_start = time.perf_counter()
         deadline = run_start + self.max_duration if self.max_duration else None
@@ -287,7 +298,7 @@ class ECPRunner:
         report_data: List[Dict[str, Any]] = []
         run_exit_reason = audit_module.STATUS_OK
 
-        for scenario in self.manifest.scenarios:
+        for scenario_index, scenario in enumerate(self.manifest.scenarios):
             if deadline is not None and time.perf_counter() >= deadline:
                 run_exit_reason = ECPBudgetExceeded.exit_reason
                 logger.error(
@@ -305,7 +316,20 @@ class ECPRunner:
                 continue
 
             logger.info("Scenario: %s", scenario.name)
-            record = self._run_scenario(scenario, deadline)
+            try:
+                record = self._run_scenario(scenario, deadline)
+            except ECPVersionUnsupported as exc:
+                message = str(exc)
+                logger.error("Run aborted before execution: %s", message)
+                report_data.append(
+                    self._skipped_scenario(scenario, ECPProtocolError.exit_reason, message)
+                )
+                for remaining in self.manifest.scenarios[scenario_index + 1 :]:
+                    report_data.append(
+                        self._skipped_scenario(remaining, ECPProtocolError.exit_reason, message)
+                    )
+                run_exit_reason = ECPProtocolError.exit_reason
+                break
             report_data.append(record)
 
             if record["exit_reason"] == ECPBudgetExceeded.exit_reason:
@@ -358,7 +382,13 @@ class ECPRunner:
             agent = self._create_agent(self.manifest.target, rpc_timeout=self.rpc_timeout)
             agent.start()
             started = True
-            init_resp = self._call_rpc(agent, "agent/initialize", {"config": {}}, scenario.name, None)
+            init_resp = self._call_rpc(
+                agent,
+                "agent/initialize",
+                initialize_params(),
+                scenario.name,
+                None,
+            )
             init_result = init_resp["result"]
             try:
                 validate_initialize_result(init_result)
@@ -366,11 +396,24 @@ class ECPRunner:
                 raise ECPProtocolError(
                     f"Invalid agent/initialize result at scenario='{scenario.name}': {exc}"
                 ) from exc
+            negotiation = negotiate_protocol_version(init_result.get("protocol_version"))
+            if negotiation.legacy and not self._legacy_version_warned:
+                logger.warning(
+                    "Agent '%s' omitted protocol_version; treating it as legacy protocol %s",
+                    init_result.get("name"),
+                    negotiation.version,
+                )
+                self._legacy_version_warned = True
             if not self.agent_info:
                 self.agent_info = {
                     "name": init_result.get("name"),
+                    "protocol_version": negotiation.version,
                     "capabilities": init_result.get("capabilities", {}),
                 }
+        except ECPVersionUnsupported:
+            if started and agent is not None:
+                agent.stop()
+            raise
         except ECPExecutionError as exc:
             logger.error("Scenario '%s' could not start: %s", scenario.name, exc)
             if started and agent is not None:
@@ -537,6 +580,13 @@ class ECPRunner:
         except ValueError as exc:
             # A well-formed JSON-RPC error is the agent reporting failure;
             # anything else means the envelope itself broke the contract.
+            error_code = None
+            if isinstance(rpc_resp, dict) and isinstance(rpc_resp.get("error"), dict):
+                error_code = rpc_resp["error"].get("code")
+            if error_code == VERSION_UNSUPPORTED_CODE:
+                raise ECPVersionUnsupported(
+                    f"VERSION_UNSUPPORTED ({VERSION_UNSUPPORTED_CODE}) at {where}: {exc}"
+                ) from exc
             failure = ECPAgentError if isinstance(rpc_resp, dict) and "error" in rpc_resp else ECPProtocolError
             raise failure(f"RPC call failed ({method}) at {where}: {exc}") from exc
 

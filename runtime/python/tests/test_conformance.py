@@ -9,10 +9,19 @@ if str(RUNTIME_SRC) not in sys.path:
 from ecp_runtime.conformance import (
     build_conformance_report,
     conformance_check,
+    validate_initialize_negotiation,
     validate_initialize_result,
     validate_reset_result,
     validate_rpc_response,
     validate_step_result,
+)
+from ecp_runtime.errors import ECPVersionUnsupported
+from ecp_runtime.protocol import (
+    LEGACY_PROTOCOL_VERSION,
+    PROTOCOL_VERSION,
+    initialize_params,
+    negotiate_protocol_version,
+    parse_protocol_version,
 )
 
 
@@ -51,8 +60,48 @@ class ConformanceTests(unittest.TestCase):
         result = {"name": "agent", "capabilities": {}}
         self.assertIs(validate_initialize_result(result), result)
 
+        versioned = {
+            "name": "agent",
+            "protocol_version": PROTOCOL_VERSION,
+            "capabilities": {},
+        }
+        self.assertIs(validate_initialize_result(versioned), versioned)
+
         with self.assertRaisesRegex(ValueError, "capabilities"):
             validate_initialize_result({"name": "agent"})
+
+        with self.assertRaisesRegex(ValueError, "MAJOR.MINOR"):
+            validate_initialize_result(
+                {"name": "agent", "protocol_version": "v1", "capabilities": {}}
+            )
+
+        with self.assertRaisesRegex(ValueError, "MAJOR.MINOR"):
+            validate_initialize_result(
+                {"name": "agent", "protocol_version": None, "capabilities": {}}
+            )
+
+    def test_protocol_version_negotiation(self) -> None:
+        self.assertEqual(parse_protocol_version("12.34"), (12, 34))
+        self.assertEqual(negotiate_protocol_version("1.0").version, PROTOCOL_VERSION)
+        self.assertEqual(negotiate_protocol_version("1.7").version, PROTOCOL_VERSION)
+
+        legacy = negotiate_protocol_version(None)
+        self.assertTrue(legacy.legacy)
+        self.assertEqual(legacy.version, LEGACY_PROTOCOL_VERSION)
+
+        with self.assertRaisesRegex(ECPVersionUnsupported, "-32001"):
+            negotiate_protocol_version("2.0")
+
+        with self.assertRaisesRegex(ValueError, "-32001"):
+            validate_initialize_negotiation(
+                {"name": "agent", "protocol_version": "2.0", "capabilities": {}}
+            )
+
+    def test_initialize_params_advertise_runtime_protocol(self) -> None:
+        self.assertEqual(
+            initialize_params({"region": "test"}),
+            {"protocol_version": PROTOCOL_VERSION, "config": {"region": "test"}},
+        )
 
     def test_reset_contract(self) -> None:
         self.assertTrue(validate_reset_result(True))

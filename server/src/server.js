@@ -12,6 +12,7 @@ const CLIENT_ROOT = path.join(REPO_ROOT, "client");
 const EXAMPLES_ROOT = path.join(REPO_ROOT, "examples");
 const PORT = Number(process.env.ECP_INSPECTOR_PORT || 6274);
 const HOST = process.env.ECP_INSPECTOR_HOST || "127.0.0.1";
+const PROTOCOL_VERSION = "1.0";
 
 const jobs = new Map();
 const sessions = new Map();
@@ -273,7 +274,10 @@ async function createSession(target) {
     : new StdioRpcSession(id, target);
   sessions.set(id, session);
   await session.start();
-  const init = await session.sendRpc("agent/initialize", { config: {} });
+  const init = await session.sendRpc("agent/initialize", {
+    protocol_version: PROTOCOL_VERSION,
+    config: {},
+  });
   session.initialized = init;
   session.logs.push({
     time: new Date().toISOString(),

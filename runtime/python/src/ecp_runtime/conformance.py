@@ -2,6 +2,9 @@
 
 from typing import Any, Callable, Dict, List, Optional
 
+from .errors import ECPVersionUnsupported
+from .protocol import negotiate_protocol_version, parse_protocol_version
+
 VALID_STATUSES = {"done", "paused"}
 USAGE_FIELDS = ("input_tokens", "output_tokens", "total_tokens")
 
@@ -62,7 +65,22 @@ def validate_initialize_result(result: Any) -> Dict[str, Any]:
         raise ValueError("agent/initialize result name must be a non-empty string")
     if not isinstance(result.get("capabilities"), dict):
         raise ValueError("agent/initialize result capabilities must be an object")
+    if "protocol_version" in result:
+        parse_protocol_version(
+            result["protocol_version"],
+            field="agent/initialize result protocol_version",
+        )
     return result
+
+
+def validate_initialize_negotiation(result: Any) -> Dict[str, Any]:
+    """Validate initialization metadata and reject incompatible major versions."""
+    validated = validate_initialize_result(result)
+    try:
+        negotiate_protocol_version(validated.get("protocol_version"))
+    except ECPVersionUnsupported as exc:
+        raise ValueError(str(exc)) from exc
+    return validated
 
 
 def validate_reset_result(result: Any) -> bool:

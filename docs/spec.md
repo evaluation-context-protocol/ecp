@@ -16,9 +16,35 @@ For Streamable HTTP, the agent runs as an HTTP server and exposes one endpoint, 
 
 ### agent/initialize
 
-**Params**: `config` (object, optional)
+**Params**:
 
-**Result**: `{ name, capabilities }`
+- `protocol_version`: highest protocol version supported by the runtime, formatted as `MAJOR.MINOR`
+- `config`: optional configuration object
+
+**Result**: `{ name, protocol_version, capabilities }`
+
+Protocol versions are independent of runtime and SDK package versions. A major-version mismatch is incompatible and produces JSON-RPC error `-32001` (`VERSION_UNSUPPORTED`). When minor versions differ, the lower minor is selected. Agents that omit the field remain supported as legacy protocol `0.1`, with one warning per run.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "agent/initialize",
+  "params": { "protocol_version": "1.0", "config": {} }
+}
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "name": "SupportAgent",
+    "protocol_version": "1.0",
+    "capabilities": {}
+  }
+}
+```
 
 ### agent/step
 
@@ -132,6 +158,8 @@ Latency aggregates only steps that actually executed, so one timeout does not sk
 
 Machine-readable JSON Schemas live in `schema/`:
 
+- `schema/initialize-params.schema.json`
+- `schema/initialize-result.schema.json`
 - `schema/manifest.schema.json`
 - `schema/agent-result.schema.json`
 - `schema/tool-call.schema.json`

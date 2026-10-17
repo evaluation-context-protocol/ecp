@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaluationcontextprotocol.io/schema/initialize-params.schema.json",
+  "title": "ECP Agent Initialize Parameters",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "protocol_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "Highest ECP protocol version supported by the runtime, formatted as MAJOR.MINOR. Optional only for legacy runtimes."
+    },
+    "config": {
+      "type": "object",
+      "description": "Optional agent configuration supplied by the runtime."
+    }
+  }
+}
