@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
-Execution boundaries and auditable run telemetry.
+Protocol version negotiation, auditable run telemetry, and a lighter install.
+
+> Versions `0.4.0`-`0.9.0` were tagged and published without changelog entries.
+> Their changes are consolidated here rather than reconstructed per-version.
 
 ### Added
 
@@ -17,6 +20,8 @@ Execution boundaries and auditable run telemetry.
 - Added an optional `usage` field to the `agent/step` result (`input_tokens`, `output_tokens`, `total_tokens`) with SDK and conformance validation, aggregated into the audit record.
 - Added typed execution errors (`ecp_runtime.errors`) so failures are classified rather than pattern matched on message text.
 - Added spec sections for execution boundaries and the audit record.
+- Added an adapter conformance harness (`ecp.testing`): `record_fixture` captures a real framework exchange, `replay` re-runs an adapter against it with no framework install and no API key. Adapter breakage now fails in CI instead of surfacing to users as empty `tool_calls`.
+- Added a nightly workflow that runs the real framework demos against live models, covering the framework drift that replayed fixtures cannot.
 
 ### Fixed
 
@@ -31,6 +36,11 @@ Execution boundaries and auditable run telemetry.
 - Steps that never produced a result now contribute a failed `execution` check, so a timed-out step can no longer be counted as a pass by CI.
 - `ECPRunner.run_scenarios()` returns two new keys, `exit_reason` and `audit`. Existing `passed` / `total` / `scenarios` keys are unchanged.
 - HTTP transport read timeouts are now classified as timeouts rather than generic transport errors.
+- The PydanticAI adapter reports token counts through the structured `usage` field instead of stringifying them into `evaluation_context`, so they aggregate into the audit record and no longer pollute graded text.
+
+### Fixed
+
+- Fixed the project to build, test, and document cleanly on macOS, and extended the test matrix to cover it.
 
 ## 0.3.1
 
