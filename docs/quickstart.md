@@ -21,16 +21,16 @@ py -m venv .venv
 Then install the runtime and the SDK:
 
 ```bash
-pip install "ecp-runtime==0.9.0" "ecp-sdk==0.9.0"
+pip install "ecp-runtime==0.10.0" "ecp-sdk==0.10.0"
 ```
 
 For framework demos, install the matching SDK extra:
 
 ```bash
-pip install "ecp-sdk[langchain]==0.9.0" langchain-openai
-pip install "ecp-sdk[crewai]==0.9.0" crewai
-pip install "ecp-sdk[pydanticai]==0.9.0" pydantic-ai
-pip install "ecp-sdk[llamaindex]==0.9.0" llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
+pip install "ecp-sdk[langchain]==0.10.0" langchain-openai
+pip install "ecp-sdk[crewai]==0.10.0" crewai
+pip install "ecp-sdk[pydanticai]==0.10.0" pydantic-ai
+pip install "ecp-sdk[llamaindex]==0.10.0" llama-index llama-index-llms-openai llama-index-tools-yahoo-finance
 ```
 
 ## 2. Create A Starter Eval
@@ -179,7 +179,7 @@ Omit `usage` entirely if your agent cannot observe token counts; the runtime dis
 
 ## Notes
 
-- The current release line is `0.9.0`.
+- The current release line is `0.10.0`.
 - New agents should use `evaluation_context`; `private_thought` remains a deprecated compatibility alias.
 - `--timeout` controls the RPC timeout for `run` and `conformance`. It overrides `ECP_RPC_TIMEOUT`; the default is 30 seconds.
 - `--max-duration` caps total run time. It overrides `ECP_MAX_DURATION` and is unset by default.

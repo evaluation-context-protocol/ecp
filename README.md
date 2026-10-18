@@ -9,7 +9,7 @@ ECP is a vendor-neutral protocol and reference runtime for testing agent outputs
 
 MCP gives agents a common way to use tools. ECP gives evaluators a common way to inspect what an agent returned, what tools it used, and what audit evidence it exposed.
 
-> Status: experimental but usable. The current package line is `0.9.0`.
+> Status: experimental but usable. The current package line is `0.10.0`.
 
 ## Why ECP
 
@@ -42,7 +42,7 @@ py -m venv .venv
 Then install and run a starter eval:
 
 ```bash
-pip install "ecp-runtime==0.9.0" "ecp-sdk==0.9.0"
+pip install "ecp-runtime==0.10.0" "ecp-sdk==0.10.0"
 ecp init
 ecp validate ecp_eval/manifest.yaml
 ecp run --manifest ecp_eval/manifest.yaml --json
