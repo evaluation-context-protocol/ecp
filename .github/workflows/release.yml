@@ -5,6 +5,16 @@ on:
     types: [closed]
     branches:
       - main
+  # Manual escape hatch. Without it, the only way to publish is to merge a PR
+  # with the right title prefix - which is how 0.9.0 -> 0.10.0 sat unpublished
+  # for two months behind five merges that all silently matched nothing.
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: "Version bump to apply"
+        required: true
+        type: choice
+        options: [patch, minor, major]
 
 permissions:
   contents: write
@@ -12,7 +22,7 @@ permissions:
 
 jobs:
   bump-and-publish:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,12 +35,20 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Parse PR Title and Determine Bump Type
+      - name: Determine Bump Type
         id: parse
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUMP="${{ github.event.inputs.bump_type }}"
+            echo "Manual release requested: $BUMP"
+            echo "bump_type=$BUMP" >> $GITHUB_OUTPUT
+            echo "### Manual release: \`$BUMP\` bump" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
           TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $TITLE"
-          
+
           if [[ "$TITLE" == major:* ]]; then
             echo "bump_type=major" >> $GITHUB_OUTPUT
           elif [[ "$TITLE" == minor:* ]]; then
@@ -39,7 +57,19 @@ jobs:
             echo "bump_type=patch" >> $GITHUB_OUTPUT
           else
             echo "bump_type=none" >> $GITHUB_OUTPUT
-            echo "No valid major/minor/hotfix prefix found. Skipping auto-release."
+            # A warning annotation and a job summary, because a silently green
+            # "release" job is indistinguishable from one that published.
+            echo "::warning title=No release published::PR title [$TITLE] has no major:/minor:/hotfix: prefix, so no version bump, tag, or PyPI publish happened."
+            {
+              echo "### :warning: No release published"
+              echo ""
+              echo "PR title: \`$TITLE\`"
+              echo ""
+              echo "The release job only triggers on a title starting with \`major:\`, \`minor:\` or \`hotfix:\`."
+              echo "Nothing was bumped, tagged, or published to PyPI."
+              echo ""
+              echo "To publish these changes, run the **Auto Release on PR Merge** workflow manually with a bump type."
+            } >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Bump Versions

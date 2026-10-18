@@ -224,6 +224,24 @@ Examples should be runnable and minimal. A good example demonstrates at least on
 
 The flagship example is `examples/customer_support_demo`. Keep it stable and easy to explain.
 
+## Releasing
+
+Releases are driven by the **merged PR title**. `release.yml` bumps the version,
+tags, and publishes both packages to PyPI only when the title starts with:
+
+| Prefix | Bump |
+| --- | --- |
+| `major:` | `X+1.0.0` |
+| `minor:` | `X.Y+1.0` |
+| `hotfix:` | `X.Y.Z+1` |
+
+Anything else - including `fix:` and `feat:` - publishes **nothing**. The job
+still reports green, so check the run summary: a skipped release now emits a
+warning annotation saying so.
+
+To publish changes that were merged without a prefix, run the **Auto Release on
+PR Merge** workflow manually from the Actions tab and pick a bump type.
+
 ## Pull Request Checklist
 
 Before opening a PR:
