@@ -58,3 +58,42 @@ def initialize_params(config: Optional[dict] = None) -> dict:
         "protocol_version": PROTOCOL_VERSION,
         "config": {} if config is None else config,
     }
+
+
+# --- Capabilities ----------------------------------------------------------
+
+#: Capabilities the runtime understands. Unknown keys are ignored, which is
+#: what keeps minor protocol versions additive.
+KNOWN_CAPABILITIES = frozenset(
+    {"tool_calls", "evaluation_context", "usage", "reset", "multi_turn"}
+)
+
+
+def required_capabilities(manifest) -> Dict[str, str]:
+    """What this manifest needs from an agent, and which grader asks for it.
+
+    Derived from the manifest rather than configured, so the check cannot drift
+    away from what the run will actually assert.
+    """
+    needed: Dict[str, str] = {}
+    for scenario in getattr(manifest, "scenarios", []) or []:
+        for step in getattr(scenario, "steps", []) or []:
+            for grader in getattr(step, "graders", []) or []:
+                if grader.type == "tool_usage":
+                    needed.setdefault("tool_calls", "a tool_usage grader")
+                elif grader.field in ("evaluation_context", "private_thought"):
+                    needed.setdefault(
+                        "evaluation_context", f"a {grader.type} grader on {grader.field}"
+                    )
+    return needed
+
+
+def missing_capabilities(declared: Dict[str, Any], needed: Dict[str, str]) -> Dict[str, str]:
+    """Needed capabilities absent from the agent's declaration.
+
+    Absence means *undeclared*, never *unsupported*. The runtime cannot tell an
+    agent that cannot report tool calls from one whose author simply did not
+    declare it, so this result drives a warning by default. A manifest opts into
+    treating it as fatal with `require_capabilities: true`.
+    """
+    return {name: why for name, why in needed.items() if name not in declared}

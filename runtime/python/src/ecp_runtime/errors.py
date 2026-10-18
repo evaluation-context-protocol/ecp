@@ -40,6 +40,12 @@ class ECPVersionUnsupported(ECPProtocolError):
     code = -32001
 
 
+class ECPCapabilityRequired(ECPProtocolError):
+    """The manifest needs a capability the agent explicitly does not declare."""
+
+    code = -32002
+
+
 class ECPAgentError(ECPExecutionError):
     """The agent returned a well-formed JSON-RPC error response."""
 

@@ -25,6 +25,10 @@ For Streamable HTTP, the agent runs as an HTTP server and exposes one endpoint, 
 
 Protocol versions are independent of runtime and SDK package versions. A major-version mismatch is incompatible and produces JSON-RPC error `-32001` (`VERSION_UNSUPPORTED`). When minor versions differ, the lower minor is selected. Agents that omit the field remain supported as legacy protocol `0.1`, with one warning per run.
 
+`capabilities` declares what the agent can report: `tool_calls`, `evaluation_context`, `usage`, `reset`, `multi_turn`. Presence of a key means supported and the value is an options object; unknown keys are ignored, which is what keeps minor versions additive. Vendor extensions use an `x-<vendor>.<name>` prefix.
+
+An empty object means **undeclared**, not unsupported — the runtime cannot distinguish an agent that cannot report tool calls from one whose author simply did not declare it. A capability a manifest needs but the agent does not declare therefore produces a warning naming the grader that asked for it. Set `require_capabilities: true` in the manifest to abort before any step runs instead, with JSON-RPC error `-32002` (`CAPABILITY_REQUIRED`).
+
 ```json
 {
   "jsonrpc": "2.0",

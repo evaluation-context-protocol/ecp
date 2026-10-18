@@ -53,7 +53,21 @@ The reference Python SDK currently returns JSON responses for `POST` requests an
 
 - `name` (string): agent display name.
 - `protocol_version` (string): protocol version selected for this session, formatted as `MAJOR.MINOR`.
-- `capabilities` (object): reserved for future use.
+- `capabilities` (object): what the agent can report. Presence of a key means supported; the value is an options object, empty when there are no options.
+
+**Capabilities**
+
+| Capability | Meaning |
+| --- | --- |
+| `tool_calls` | The agent reports the tools it invoked. |
+| `evaluation_context` | The agent populates evaluator-safe context. |
+| `usage` | The agent reports token accounting. |
+| `reset` | The agent honours `agent/reset`; without it the call still returns `true` but may be a no-op. |
+| `multi_turn` | The agent maintains state across steps within a scenario. |
+
+Unknown keys MUST be ignored by both sides - that is what makes minor versions additive. Vendor extensions use an `x-<vendor>.<name>` prefix.
+
+An empty object means **undeclared**, not unsupported. A runtime cannot distinguish an agent that cannot report tool calls from one whose author simply did not declare it, so absence of a needed capability SHOULD produce a warning rather than a failure. A runtime MAY offer an opt-in that makes it fatal; the reference runtime does so with `require_capabilities: true` in the manifest.
 
 #### Protocol version negotiation
 

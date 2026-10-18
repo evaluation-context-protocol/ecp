@@ -290,8 +290,26 @@ def _handle_init(params):
     return {
         "name": name,
         "protocol_version": selected_version,
-        "capabilities": {},
+        "capabilities": _declared_capabilities(),
     }
+
+
+def _declared_capabilities() -> Dict[str, Any]:
+    """Merge author-declared capabilities with what the SDK can infer.
+
+    `reset` is inferred rather than declared: the SDK knows whether an
+    @on_reset hook was registered, and claiming reset support without one is
+    how `ecp conformance` ended up reporting a passing reset for agents that
+    silently do nothing.
+    """
+    meta = getattr(_CURRENT_AGENT_INSTANCE, "_ecp_meta", {}) or {}
+    capabilities = dict(meta.get("capabilities") or {})
+    if _HOOKS.get("reset"):
+        capabilities.setdefault("reset", {})
+    else:
+        # An explicit declaration cannot conjure a hook that is not there.
+        capabilities.pop("reset", None)
+    return capabilities
 
 def _handle_step(params):
     method_name = _HOOKS["step"]

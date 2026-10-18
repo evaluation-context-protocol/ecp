@@ -6,6 +6,9 @@ Execution boundaries and auditable run telemetry.
 
 ### Added
 
+- Added agent capability declaration. `@agent(name=..., capabilities={...})` tells the runtime what an agent can report (`tool_calls`, `evaluation_context`, `usage`, `reset`, `multi_turn`), and the runtime derives what a manifest needs from its graders. A capability a manifest needs but the agent does not declare warns by default, naming the grader that asked for it. (#26)
+- Added `require_capabilities: true` as a manifest option, turning that warning into a failure before any step runs.
+- Added JSON-RPC error `-32002` (`CAPABILITY_REQUIRED`).
 - Added `MAJOR.MINOR` protocol version negotiation to `agent/initialize`, independent of package versions.
 - Added initialize request/result schemas and recorded the negotiated protocol version in audit metadata.
 - Added a run-level wall-clock budget via `--max-duration` / `ECP_MAX_DURATION`, separate from the existing per-RPC `--timeout`.
@@ -14,6 +17,10 @@ Execution boundaries and auditable run telemetry.
 - Added an optional `usage` field to the `agent/step` result (`input_tokens`, `output_tokens`, `total_tokens`) with SDK and conformance validation, aggregated into the audit record.
 - Added typed execution errors (`ecp_runtime.errors`) so failures are classified rather than pattern matched on message text.
 - Added spec sections for execution boundaries and the audit record.
+
+### Fixed
+
+- `ecp conformance` no longer reports a clean pass for `agent/reset` against an agent with no reset hook. The SDK now infers the `reset` capability from whether `@on_reset` is registered rather than claiming it unconditionally, and the conformance report says when the call is likely a no-op. Note the runner never calls `agent/reset` — scenario isolation comes from spawning a fresh agent per scenario — so this affected `ecp conformance`, the Inspector, and the pytest fixture rather than run isolation. (#27)
 
 ### Changed
 

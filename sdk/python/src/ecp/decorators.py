@@ -60,10 +60,40 @@ _HOOKS = {
 }
 
 # --- Decorators ---
-def agent(name: str = "AnonymousAgent"):
-    """Class Decorator: Marks a class as an ECP Agent."""
+#: Capabilities an agent may declare. Presence means supported; the value is an
+#: options object, empty when there are no options.
+#:
+#: Only `reset` can be inferred honestly - the SDK knows whether an @on_reset
+#: hook exists. The rest depend on what a step actually returns at runtime, so
+#: the agent author declares them.
+KNOWN_CAPABILITIES = (
+    "tool_calls",
+    "evaluation_context",
+    "usage",
+    "reset",
+    "multi_turn",
+)
+
+
+def agent(name: str = "AnonymousAgent", capabilities: Optional[Dict[str, Any]] = None):
+    """Class Decorator: Marks a class as an ECP Agent.
+
+    ``capabilities`` tells the runtime what this agent can report, so a manifest
+    asking for something the agent never produces fails with a clear message
+    instead of N identical grader failures. Declaring nothing keeps the previous
+    permissive behaviour.
+    """
+    declared = dict(capabilities or {})
+    for key, value in declared.items():
+        if not isinstance(key, str) or not key:
+            raise ValueError("capability names must be non-empty strings")
+        if not isinstance(value, dict):
+            raise TypeError(
+                f"capability {key!r} must map to an options object (use {{}} when there are none)"
+            )
+
     def wrapper(cls):
-        cls._ecp_meta = {"name": name}
+        cls._ecp_meta = {"name": name, "capabilities": declared}
         return cls
     return wrapper
 

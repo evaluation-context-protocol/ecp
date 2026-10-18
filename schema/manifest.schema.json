@@ -48,58 +48,144 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["text_match", "llm_judge", "tool_usage"]
+                        "enum": [
+                          "text_match",
+                          "llm_judge",
+                          "tool_usage"
+                        ]
                       },
                       "field": {
                         "type": "string",
-                        "enum": ["public_output", "evaluation_context", "private_thought"]
+                        "enum": [
+                          "public_output",
+                          "evaluation_context",
+                          "private_thought"
+                        ]
                       },
                       "condition": {
-                        "type": ["string", "null"],
-                        "enum": ["contains", "equals", "does_not_contain", "regex", null]
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "enum": [
+                          "contains",
+                          "equals",
+                          "does_not_contain",
+                          "regex",
+                          null
+                        ]
                       },
-                      "value": {"type": ["string", "null"]},
-                      "pattern": {"type": ["string", "null"], "minLength": 1},
+                      "value": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "pattern": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "minLength": 1
+                      },
                       "prompt": {
-                        "type": ["string", "null"],
+                        "type": [
+                          "string",
+                          "null"
+                        ],
                         "minLength": 1,
                         "pattern": "\\S"
                       },
-                      "assertion": {"type": ["string", "null"]},
-                      "tool_name": {"type": ["string", "null"]},
+                      "assertion": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "tool_name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
                       "arguments": {
                         "type": "object",
                         "additionalProperties": true
                       }
                     },
-                    "required": ["type"],
+                    "required": [
+                      "type"
+                    ],
                     "allOf": [
                       {
-                        "if": {"properties": {"type": {"const": "text_match"}}},
+                        "if": {
+                          "properties": {
+                            "type": {
+                              "const": "text_match"
+                            }
+                          }
+                        },
                         "then": {
-                          "required": ["condition"],
-                          "properties": {"condition": {"type": "string"}},
+                          "required": [
+                            "condition"
+                          ],
+                          "properties": {
+                            "condition": {
+                              "type": "string"
+                            }
+                          },
                           "allOf": [
                             {
-                              "if": {"properties": {"condition": {"const": "regex"}}},
+                              "if": {
+                                "properties": {
+                                  "condition": {
+                                    "const": "regex"
+                                  }
+                                }
+                              },
                               "then": {
-                                "required": ["pattern"],
-                                "properties": {"pattern": {"type": "string", "minLength": 1}}
+                                "required": [
+                                  "pattern"
+                                ],
+                                "properties": {
+                                  "pattern": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                }
                               },
                               "else": {
-                                "required": ["value"],
-                                "properties": {"value": {"type": "string"}}
+                                "required": [
+                                  "value"
+                                ],
+                                "properties": {
+                                  "value": {
+                                    "type": "string"
+                                  }
+                                }
                               }
                             }
                           ]
                         }
                       },
                       {
-                        "if": {"properties": {"type": {"const": "llm_judge"}}},
-                        "then": {
-                          "required": ["prompt"],
+                        "if": {
                           "properties": {
-                            "prompt": {"type": "string", "minLength": 1, "pattern": "\\S"}
+                            "type": {
+                              "const": "llm_judge"
+                            }
+                          }
+                        },
+                        "then": {
+                          "required": [
+                            "prompt"
+                          ],
+                          "properties": {
+                            "prompt": {
+                              "type": "string",
+                              "minLength": 1,
+                              "pattern": "\\S"
+                            }
                           }
                         }
                       }
@@ -107,7 +193,9 @@
                   }
                 }
               },
-              "required": ["input"]
+              "required": [
+                "input"
+              ]
             }
           },
           "dataset": {
@@ -116,7 +204,10 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["csv", "jsonl"]
+                "enum": [
+                  "csv",
+                  "jsonl"
+                ]
               },
               "source": {
                 "type": "string"
@@ -130,16 +221,39 @@
                 "default": "output"
               }
             },
-            "required": ["type", "source"]
+            "required": [
+              "type",
+              "source"
+            ]
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "anyOf": [
-          {"required": ["steps"]},
-          {"required": ["dataset"]}
+          {
+            "required": [
+              "steps"
+            ]
+          },
+          {
+            "required": [
+              "dataset"
+            ]
+          }
         ]
       }
+    },
+    "require_capabilities": {
+      "type": "boolean",
+      "default": false,
+      "description": "Abort before execution when the agent does not declare a capability this manifest needs. Off by default, because an empty capability set means undeclared rather than unsupported."
     }
   },
-  "required": ["manifest_version", "name", "target", "scenarios"]
+  "required": [
+    "manifest_version",
+    "name",
+    "target",
+    "scenarios"
+  ]
 }

@@ -77,6 +77,11 @@ class ECPManifest(StrictModel):
     manifest_version: Literal["v1"]
     name: str = Field(min_length=1)
     target: str = Field(min_length=1)
+    # Opt in to failing before execution when the agent does not declare a
+    # capability this manifest needs. Off by default: agents written before
+    # capabilities existed declare nothing, and the runtime cannot distinguish
+    # "cannot report" from "did not say".
+    require_capabilities: bool = False
     scenarios: List[ScenarioConfig]
 
     @classmethod

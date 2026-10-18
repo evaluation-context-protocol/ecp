@@ -63,8 +63,17 @@ def validate_initialize_result(result: Any) -> Dict[str, Any]:
         raise ValueError("agent/initialize result must be an object")
     if not isinstance(result.get("name"), str) or not result["name"]:
         raise ValueError("agent/initialize result name must be a non-empty string")
-    if not isinstance(result.get("capabilities"), dict):
+    capabilities = result.get("capabilities")
+    if not isinstance(capabilities, dict):
         raise ValueError("agent/initialize result capabilities must be an object")
+    for key, value in capabilities.items():
+        if not isinstance(key, str) or not key:
+            raise ValueError("agent/initialize capability names must be non-empty strings")
+        if not isinstance(value, dict):
+            raise ValueError(
+                f"agent/initialize capability {key!r} must map to an object "
+                "(use {} when there are no options)"
+            )
     if "protocol_version" in result:
         parse_protocol_version(
             result["protocol_version"],
