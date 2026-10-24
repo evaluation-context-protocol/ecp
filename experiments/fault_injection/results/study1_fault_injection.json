@@ -1,0 +1,590 @@
+{
+  "generated_at": "2026-10-24T23:12:31Z",
+  "control_passed_all_configurations": true,
+  "configurations": {
+    "outcome_only": "Assertions on public_output alone.",
+    "structured": "Adds tool_usage assertions over reported tool calls.",
+    "contract": "Adds a text assertion on evaluation_context."
+  },
+  "defects_eligible": 6,
+  "non_defect_probes": 4,
+  "per_configuration": {
+    "structured": {
+      "eligible_defects": 6,
+      "detected": 3,
+      "detection_rate": 0.5,
+      "probes": 4,
+      "false_positives": 0,
+      "false_positive_rate": 0.0,
+      "detected_keys": [
+        "wrong_argument",
+        "skipped_verification",
+        "retrieved_not_derived"
+      ],
+      "false_positive_keys": []
+    },
+    "contract": {
+      "eligible_defects": 6,
+      "detected": 4,
+      "detection_rate": 0.6667,
+      "probes": 4,
+      "false_positives": 3,
+      "false_positive_rate": 0.75,
+      "detected_keys": [
+        "wrong_argument",
+        "skipped_verification",
+        "fabricated_value",
+        "retrieved_not_derived"
+      ],
+      "false_positive_keys": [
+        "benign_rephrase",
+        "benign_numeric_window",
+        "benign_terse"
+      ]
+    }
+  },
+  "per_channel": {
+    "tool_calls": {
+      "eligible": 4,
+      "structured": 3,
+      "contract": 3
+    },
+    "evaluation_context": {
+      "eligible": 1,
+      "structured": 0,
+      "contract": 1
+    },
+    "ordering": {
+      "eligible": 1,
+      "structured": 0,
+      "contract": 0
+    }
+  },
+  "rows": [
+    {
+      "defect": "prohibited_tool",
+      "label": "Prohibited tool call",
+      "channel": "tool_calls",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": false
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": []
+      },
+      "notes": "tool_usage can only assert a call is PRESENT. There is no negative condition, so a prohibited call cannot be expressed at all."
+    },
+    {
+      "defect": "wrong_argument",
+      "label": "Wrong tool argument",
+      "channel": "tool_calls",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": true,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [
+          "tool_usage:tool_calls"
+        ],
+        "contract": [
+          "tool_usage:tool_calls"
+        ]
+      },
+      "notes": "tool_usage matches an argument subset, so a wrong value fails the match."
+    },
+    {
+      "defect": "skipped_verification",
+      "label": "Skipped required verification",
+      "channel": "tool_calls",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": true,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [
+          "tool_usage:tool_calls"
+        ],
+        "contract": [
+          "tool_usage:tool_calls",
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "tool_usage presence assertion covers this directly."
+    },
+    {
+      "defect": "fabricated_value",
+      "label": "Fabricated intermediate value",
+      "channel": "evaluation_context",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": [
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "Flagged only by the evaluation_context text assertion, and only because the fabricated value replaces the exact string that assertion looks for. Structured evidence misses it entirely: ECP carries no tool results to cross-check the claim against. Read alongside benign_rephrase, which shows what that assertion costs."
+    },
+    {
+      "defect": "retrieved_not_derived",
+      "label": "Answer retrieved, not derived",
+      "channel": "tool_calls",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": true,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [
+          "tool_usage:tool_calls"
+        ],
+        "contract": [
+          "tool_usage:tool_calls",
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "Manifests as an absent lookup_order call."
+    },
+    {
+      "defect": "out_of_order",
+      "label": "Verification after the fact",
+      "channel": "ordering",
+      "is_defect": true,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": false
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": []
+      },
+      "notes": "tool_calls is an unordered presence set as far as the graders are concerned. No grader inspects sequence."
+    },
+    {
+      "defect": "benign_rephrase",
+      "label": "Correct behaviour, different wording (false-positive probe)",
+      "channel": "evaluation_context",
+      "is_defect": false,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": [
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "Measures the cost of the evaluation_context assertion. This agent did nothing wrong, so any configuration that flags it is a false positive."
+    },
+    {
+      "defect": "benign_numeric_window",
+      "label": "Correct behaviour, numeric policy wording (probe)",
+      "channel": "evaluation_context",
+      "is_defect": false,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": [
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "A single character of formatting separates this from the asserted string. Nothing about the agent's behaviour is wrong."
+    },
+    {
+      "defect": "benign_terse",
+      "label": "Correct behaviour, terse context (probe)",
+      "channel": "evaluation_context",
+      "is_defect": false,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": true
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": [
+          "text_match:evaluation_context"
+        ]
+      },
+      "notes": "Summarising rather than restating the policy is exactly what the spec asks for, and it fails the assertion."
+    },
+    {
+      "defect": "benign_verbatim",
+      "label": "Correct behaviour, asserted phrasing (probe)",
+      "channel": "evaluation_context",
+      "is_defect": false,
+      "slips_past_outcome_grading": true,
+      "flagged": {
+        "outcome_only": false,
+        "structured": false,
+        "contract": false
+      },
+      "failed_graders": {
+        "outcome_only": [],
+        "structured": [],
+        "contract": []
+      },
+      "notes": "The one wording the assertion was written for. Included so the probe set is not uniformly adversarial."
+    }
+  ],
+  "taxonomy_prediction_mismatches": [],
+  "repetitions": 1,
+  "raw_outcomes": [
+    {
+      "defect": "clean",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 197.504,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "clean",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 189.335,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "clean",
+      "grader_set": "contract",
+      "passed": 5,
+      "total": 5,
+      "failed_graders": [],
+      "duration_ms": 195.847,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "prohibited_tool",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 203.358,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "prohibited_tool",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 193.095,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "prohibited_tool",
+      "grader_set": "contract",
+      "passed": 5,
+      "total": 5,
+      "failed_graders": [],
+      "duration_ms": 198.38,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "wrong_argument",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 191.309,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "wrong_argument",
+      "grader_set": "structured",
+      "passed": 3,
+      "total": 4,
+      "failed_graders": [
+        "tool_usage:tool_calls"
+      ],
+      "duration_ms": 197.081,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "wrong_argument",
+      "grader_set": "contract",
+      "passed": 4,
+      "total": 5,
+      "failed_graders": [
+        "tool_usage:tool_calls"
+      ],
+      "duration_ms": 200.734,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "skipped_verification",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 187.589,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "skipped_verification",
+      "grader_set": "structured",
+      "passed": 3,
+      "total": 4,
+      "failed_graders": [
+        "tool_usage:tool_calls"
+      ],
+      "duration_ms": 205.048,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "skipped_verification",
+      "grader_set": "contract",
+      "passed": 3,
+      "total": 5,
+      "failed_graders": [
+        "tool_usage:tool_calls",
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 198.036,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "fabricated_value",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 194.371,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "fabricated_value",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 202.553,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "fabricated_value",
+      "grader_set": "contract",
+      "passed": 4,
+      "total": 5,
+      "failed_graders": [
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 200.376,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "retrieved_not_derived",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 196.972,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "retrieved_not_derived",
+      "grader_set": "structured",
+      "passed": 3,
+      "total": 4,
+      "failed_graders": [
+        "tool_usage:tool_calls"
+      ],
+      "duration_ms": 198.0,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "retrieved_not_derived",
+      "grader_set": "contract",
+      "passed": 3,
+      "total": 5,
+      "failed_graders": [
+        "tool_usage:tool_calls",
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 194.747,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "out_of_order",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 198.892,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "out_of_order",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 197.478,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "out_of_order",
+      "grader_set": "contract",
+      "passed": 5,
+      "total": 5,
+      "failed_graders": [],
+      "duration_ms": 195.669,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_rephrase",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 201.215,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_rephrase",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 195.102,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_rephrase",
+      "grader_set": "contract",
+      "passed": 4,
+      "total": 5,
+      "failed_graders": [
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 203.234,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_numeric_window",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 196.826,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_numeric_window",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 197.295,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_numeric_window",
+      "grader_set": "contract",
+      "passed": 4,
+      "total": 5,
+      "failed_graders": [
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 195.874,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_terse",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 197.785,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_terse",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 192.058,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_terse",
+      "grader_set": "contract",
+      "passed": 4,
+      "total": 5,
+      "failed_graders": [
+        "text_match:evaluation_context"
+      ],
+      "duration_ms": 190.216,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_verbatim",
+      "grader_set": "outcome_only",
+      "passed": 2,
+      "total": 2,
+      "failed_graders": [],
+      "duration_ms": 191.094,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_verbatim",
+      "grader_set": "structured",
+      "passed": 4,
+      "total": 4,
+      "failed_graders": [],
+      "duration_ms": 189.207,
+      "exit_reason": "ok"
+    },
+    {
+      "defect": "benign_verbatim",
+      "grader_set": "contract",
+      "passed": 5,
+      "total": 5,
+      "failed_graders": [],
+      "duration_ms": 191.795,
+      "exit_reason": "ok"
+    }
+  ]
+}
