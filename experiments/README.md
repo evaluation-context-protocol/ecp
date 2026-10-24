@@ -70,7 +70,64 @@ Three findings worth stating plainly:
 
 ---
 
-## Study 2 - Cross-framework agreement (designed, not run)
+## Study 2 - Reporting fidelity and defect prevalence (harness done, live run blocked)
+
+**Question.** Does an agent report its trajectory faithfully, and among runs
+where the final answer is correct, how often is the trajectory defective?
+
+This is the study Study 1 cannot do. Study 1 measures what the grader vocabulary
+*can express*, using trajectories we control. It says nothing about whether a
+real agent's reported trajectory matches what it actually did - and ECP records
+**self-reported** behaviour, with nothing verifying it. That assumption underpins
+the whole design and had never been measured.
+
+**Method.** Every tool in `reporting_fidelity/domain.py` appends to a JSONL log
+the moment it is really invoked, independently of what the agent later reports.
+That log is ground truth. Per scenario the harness drives the agent over real
+ECP JSON-RPC with an isolated log, then diffs ground truth against the reported
+`tool_calls`, labels defects from ground truth, and runs ECP's real grader
+functions against the report to ask what ECP would have concluded.
+
+Fidelity is reported as **recall** (did it report what it did) and **precision**
+(did it report things it did not do), because the failure modes differ in kind:
+low recall makes ECP blind, low precision makes it lie.
+
+**Status.** The harness is validated against `stub_agent.py`, which genuinely
+invokes both tools but deliberately reports only one. Results:
+
+| Metric | Value |
+| --- | --- |
+| Reporting recall | **0.50** |
+| Reporting precision | 1.00 |
+| Answer accuracy | 1.00 |
+| Trajectory defects in ground truth | **0** |
+| Trials where ECP flags a defect anyway | **4 / 4** |
+
+The last two rows are the finding. The stub's *behaviour* was correct; only its
+*reporting* was lossy. ECP nonetheless flags `skipped_verification` and
+`wrong_argument` on every trial - **false failures that blame the agent for the
+adapter's omission.** This is the mirror image of Study 1's false positives, and
+it bounds every positive result in Study 1: an expressible check is only as good
+as the reporting feeding it.
+
+**The live run is blocked.** `agent.py` is a real LangChain agent
+(`langchain.agents.create_agent`, `gpt-4o-mini`) over the same instrumented
+tools, and the ECP plumbing is verified end to end - protocol negotiated,
+adapter wired, request reaching OpenAI. The `OPENAI_API_KEY` in the environment
+returns `401 invalid_api_key`, so no live numbers were collected. With a working
+key:
+
+```bash
+python experiments/reporting_fidelity/run_study.py --agent live --repeat 5
+```
+
+Cost is a few cents at `gpt-4o-mini`. Expect the live recall number to be the
+most important in the paper, and note that `ECPLangChainAdapter` captures tool
+calls through `on_llm_end` against a LangChain 1.x agent - if that callback
+shape has drifted, recall will be near zero, which is itself the finding the
+replay fixtures structurally cannot surface.
+
+## Study 3 - Cross-framework agreement (designed, not run)
 
 **Question.** Run one manifest against functionally equivalent agents in
 CrewAI, LangChain, LlamaIndex and PydanticAI. Do the four produce the same
@@ -97,7 +154,7 @@ the portability claim is actually about.
 
 ---
 
-## Study 3 - Overhead (designed, not run)
+## Study 4 - Overhead (designed, not run)
 
 **Question.** What does the contract cost in latency and tokens?
 

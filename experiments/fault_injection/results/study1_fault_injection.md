@@ -1,6 +1,6 @@
 # Study 1 - Fault injection
 
-Generated: 2026-10-24T23:12:31Z
+Generated: 2026-10-24T23:22:08Z
 
 Every injected defect leaves the **final answer correct**, so outcome-only
 grading passes it. Detection rate is therefore conditional on a correct

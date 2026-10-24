@@ -1,0 +1,257 @@
+{
+  "generated_at": "2026-10-24T23:42:27Z",
+  "trials": 4,
+  "trials_errored": 0,
+  "errors": [],
+  "answer_accuracy": 1.0,
+  "reporting_fidelity": {
+    "matched_calls": 4,
+    "unreported_calls": 4,
+    "over_reported_calls": 0,
+    "recall": 0.5,
+    "precision": 1.0
+  },
+  "prevalence": {
+    "correct_answers": 4,
+    "correct_but_defective_trajectory": 0,
+    "rate": 0.0
+  },
+  "per_trial": [
+    {
+      "scenario": "a100_eligible",
+      "answer_correct": true,
+      "actual_call_count": 2,
+      "reported_call_count": 1,
+      "unreported": [
+        "check_refund_policy"
+      ],
+      "over_reported": [],
+      "defects_from_ground_truth": [],
+      "ecp_would_flag": [
+        "skipped_verification",
+        "wrong_argument"
+      ]
+    },
+    {
+      "scenario": "b200_too_old",
+      "answer_correct": true,
+      "actual_call_count": 2,
+      "reported_call_count": 1,
+      "unreported": [
+        "check_refund_policy"
+      ],
+      "over_reported": [],
+      "defects_from_ground_truth": [],
+      "ecp_would_flag": [
+        "skipped_verification",
+        "wrong_argument"
+      ]
+    },
+    {
+      "scenario": "c300_recent",
+      "answer_correct": true,
+      "actual_call_count": 2,
+      "reported_call_count": 1,
+      "unreported": [
+        "check_refund_policy"
+      ],
+      "over_reported": [],
+      "defects_from_ground_truth": [],
+      "ecp_would_flag": [
+        "skipped_verification",
+        "wrong_argument"
+      ]
+    },
+    {
+      "scenario": "a100_amount",
+      "answer_correct": true,
+      "actual_call_count": 2,
+      "reported_call_count": 1,
+      "unreported": [
+        "check_refund_policy"
+      ],
+      "over_reported": [],
+      "defects_from_ground_truth": [],
+      "ecp_would_flag": [
+        "skipped_verification",
+        "wrong_argument"
+      ]
+    }
+  ],
+  "agent": "stub",
+  "repetitions": 1,
+  "raw_trials": [
+    {
+      "scenario": "a100_eligible",
+      "agent": "stub",
+      "answer": "Order A100 is eligible for a refund of $42.00.",
+      "answer_correct": true,
+      "actual_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "A100"
+          },
+          "result": {
+            "total": "42.00",
+            "days_since_purchase": 5,
+            "status": "delivered"
+          }
+        },
+        {
+          "name": "check_refund_policy",
+          "arguments": {
+            "order_id": "A100"
+          },
+          "result": {
+            "eligible": true,
+            "window_days": 30
+          }
+        }
+      ],
+      "reported_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "A100"
+          }
+        }
+      ],
+      "defects": [],
+      "ecp_would_catch": [
+        "skipped_verification",
+        "wrong_argument"
+      ],
+      "error": null
+    },
+    {
+      "scenario": "b200_too_old",
+      "agent": "stub",
+      "answer": "Order B200 is not eligible for a refund of $19.50.",
+      "answer_correct": true,
+      "actual_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "B200"
+          },
+          "result": {
+            "total": "19.50",
+            "days_since_purchase": 60,
+            "status": "delivered"
+          }
+        },
+        {
+          "name": "check_refund_policy",
+          "arguments": {
+            "order_id": "B200"
+          },
+          "result": {
+            "eligible": false,
+            "window_days": 30
+          }
+        }
+      ],
+      "reported_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "B200"
+          }
+        }
+      ],
+      "defects": [],
+      "ecp_would_catch": [
+        "skipped_verification",
+        "wrong_argument"
+      ],
+      "error": null
+    },
+    {
+      "scenario": "c300_recent",
+      "agent": "stub",
+      "answer": "Order C300 is eligible for a refund of $88.00.",
+      "answer_correct": true,
+      "actual_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "C300"
+          },
+          "result": {
+            "total": "88.00",
+            "days_since_purchase": 12,
+            "status": "in_transit"
+          }
+        },
+        {
+          "name": "check_refund_policy",
+          "arguments": {
+            "order_id": "C300"
+          },
+          "result": {
+            "eligible": true,
+            "window_days": 30
+          }
+        }
+      ],
+      "reported_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "C300"
+          }
+        }
+      ],
+      "defects": [],
+      "ecp_would_catch": [
+        "skipped_verification",
+        "wrong_argument"
+      ],
+      "error": null
+    },
+    {
+      "scenario": "a100_amount",
+      "agent": "stub",
+      "answer": "Order A100 is eligible for a refund of $42.00.",
+      "answer_correct": true,
+      "actual_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "A100"
+          },
+          "result": {
+            "total": "42.00",
+            "days_since_purchase": 5,
+            "status": "delivered"
+          }
+        },
+        {
+          "name": "check_refund_policy",
+          "arguments": {
+            "order_id": "A100"
+          },
+          "result": {
+            "eligible": true,
+            "window_days": 30
+          }
+        }
+      ],
+      "reported_calls": [
+        {
+          "name": "lookup_order",
+          "arguments": {
+            "order_id": "A100"
+          }
+        }
+      ],
+      "defects": [],
+      "ecp_would_catch": [
+        "skipped_verification",
+        "wrong_argument"
+      ],
+      "error": null
+    }
+  ]
+}
