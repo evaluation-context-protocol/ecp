@@ -16,15 +16,23 @@ ECP is not an evaluation framework. It is the contract between agents and the to
 
 Because every agent reports the same fields, an evaluator's config does not change when the agent's framework does. Only the `target` (the command or URL that starts the agent) changes.
 
+> **Availability.** `ECPSession`, the Promptfoo provider and the DeepEval bridge are on the `main` branch and will ship in the release after `0.10.0`. Until then, install the runtime from source: `pip install "git+https://github.com/evaluation-context-protocol/ecp.git#subdirectory=runtime/python"`.
+
 The examples below test a refund agent that must look orders up and must never call `issue_refund`.
 
 ## Promptfoo
 
 ECP ships a Promptfoo provider. The reply becomes Promptfoo's `output`; what the agent did goes in the response `metadata`.
 
+Promptfoo loads Python providers from a file, so create `ecp_provider.py` next to your config with one line:
+
+```python
+from ecp_runtime.integrations.promptfoo import call_api  # noqa: F401
+```
+
 ```yaml
 providers:
-  - id: file://integrations/promptfoo/ecp_provider.py
+  - id: file://ecp_provider.py
     config:
       target: python my_agent.py      # same string as a manifest's target:
       rpc_timeout: 120                # seconds per ECP call (optional)
