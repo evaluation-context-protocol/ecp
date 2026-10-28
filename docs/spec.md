@@ -90,7 +90,17 @@ Supported graders:
 
 - `text_match` (contains, equals, does_not_contain, regex)
 - `llm_judge` (requires the `ecp-runtime[judge]` extra and `OPENAI_API_KEY`)
-- `tool_usage` (name + argument subset match)
+- `tool_usage` (name + argument subset match; `condition: not_called` forbids a call)
+
+A prohibition looks like this:
+
+```yaml
+- type: tool_usage
+  condition: not_called
+  tool_name: issue_refund
+```
+
+`arguments` narrows it to calls whose arguments include those pairs. A prohibition passes when the call is *absent*, so it would pass vacuously for an agent that reports no tool calls at all. It therefore **fails unless the agent declares the `tool_calls` capability**, and the failure message says how to declare it. Declaring it is a claim that every call is reported; a prohibition is only as strong as that claim.
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or the deprecated `private_thought` alias.
 

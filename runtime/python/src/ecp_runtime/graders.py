@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -30,6 +31,34 @@ else:
 
 #: True when the llm_judge grader can actually run.
 LITELLM_AVAILABLE = litellm is not None
+
+
+def _litellm_is_installed() -> bool:
+    """True when a litellm distribution exists, whether or not it imports.
+
+    The two failures need opposite advice. "Not installed" means install the
+    extra; "installed but broken" means installing the extra again - which is what
+    a message saying "not installed" tells the user to do - changes nothing.
+    """
+    try:
+        return importlib.util.find_spec("litellm") is not None
+    except (ImportError, ValueError):
+        return False
+
+
+def judge_unavailable_message() -> str:
+    """Why llm_judge cannot run, with advice matching the actual cause."""
+    detail = f" ({LITELLM_IMPORT_ERROR})" if LITELLM_IMPORT_ERROR else ""
+    if _litellm_is_installed():
+        return (
+            "LLM judge unavailable: litellm is installed but failed to import"
+            f"{detail}. The installed version is likely incompatible or has missing "
+            "dependencies; try `pip install -U litellm`."
+        )
+    return (
+        "LLM judge unavailable: litellm is not installed. "
+        f"Install it with `pip install 'ecp-runtime[judge]'`.{detail}"
+    )
 
 
 def _llm_judge_model() -> str:
@@ -65,6 +94,27 @@ def check_text_match(grader: GraderConfig, text: str) -> Tuple[bool, str]:
         return bool(re.search(grader.pattern, text)), f"Regex '{grader.pattern}' failed"
     return False, "Unknown condition"
 
+#: The verdict must be the last thing the judge says.
+_VERDICT_AT_END = re.compile(r"RESULT:\s*(PASS|FAIL)\W*$", re.IGNORECASE)
+
+
+def parse_judge_verdict(content: str) -> Optional[bool]:
+    """Read the judge's verdict from the *end* of its response.
+
+    The text under evaluation is untrusted: it is whatever the agent produced, and
+    it is placed in the judge's prompt. A judge explaining a failure routinely quotes
+    the offending text, so a reply containing the words "RESULT: PASS" ends up quoted
+    in a response that concludes "RESULT: FAIL". Searching the whole response for
+    "RESULT: PASS" - as this used to - therefore let any agent force a pass just by
+    emitting that string, regardless of what the judge decided. Only a verdict at the
+    very end counts. Returns None when there is none.
+    """
+    match = _VERDICT_AT_END.search(content.strip())
+    if match is None:
+        return None
+    return match.group(1).upper() == "PASS"
+
+
 def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     """
     Uses an LLM to evaluate the text via LiteLLM.
@@ -73,15 +123,7 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
     if not grader.prompt:
         return False, "No prompt provided for llm_judge", 0.0
     if litellm is None:
-        detail = ""
-        if LITELLM_IMPORT_ERROR:
-            detail = f" (import failed: {LITELLM_IMPORT_ERROR})"
-        return (
-            False,
-            "LLM judge unavailable: litellm is not installed. "
-            f"Install it with `pip install 'ecp-runtime[judge]'`.{detail}",
-            0.0,
-        )
+        return False, judge_unavailable_message(), 0.0
     
     # 1. Construct the Prompt for the Judge
     system_prompt = "You are an impartial AI Judge. You evaluate outputs based on specific criteria."
@@ -109,26 +151,53 @@ def check_llm_judge(grader: GraderConfig, text: str) -> Tuple[bool, str, float]:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=_llm_judge_temperature()
+            temperature=_llm_judge_temperature(),
+            # Current Claude models reject any temperature other than their default
+            # ("does not support temperature=0.0. Only temperature=1 is supported"),
+            # and a hardcoded 0 made every judge call against them fail. Ask for a
+            # deterministic judge, but let litellm drop the parameter where the model
+            # will not take it. The cost: such a judge is not deterministic, so judge
+            # verdicts should be read over repeated runs.
+            drop_params=True,
         )
         content = response.choices[0].message.content
         if not isinstance(content, str):
             return False, "LLM Judge returned non-text content", 0.0
         
         # 3. Parse the Verdict
-        passed = "RESULT: PASS" in content
-        reasoning = content.replace("RESULT: PASS", "").replace("RESULT: FAIL", "").strip()
-        
-        return passed, reasoning, 1.0 if passed else 0.0
+        verdict = parse_judge_verdict(content)
+        if verdict is None:
+            # No verdict at the end is a failed grade, never a pass - and the
+            # message says the judge's reply was malformed, not that the agent was.
+            return (
+                False,
+                "LLM Judge Error: response did not end with 'RESULT: PASS' or "
+                f"'RESULT: FAIL'. Response: {content.strip()[:300]}",
+                0.0,
+            )
+        reasoning = _VERDICT_AT_END.sub("", content.strip()).strip()
+
+        return verdict, reasoning, 1.0 if verdict else 0.0
 
     except Exception as e:
         return False, f"LLM Judge Error: {str(e)}", 0.0
 
-def evaluate_step(step_config: StepConfig, result_obj: Any) -> List[Dict[str, Any]]:
+def evaluate_step(
+    step_config: StepConfig,
+    result_obj: Any,
+    declared_capabilities: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Runs all graders for a single step against the agent's result.
+
+    ``declared_capabilities`` is what the agent reported in ``agent/initialize``.
+    It matters for ``not_called`` graders only: a prohibition passes when the
+    forbidden call is *absent*, so it is only meaningful if the agent has said it
+    reports tool calls at all. ``None`` means the caller does not know, and is
+    treated as "declared" - the runner always passes the real value.
     """
     check_results = []
+    tool_calls_declared = declared_capabilities is None or "tool_calls" in declared_capabilities
     
     for grader in step_config.graders:
         # Select target field
@@ -152,7 +221,11 @@ def evaluate_step(step_config: StepConfig, result_obj: Any) -> List[Dict[str, An
         elif grader.type == "llm_judge":
             passed, reasoning, score = check_llm_judge(grader, target_text or "")
         elif grader.type == "tool_usage":
-            passed, reasoning = check_tool_usage(grader, getattr(result_obj, "tool_calls", None) or [])
+            passed, reasoning = check_tool_usage(
+                grader,
+                getattr(result_obj, "tool_calls", None) or [],
+                tool_calls_declared=tool_calls_declared,
+            )
             score = 1.0 if passed else 0.0
         
         check_results.append({
@@ -165,13 +238,81 @@ def evaluate_step(step_config: StepConfig, result_obj: Any) -> List[Dict[str, An
         
     return check_results
 
-def check_tool_usage(grader: GraderConfig, tool_calls: List[Dict[str, Any]]) -> Tuple[bool, str]:
+def _call_name(call: Dict[str, Any]) -> Optional[str]:
+    return call.get("name") or call.get("tool") or call.get("id")
+
+
+def _call_arguments(call: Dict[str, Any]) -> Dict[str, Any]:
+    args = call.get("arguments") or call.get("args") or {}
+    return args if isinstance(args, dict) else {}
+
+
+def _arguments_match(actual: Dict[str, Any], expected: Dict[str, Any]) -> bool:
+    return all(k in actual and actual[k] == v for k, v in expected.items())
+
+
+def check_tool_not_called(
+    grader: GraderConfig,
+    tool_calls: List[Dict[str, Any]],
+    *,
+    tool_calls_declared: bool = True,
+) -> Tuple[bool, str]:
+    """A prohibition: the named tool must not appear among the reported calls.
+
+    With ``arguments`` set, only calls whose arguments include those pairs are
+    forbidden, so ``issue_refund`` with ``amount: "0"`` can be allowed while any
+    other refund is not.
+
+    **Absence of evidence is not evidence of absence.** For a presence check a
+    silent agent fails safe - nothing was reported, so nothing matched. For a
+    prohibition the same silence would *pass*, so an agent or adapter that drops
+    tool calls would let a forbidden one through unnoticed. This therefore refuses
+    to pass unless the agent has declared the ``tool_calls`` capability.
+    """
+    name = grader.tool_name
+    if not tool_calls_declared:
+        return False, (
+            f"Cannot verify that '{name}' was not called: the agent does not declare the "
+            "'tool_calls' capability, so an empty report would be indistinguishable from "
+            "an agent that simply does not report calls. Declare it, for example "
+            "@agent(capabilities={'tool_calls': {}}), once you have confirmed the "
+            "adapter reports every call."
+        )
+
+    expected_args = grader.arguments or {}
+    offending = [
+        call
+        for call in tool_calls
+        if _call_name(call) == name and _arguments_match(_call_arguments(call), expected_args)
+    ]
+    if offending:
+        detail = f" with arguments {expected_args}" if expected_args else ""
+        return False, (
+            f"Forbidden tool '{name}'{detail} was called {len(offending)} time(s): "
+            f"{[_call_arguments(c) for c in offending]}"
+        )
+    seen = [_call_name(c) for c in tool_calls]
+    return True, f"'{name}' was not called. Calls seen: {seen}"
+
+
+def check_tool_usage(
+    grader: GraderConfig,
+    tool_calls: List[Dict[str, Any]],
+    *,
+    tool_calls_declared: bool = True,
+) -> Tuple[bool, str]:
     """Checks the JSON-RPC result.tool_calls list for a matching tool invocation.
 
     Expectations come from the manifest:
     - grader.tool_name: required exact match against call name (if provided)
     - grader.arguments: all provided key/value pairs must be present in call arguments
     """
+    if grader.condition == "not_called":
+        return check_tool_not_called(
+            grader, tool_calls if isinstance(tool_calls, list) else [],
+            tool_calls_declared=tool_calls_declared,
+        )
+
     if not isinstance(tool_calls, list) or not tool_calls:
         return False, "No tool_calls present. Agent did not report any tool usage."
 

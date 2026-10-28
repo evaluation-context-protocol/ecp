@@ -13,12 +13,20 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+#: Conditions that apply to tool_usage graders rather than text_match graders.
+_TOOL_CONDITIONS = frozenset({"called", "not_called"})
+
+
 # --- The Grader (Assertion) Schema ---
 class GraderConfig(StrictModel):
     type: Literal["text_match", "llm_judge", "tool_usage"]
     field: Literal["public_output", "evaluation_context", "private_thought"] = "public_output"
     # For text_match
-    condition: Optional[Literal["contains", "equals", "does_not_contain", "regex"]] = None
+    # text_match: contains / equals / does_not_contain / regex.
+    # tool_usage: called (the default) or not_called.
+    condition: Optional[
+        Literal["contains", "equals", "does_not_contain", "regex", "called", "not_called"]
+    ] = None
     value: Optional[str] = None
     pattern: Optional[str] = None
     # For llm_judge
@@ -33,6 +41,11 @@ class GraderConfig(StrictModel):
         if self.type == "text_match":
             if not self.condition:
                 raise ValueError("text_match grader requires 'condition'")
+            if self.condition in _TOOL_CONDITIONS:
+                raise ValueError(
+                    f"text_match does not support condition={self.condition!r}; "
+                    "that condition belongs to tool_usage"
+                )
             if self.condition == "regex":
                 if not self.pattern:
                     raise ValueError("text_match with condition=regex requires 'pattern'")
@@ -46,6 +59,15 @@ class GraderConfig(StrictModel):
         elif self.type == "tool_usage":
             if not isinstance(self.arguments, dict):
                 raise ValueError("tool_usage grader 'arguments' must be an object/dictionary")
+            if self.condition is not None and self.condition not in _TOOL_CONDITIONS:
+                raise ValueError(
+                    f"tool_usage does not support condition={self.condition!r}; "
+                    f"use one of: {', '.join(sorted(_TOOL_CONDITIONS))}"
+                )
+            if self.condition == "not_called" and not self.tool_name:
+                # Without a name this would forbid every tool call at once, which is
+                # never what an author means and is easy to write by accident.
+                raise ValueError("tool_usage with condition=not_called requires 'tool_name'")
 
         return self
 

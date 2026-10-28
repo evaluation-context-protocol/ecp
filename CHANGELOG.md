@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added `condition: not_called` on `tool_usage`, a prohibition on a tool call: `tool_name: issue_refund` fails if the agent called it, and `arguments` narrows the ban to calls matching those pairs. Until now ECP could only assert a call was *present*, so an agent could take an unauthorised action, write a clean reply, and pass every grader.
+- `called` is accepted as an explicit spelling of the existing default `tool_usage` behaviour.
+
+### Changed
+
+- A `not_called` grader **fails rather than passes** when the agent has not declared the `tool_calls` capability. A prohibition passes when the call is absent, so an agent or adapter that drops tool calls would otherwise satisfy it vacuously. The failure message explains how to declare the capability. Presence checks are unaffected, since they already fail safe.
+- `evaluate_step` takes an optional `declared_capabilities` argument. The runner always supplies it; direct callers that omit it get the previous lenient behaviour.
+
+### Fixed
+
+- **`llm_judge` verdicts could be forged by the text being judged.** The verdict was decided by `"RESULT: PASS" in response`, a substring test over the whole response. A judge explaining a failure quotes the offending text, so an agent reply containing the words `RESULT: PASS` produced a response that quoted them while concluding `RESULT: FAIL`, and was passed anyway. The model was not fooled; the parser was. The verdict is now read only from the end of the response, and a response with no trailing verdict is a failed grade reported as a judge error.
+- `llm_judge` always sent `temperature=0`, which current Claude models reject (`does not support temperature=0.0. Only temperature=1 is supported`), so every judge call against them failed. litellm is now asked to drop parameters a model will not take.
+- The "judge unavailable" message told users whose litellm was installed but failed to import to run `pip install 'ecp-runtime[judge]'`, which changes nothing. It now distinguishes "not installed" from "installed but failed to import" and gives advice matching the cause.
+- **The LangChain adapter crashed when a model returned a list of content blocks.** Anthropic models return text and tool-use as separate blocks, so `public_output` became a list and the step failed with `public_output must be a string`. Text blocks are now joined and tool-use blocks ignored. Found by running one manifest across four frameworks against a real model.
+- **The LlamaIndex adapter reported tool calls with an empty name.** LlamaIndex's `ToolCallResult` names the tool `tool_name` and its arguments `tool_kwargs`, which the adapter did not read, so every step with a tool call failed validation. Both are now read.
+
 ## 0.10.0
 
 Protocol version negotiation, auditable run telemetry, and a lighter install.

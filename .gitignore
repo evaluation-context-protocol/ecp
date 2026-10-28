@@ -216,3 +216,15 @@ __marimo__/
 
 # litellm writes this on import; it is not project content
 litellm_uuid.txt
+
+# crewai_claude_crew scratch output from `run_with_ground_truth.py --keep`
+examples/crewai_claude_crew/.run/
+
+# experiments: dependencies, generated machine-specific manifests, per-trial scratch
+experiments/head_to_head/promptfoo/node_modules/
+experiments/head_to_head/promptfoo/.promptfoo/
+experiments/portability/manifests/
+experiments/natural_defects/results/tool_logs/
+
+# blind-labelling answer key (author's labels); keep out of what labellers receive
+experiments/head_to_head/labelling/key.json

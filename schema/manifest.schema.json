@@ -72,8 +72,11 @@
                           "equals",
                           "does_not_contain",
                           "regex",
+                          "called",
+                          "not_called",
                           null
-                        ]
+                        ],
+                        "description": "text_match: contains, equals, does_not_contain, regex. tool_usage: called (the default) or not_called."
                       },
                       "value": {
                         "type": [
@@ -185,6 +188,33 @@
                               "type": "string",
                               "minLength": 1,
                               "pattern": "\\S"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "type": {
+                              "const": "tool_usage"
+                            },
+                            "condition": {
+                              "const": "not_called"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "condition"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "tool_name"
+                          ],
+                          "properties": {
+                            "tool_name": {
+                              "type": "string",
+                              "minLength": 1
                             }
                           }
                         }

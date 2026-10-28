@@ -553,7 +553,11 @@ class ECPRunner:
         if step_result.evaluation_context:
             logger.debug("Evaluation context: %s", step_result.evaluation_context)
 
-        checks = evaluate_step(step, step_result)
+        checks = evaluate_step(
+            step,
+            step_result,
+            declared_capabilities=(self.agent_info or {}).get("capabilities") or {},
+        )
         for check in checks:
             status = "PASS" if check["passed"] else "FAIL"
             logger.info("%s | %s on %s", status, check["type"], check["field"])

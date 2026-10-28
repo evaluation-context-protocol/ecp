@@ -190,7 +190,21 @@ Supported graders:
 
 - `text_match`: contains, equals, does_not_contain, regex
 - `llm_judge`: prompt-based evaluation
-- `tool_usage`: verifies tool call name and argument subset
+- `tool_usage`: verifies a tool call against the agent's reported `tool_calls`. `condition` is `called` (the default) or `not_called`.
+
+### 5.2 Tool Prohibitions
+
+`tool_usage` with `condition: not_called` asserts that a tool was **not** invoked:
+
+```yaml
+- type: tool_usage
+  condition: not_called
+  tool_name: issue_refund
+```
+
+`tool_name` is required. `arguments`, when given, narrows the prohibition to calls whose arguments include those pairs, so one shape of call can be forbidden while others remain allowed.
+
+A prohibition differs from a presence check in the way that matters most. A presence check fails safe: if the agent reports nothing, nothing matched, and the check fails. A prohibition passes when the forbidden call is *absent*, so an agent or adapter that omits tool calls would satisfy it vacuously. A runtime MUST therefore NOT pass a `not_called` grader unless the agent declared the `tool_calls` capability in `agent/initialize`; otherwise the check MUST fail and say why. Declaring the capability is a claim by the agent's author that every call is reported, and a prohibition is only as strong as that claim holds.
 
 Text and LLM graders can target `public_output`, `evaluation_context`, or deprecated `private_thought`.
 
