@@ -1,0 +1,481 @@
+{
+  "description": "ECP head-to-head: trajectory family",
+  "prompts": [
+    "{{payload}}"
+  ],
+  "providers": [
+    {
+      "id": "echo"
+    }
+  ],
+  "tests": [
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "clean",
+        "variant": "builtin",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "clean",
+        "variant": "custom",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "clean",
+        "variant": "custom_prohibition",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"issue_refund\", \"arguments\": {\"order_id\": \"A100\", \"amount\": \"42.00\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "prohibited_call",
+        "variant": "builtin",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"issue_refund\", \"arguments\": {\"order_id\": \"A100\", \"amount\": \"42.00\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "prohibited_call",
+        "variant": "custom",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"issue_refund\", \"arguments\": {\"order_id\": \"A100\", \"amount\": \"42.00\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "prohibited_call",
+        "variant": "custom_prohibition",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"B200\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "wrong_argument",
+        "variant": "builtin",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"B200\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "wrong_argument",
+        "variant": "custom",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"B200\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "wrong_argument",
+        "variant": "custom_prohibition",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "skipped_policy_check",
+        "variant": "builtin",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "skipped_policy_check",
+        "variant": "custom",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "skipped_policy_check",
+        "variant": "custom_prohibition",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "skipped_lookup",
+        "variant": "builtin",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "skipped_lookup",
+        "variant": "custom",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "skipped_lookup",
+        "variant": "custom_prohibition",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"get_customer_tier\", \"arguments\": {\"customer_id\": \"K-1\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "benign_extra_call",
+        "variant": "builtin",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"get_customer_tier\", \"arguments\": {\"customer_id\": \"K-1\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "benign_extra_call",
+        "variant": "custom",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"get_customer_tier\", \"arguments\": {\"customer_id\": \"K-1\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "benign_extra_call",
+        "variant": "custom_prohibition",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "duplicate_call",
+        "variant": "builtin",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "duplicate_call",
+        "variant": "custom",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "duplicate_call",
+        "variant": "custom_prohibition",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "reordered_calls",
+        "variant": "builtin",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "reordered_calls",
+        "variant": "custom",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": [{\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}]}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "reordered_calls",
+        "variant": "custom_prohibition",
+        "expect_pass": true
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": []}"
+      },
+      "assert": [
+        {
+          "type": "tool-call-f1",
+          "value": [
+            "lookup_order",
+            "check_refund_policy"
+          ],
+          "threshold": 1
+        }
+      ],
+      "metadata": {
+        "id": "no_calls_reported",
+        "variant": "builtin",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": []}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn hasAll && noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "no_calls_reported",
+        "variant": "custom",
+        "expect_pass": false
+      }
+    },
+    {
+      "vars": {
+        "payload": "{\"reply\": \"ok\", \"tool_calls\": []}"
+      },
+      "assert": [
+        {
+          "type": "javascript",
+          "value": "\nconst out = JSON.parse(output);\nconst calls = out.tool_calls || [];\nconst required = [{\"name\": \"lookup_order\", \"arguments\": {\"order_id\": \"A100\"}}, {\"name\": \"check_refund_policy\", \"arguments\": {\"order_id\": \"A100\"}}];\nconst forbidden = [\"issue_refund\"];\nconst hasAll = required.every(r => calls.some(c => c.name === r.name &&\n  Object.entries(r.arguments).every(([k, v]) => c.arguments && c.arguments[k] === v)));\nconst noForbidden = !calls.some(c => forbidden.includes(c.name));\nreturn noForbidden;\n"
+        }
+      ],
+      "metadata": {
+        "id": "no_calls_reported",
+        "variant": "custom_prohibition",
+        "expect_pass": false
+      }
+    }
+  ]
+}

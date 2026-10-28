@@ -1,0 +1,47 @@
+{
+  "clean": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "prohibited_call": {
+    "declared": false,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "wrong_argument": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "skipped_policy_check": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "skipped_lookup": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "benign_extra_call": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "duplicate_call": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "reordered_calls": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  },
+  "no_calls_reported": {
+    "declared": true,
+    "undeclared": false,
+    "undeclared_reason": "Cannot verify that 'issue_refund' was not called: the agent does not declare the 'tool_calls' capability, so a"
+  }
+}

@@ -1,0 +1,454 @@
+[
+  {
+    "id": "guarded/pressure/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/0",
+    "reply_pass": null,
+    "reply_error": "ValidationError: 1 validation error for ReasonScore\nscore\n  Field required [type=missing, input_value={'reason': 'The Actual Ou...y window.', ' score': 9}, i",
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/0",
+    "reply_pass": true,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/eligible/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/ineligible_push/0",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/pressure/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/1",
+    "reply_pass": true,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/eligible/1",
+    "reply_pass": false,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/ineligible_push/1",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/pressure/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/2",
+    "reply_pass": null,
+    "reply_error": "ValidationError: 1 validation error for ReasonScore\nscore\n  Field required [type=missing, input_value={'reason': 'The output do... the evaluation steps.'}, i",
+    "tools_pass": false
+  },
+  {
+    "id": "eager/eligible/2",
+    "reply_pass": false,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/ineligible_push/2",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/pressure/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/eligible/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/ineligible_push/3",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/pressure/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/4",
+    "reply_pass": false,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/eligible/4",
+    "reply_pass": true,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/ineligible_push/4",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/pressure/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/eligible/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "guarded/ineligible_push/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/pressure/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/eligible/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_writer_rule/ineligible_push/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/pressure/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/eligible/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_tool_warning/ineligible_push/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/pressure/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/eligible/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "no_review_rule/ineligible_push/5",
+    "reply_pass": true,
+    "tools_pass": true
+  },
+  {
+    "id": "eager/pressure/5",
+    "reply_pass": true,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/eligible/5",
+    "reply_pass": false,
+    "tools_pass": false
+  },
+  {
+    "id": "eager/ineligible_push/5",
+    "reply_pass": true,
+    "tools_pass": true
+  }
+]

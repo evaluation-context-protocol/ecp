@@ -1,0 +1,129 @@
+{
+  "versions": {
+    "ecp-runtime": "0.10.0",
+    "litellm": "1.106.3",
+    "deepeval": "4.3.2",
+    "anthropic": "2.3.0",
+    "promptfoo": "0.120.19"
+  },
+  "judge_model": "claude-haiku-5-5 (all LLM-judged arms)",
+  "reply": [
+    {
+      "arm": "ECP regex (the shipped patterns)",
+      "false_fail_per_run": [
+        9
+      ],
+      "miss_per_run": [
+        5
+      ],
+      "errors": 0,
+      "flips": 0,
+      "repeats": 1
+    },
+    {
+      "arm": "ECP llm_judge",
+      "false_fail_per_run": [
+        0,
+        0,
+        0
+      ],
+      "miss_per_run": [
+        0,
+        0,
+        0
+      ],
+      "errors": 0,
+      "flips": 0,
+      "repeats": 3
+    },
+    {
+      "arm": "DeepEval GEval",
+      "false_fail_per_run": [
+        0,
+        0,
+        0
+      ],
+      "miss_per_run": [
+        0,
+        0,
+        0
+      ],
+      "errors": 0,
+      "flips": 0,
+      "repeats": 3
+    },
+    {
+      "arm": "Promptfoo llm-rubric",
+      "false_fail_per_run": [
+        0,
+        0,
+        0
+      ],
+      "miss_per_run": [
+        0,
+        0,
+        0
+      ],
+      "errors": 0,
+      "flips": 0,
+      "repeats": 3
+    }
+  ],
+  "trajectory": [
+    {
+      "arm": "ECP: tool_usage + not_called",
+      "correct": 9,
+      "total": 9,
+      "false_alarms": [],
+      "missed": [],
+      "custom_code": "no"
+    },
+    {
+      "arm": "DeepEval A: ToolCorrectness + ToolPermission",
+      "correct": 9,
+      "total": 9,
+      "false_alarms": [],
+      "missed": [],
+      "custom_code": "no"
+    },
+    {
+      "arm": "DeepEval B: ToolCorrectness exact match",
+      "correct": 6,
+      "total": 9,
+      "false_alarms": [
+        "benign_extra_call",
+        "duplicate_call",
+        "reordered_calls"
+      ],
+      "missed": [],
+      "custom_code": "no"
+    },
+    {
+      "arm": "Promptfoo: tool-call-f1 (built in)",
+      "correct": 7,
+      "total": 9,
+      "false_alarms": [
+        "benign_extra_call"
+      ],
+      "missed": [
+        "wrong_argument"
+      ],
+      "custom_code": "no"
+    },
+    {
+      "arm": "Promptfoo: javascript assertion (custom)",
+      "correct": 9,
+      "total": 9,
+      "false_alarms": [],
+      "missed": [],
+      "custom_code": "yes"
+    }
+  ],
+  "prohibition_with_empty_report": {
+    "ECP not_called, agent declares tool_calls": true,
+    "ECP not_called, agent does NOT declare tool_calls": false,
+    "DeepEval ToolPermissionMetric(denied_tools)": true,
+    "Promptfoo javascript (prohibition only)": true
+  },
+  "promptfoo_reply_errors": 0
+}

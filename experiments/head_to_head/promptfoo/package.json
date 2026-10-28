@@ -1,0 +1,8 @@
+{
+  "name": "ecp-head-to-head-promptfoo",
+  "private": true,
+  "description": "Pinned Promptfoo install for the ECP head-to-head study",
+  "dependencies": {
+    "promptfoo": "^0.120.19"
+  }
+}

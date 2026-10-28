@@ -1,0 +1,501 @@
+{
+  "tool": "DeepEval",
+  "versions": {
+    "deepeval": "4.3.2",
+    "anthropic": "2.3.0"
+  },
+  "judge_model": "claude-haiku-5-5",
+  "geval_threshold": 0.5,
+  "reply": {
+    "geval": [
+      [
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.2
+        },
+        {
+          "pass": false,
+          "score": 0.2
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.8
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": true,
+          "score": 0.8
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        }
+      ],
+      [
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        }
+      ],
+      [
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": true,
+          "score": 0.6
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 0.9
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": true,
+          "score": 1.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        },
+        {
+          "pass": false,
+          "score": 0.1
+        },
+        {
+          "pass": false,
+          "score": 0.0
+        }
+      ]
+    ]
+  },
+  "traj": {
+    "clean": {
+      "required": {
+        "pass": true,
+        "score": 1.0
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": true,
+        "score": 1.0
+      },
+      "A": true,
+      "B": true
+    },
+    "prohibited_call": {
+      "required": {
+        "pass": true,
+        "score": 1.0
+      },
+      "denied": {
+        "pass": false,
+        "score": 0.6666666666666666
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": false,
+      "B": false
+    },
+    "wrong_argument": {
+      "required": {
+        "pass": false,
+        "score": 0.5
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": false,
+      "B": false
+    },
+    "skipped_policy_check": {
+      "required": {
+        "pass": false,
+        "score": 0.5
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": false,
+      "B": false
+    },
+    "skipped_lookup": {
+      "required": {
+        "pass": false,
+        "score": 0.5
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": false,
+      "B": false
+    },
+    "benign_extra_call": {
+      "required": {
+        "pass": true,
+        "score": 1.0
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": true,
+      "B": false
+    },
+    "duplicate_call": {
+      "required": {
+        "pass": true,
+        "score": 1.0
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": true,
+      "B": false
+    },
+    "reordered_calls": {
+      "required": {
+        "pass": true,
+        "score": 1.0
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": true,
+      "B": false
+    },
+    "no_calls_reported": {
+      "required": {
+        "pass": false,
+        "score": 0.0
+      },
+      "denied": {
+        "pass": true,
+        "score": 1.0
+      },
+      "exact": {
+        "pass": false,
+        "score": 0.0
+      },
+      "A": false,
+      "B": false
+    }
+  }
+}

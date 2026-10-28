@@ -1,0 +1,181 @@
+{
+  "tool": "ECP",
+  "versions": {
+    "ecp-runtime": "0.10.0",
+    "litellm": "1.106.3"
+  },
+  "judge_model": "anthropic/claude-haiku-5-5",
+  "reply": {
+    "regex": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ],
+    "judge": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    ]
+  },
+  "traj": {
+    "clean": {
+      "pass": true,
+      "failed": []
+    },
+    "prohibited_call": {
+      "pass": false,
+      "failed": [
+        "Forbidden tool 'issue_refund' was called 1 time(s): [{'order_id': 'A100', 'amount': '42.00"
+      ]
+    },
+    "wrong_argument": {
+      "pass": false,
+      "failed": [
+        "No matching tool call for name='lookup_order' and arguments={'order_id': 'A100'}. Calls se"
+      ]
+    },
+    "skipped_policy_check": {
+      "pass": false,
+      "failed": [
+        "No matching tool call for name='check_refund_policy' and arguments={'order_id': 'A100'}. C"
+      ]
+    },
+    "skipped_lookup": {
+      "pass": false,
+      "failed": [
+        "No matching tool call for name='lookup_order' and arguments={'order_id': 'A100'}. Calls se"
+      ]
+    },
+    "benign_extra_call": {
+      "pass": true,
+      "failed": []
+    },
+    "duplicate_call": {
+      "pass": true,
+      "failed": []
+    },
+    "reordered_calls": {
+      "pass": true,
+      "failed": []
+    },
+    "no_calls_reported": {
+      "pass": false,
+      "failed": [
+        "No tool_calls present. Agent did not report any tool usage.",
+        "No tool_calls present. Agent did not report any tool usage."
+      ]
+    }
+  }
+}
