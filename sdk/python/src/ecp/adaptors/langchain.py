@@ -111,7 +111,7 @@ class ECPLangChainAdapter(BaseCallbackHandler):
                 content = self._last_message_content(messages)
                 if content:
                     return content
-            return response.get("output") or response.get("content") or str(response)
+            return _content_to_text(response.get("output") or response.get("content")) or str(response)
 
         if isinstance(response, list):
             content = self._last_message_content(response)
@@ -119,7 +119,7 @@ class ECPLangChainAdapter(BaseCallbackHandler):
                 return content
 
         if hasattr(response, "content"):
-            return getattr(response, "content")
+            return _content_to_text(getattr(response, "content"))
 
         return str(response)
 
@@ -129,9 +129,30 @@ class ECPLangChainAdapter(BaseCallbackHandler):
                 content = msg.get("content")
             else:
                 content = getattr(msg, "content", None)
-            if content:
-                return content
+            text = _content_to_text(content)
+            if text:
+                return text
         return None
+
+def _content_to_text(content: Any) -> str:
+    """Flatten a message's content to text.
+
+    Providers return either a string or a list of content blocks (Anthropic does the
+    latter whenever the model writes text alongside a tool call). ECP's public_output
+    must be a string, so join the text blocks and ignore tool-use blocks.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and block.get("type", "text") == "text":
+                parts.append(str(block.get("text") or ""))
+        return "".join(parts)
+    return ""
+
 
 # --- Monkey Patching to make it work with @on_step ---
 # Since this is an adapter, we manually bind the 'step' method to the 'step' hook.

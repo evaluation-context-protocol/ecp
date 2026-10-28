@@ -38,6 +38,28 @@ class AdapterNormalizationTests(unittest.TestCase):
         self.assertEqual(normalized[0]["name"], "calculator")
         self.assertEqual(normalized[0]["arguments"]["expression"], "2+2")
 
+    def test_langchain_block_list_content_flattened_to_text(self):
+        # Anthropic returns a list of blocks when the model writes text beside a tool call.
+        adapter_cls = self._load_langchain_adapter()
+        adapter = adapter_cls(runnable=SimpleNamespace(invoke=lambda *_a, **_k: "ok"))
+        blocks = [
+            {"type": "text", "text": "Your order "},
+            {"type": "tool_use", "name": "lookup_order", "input": {}},
+            {"type": "text", "text": "is eligible."},
+        ]
+        reply = adapter._extract_final_text({"messages": [SimpleNamespace(content=blocks)]})
+        self.assertEqual(reply, "Your order is eligible.")
+        self.assertIsInstance(adapter._extract_final_text(SimpleNamespace(content=blocks)), str)
+
+    def test_llama_index_tool_call_result_event_normalized(self):
+        # LlamaIndex's ToolCallResult names the tool `tool_name` and its arguments `tool_kwargs`.
+        from ecp.adaptors.llama_index import ECPLlamaIndexAdapter
+
+        adapter = ECPLlamaIndexAdapter(workflow=SimpleNamespace(run=lambda **_kwargs: None))
+        event = SimpleNamespace(tool_name="lookup_order", tool_kwargs={"order_id": "A100"}, tool_id="t1")
+        normalized = adapter._normalize_tool_calls([event])
+        self.assertEqual(normalized, [{"name": "lookup_order", "arguments": {"order_id": "A100"}}])
+
     def test_crewai_tool_call_string_arguments_normalized(self):
         from ecp.adaptors.crewai import ECPCrewAIAdapter
 

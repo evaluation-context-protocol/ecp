@@ -154,9 +154,12 @@ class ECPLlamaIndexAdapter:
             if not isinstance(data, dict):
                 continue
 
-            name = data.get("name") or data.get("tool") or data.get("id")
+            # LlamaIndex's ToolCall / ToolCallResult events name the tool `tool_name`
+            # and carry arguments as `tool_kwargs`.
+            name = data.get("name") or data.get("tool_name") or data.get("tool") or data.get("id")
             args = (
                 data.get("arguments")
+                or data.get("tool_kwargs")
                 or data.get("args")
                 or data.get("parameters")
                 or data.get("kwargs")
