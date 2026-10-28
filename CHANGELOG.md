@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added `ecp_runtime.session.ECPSession`, a client for evaluators other than `ecp run`: start an ECP agent (stdio command or HTTP URL), initialize it, send steps, and get back the reply, tool calls and evaluation context, validated the way the runner validates them.
+- Added a Promptfoo provider (`integrations/promptfoo/ecp_provider.py`): Promptfoo can test any ECP agent, with the reply as `output` and tool calls in the response `metadata`.
+- Added a DeepEval bridge (`ecp_runtime.integrations.deepeval`) that turns ECP steps into `LLMTestCase` objects. It refuses agents that have not declared `tool_calls`, since DeepEval would read their empty tool list as "no tools used". DeepEval is imported only when the bridge is used.
 - Added `condition: not_called` on `tool_usage`, a prohibition on a tool call: `tool_name: issue_refund` fails if the agent called it, and `arguments` narrows the ban to calls matching those pairs. Until now ECP could only assert a call was *present*, so an agent could take an unauthorised action, write a clean reply, and pass every grader.
 - `called` is accepted as an explicit spelling of the existing default `tool_usage` behaviour.
 
