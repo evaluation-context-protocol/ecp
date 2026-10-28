@@ -14,10 +14,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 key = json.loads((HERE / "key.json").read_text(encoding="utf-8"))
-lab = {r["id"]: r["verdict (PASS/FAIL)"].strip().upper() for r in csv.DictReader(open(sys.argv[1], encoding="utf-8"))}
+lab = {r["id"]: (r["verdict (PASS/FAIL)"] or "").strip().upper() for r in csv.DictReader(open(sys.argv[1], encoding="utf-8-sig"))}
 missing = [i for i in key if lab.get(i) not in ("PASS", "FAIL")]
 if missing:
-    sys.exit(f"unfilled or invalid verdicts for: {', '.join(missing)}")
+    print(f"note: no valid verdict for {', '.join(missing)}; scoring the {len(key) - len(missing)} that have one")
+    key = {i: k for i, k in key.items() if i not in missing}
 
 author = {i: ("PASS" if k["author_label"] == "good" else "FAIL") for i, k in key.items()}
 n = len(key)

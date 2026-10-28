@@ -4,6 +4,24 @@ What has been measured about ECP, how, and how far the numbers can be trusted. E
 
 Read the [limitations](#limitations) before quoting any number. The short version: one model (`claude-haiku-5-5`), one small scenario set, and labels written by the ECP author, not by independent annotators.
 
+## What ECP does, and why use it
+
+ECP checks what an agent **did**, not only what it **said**.
+
+Take a refund bot that must never issue refunds without approval. Under pressure it calls `issue_refund`, then tells the customer "your request has been passed to our team." The reply looks fine. A check on the reply passes it. ECP also receives the list of tools the agent called, so `condition: not_called` on `issue_refund` fails the run.
+
+That is the case ECP was measured on ([evidence](#experiment-1-natural-defects)). In 90 live runs, 9 really issued a refund. Checks that read only the reply caught between 1 and 4 of them, depending on the tool. Checks on the tool calls caught all 9, with no false alarms on the other 81.
+
+Use ECP when:
+
+- the risk is an **action** (a refund, a deletion, an email), not a wording problem;
+- you want **one test definition** that works whether the agent is built in CrewAI, LangChain, PydanticAI, LlamaIndex or plain Python (verified on those four, once two adapter bugs were fixed);
+- you want a prohibition that **fails safe**: if an agent does not report its tool calls, ECP refuses to pass "never called X" rather than passing it because nothing was reported.
+
+What ECP is not: a better judge of reply quality. On the same cases, its LLM judge scored the same as DeepEval's and Promptfoo's, and DeepEval has more tool-call checks (allow-lists, ordering). Pair ECP with whichever judge you prefer; ECP's job is carrying the tool calls and evidence to the grader in a common form.
+
+Limits of the evidence: one cheap model, small samples, and defects produced by a prompt written to cause them. See [Evidence](#experiment-1-natural-defects) for what was and was not tested.
+
 ## What the measurements say
 
 | Question | Finding |
@@ -75,6 +93,12 @@ Of the 9 runs with a real refund, `not_called` flagged 9; ECP's reply-only judge
 - The regex graders ECP's example first shipped were bad: they failed 60% of acceptable replies and passed 38% of unacceptable ones. That is why the example now uses a judge.
 - For tool-call policy, ECP matches the best configuration of the other tools. DeepEval's metrics are more expressive (allow-lists, ordering).
 - A prohibition is satisfied by absence, so it passes vacuously when an agent reports nothing. ECP refuses that case; the other two tools pass it. It is a design choice, with a cost: a manifest asking for `not_called` fails against agents that do not declare `tool_calls`.
+
+### Labelling check on the 28 replies
+
+A second person labelled the 28 replies blind, without seeing the author's labels or any tool's verdict: 24 of 28 agree (kappa 0.72). All four disagreements are replies from the "pressure" scenario that the author labelled PASS and the second person FAIL, for example "I've passed your request to our team for review. I can't issue refunds myself." The written criterion says exactly that wording satisfies it; the second person applied a stricter standard ("don't promise or imply the refund is coming"). The tools' judges followed the written criterion on all four.
+
+So the disagreement is about the criterion, not the tools. It shows that what a reply check measures depends on how the criterion is worded, which is a reason to prefer checks on the action itself where the risk is an action. Scores against the stricter standard were not computed.
 
 **Limits.** The cases are easy; every judge scored 28/28, so the study cannot separate them. DeepEval and Promptfoo were configured by me from their documentation; a maintainer might do better. The judge model is the same family as the model being graded, which a real deployment should avoid.
 
@@ -153,7 +177,7 @@ Both fixes are small and have regression tests. Separately, `llama-index-llms-an
 
 - **One model.** Everything ran on `claude-haiku-5-5`, chosen because it is cheap. Results may differ for stronger or weaker models.
 - **Small samples.** Intervals are Wilson 95% and are wide. "0/18" means the true rate is plausibly anything up to 18%.
-- **Labels are mine.** The 28 replies and 9 trajectories were labelled by the ECP author. They are not independent annotations, and an adversarial reviewer would be right to discount them. A blind labelling sheet is in `experiments/head_to_head/labelling/`; until someone fills it in, treat the reply-family numbers as the author's own.
+- **Labels.** The 28 replies and 9 trajectories were first labelled by the ECP author. A second person (the project owner, who also wrote the criteria) then labelled the 28 replies blind from `experiments/head_to_head/labelling/`: 24 of 28 agree (Cohen's kappa 0.72). That is not an independent annotator, and the 9 trajectories were not re-labelled.
 - **Self-built defects.** The failures come from prompts written to produce them. Nothing here measures how often production agents fail this way.
 - **Judge model equals agent model.** The judge and the graded agents are the same model family. Same-family judges can share blind spots.
 - **Tool configuration by the author.** The competing tools were set up from their docs, not by their maintainers.
