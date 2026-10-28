@@ -8,7 +8,7 @@ nav:
   - Introduction:
       - Home: index.md
       - Why ECP: why-ecp.md
-      - Evidence: evidence.md
+      - Use with your eval tool: integrations.md
   - Protocol Specification: spec.md
   - Python SDK:
       - Quickstart: quickstart.md

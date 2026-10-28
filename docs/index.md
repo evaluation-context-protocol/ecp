@@ -8,23 +8,20 @@ ECP is a vendor-neutral protocol for testing agent outputs, tool calls, and eval
 
 Think of it as the evaluation contract layer: MCP gives agents a common way to use tools; ECP gives evaluators a common way to inspect what an agent returned, what tools it used, and what audit evidence it exposed.
 
-## What ECP does, and why use it
+## Where ECP Sits
 
-ECP checks what an agent **did**, not only what it **said**.
+ECP is a protocol between agents and the tools that evaluate them. It is not another evaluation framework.
 
-Take a refund bot that must never issue refunds without approval. Under pressure it calls `issue_refund`, then tells the customer "your request has been passed to our team." The reply looks fine. A check on the reply passes it. ECP also receives the list of tools the agent called, so `condition: not_called` on `issue_refund` fails the run.
+- **Agent side.** Adapters put an agent built in CrewAI, LangChain, PydanticAI, LlamaIndex or plain Python onto one contract: what it said (`public_output`), what it did (`tool_calls`), and evidence for the evaluator (`evaluation_context`, `usage`).
+- **Evaluator side.** Any tool that speaks ECP can test any of those agents without framework code: ECP's own `ecp run`, [Promptfoo and DeepEval](integrations.md), or your own harness.
 
-That is the case ECP was measured on ([evidence](evidence.md)). In 90 live runs, 9 really issued a refund. Checks that read only the reply caught between 1 and 4 of them, depending on the tool. Checks on the tool calls caught all 9, with no false alarms on the other 81.
+Change the agent's framework and the evaluation does not change, only the command that starts the agent. Change the evaluation tool and the agent does not change.
 
-Use ECP when:
+ECP's runtime includes graders (`llm_judge`, `tool_usage`, `not_called`) so the protocol works on its own, but grading is not what ECP is for. Use the judge you already trust; ECP makes sure it can see what the agent did.
 
-- the risk is an **action** (a refund, a deletion, an email), not a wording problem;
-- you want **one test definition** that works whether the agent is built in CrewAI, LangChain, PydanticAI, LlamaIndex or plain Python (verified on those four, once two adapter bugs were fixed);
-- you want a prohibition that **fails safe**: if an agent does not report its tool calls, ECP refuses to pass "never called X" rather than passing it because nothing was reported.
+### Why the contract carries tool calls
 
-What ECP is not: a better judge of reply quality. On the same cases, its LLM judge scored the same as DeepEval's and Promptfoo's, and DeepEval has more tool-call checks (allow-lists, ordering). Pair ECP with whichever judge you prefer; ECP's job is carrying the tool calls and evidence to the grader in a common form.
-
-Limits of the evidence: one cheap model, small samples, and defects produced by a prompt written to cause them. See [Evidence](evidence.md) for what was and was not tested.
+A refund agent that must never issue refunds is pushed by a customer, calls `issue_refund`, and replies "your request has been passed to our team." The reply is fine. Only the tool call shows the refund went out. In 90 measured runs with 9 real refunds, checks on the reply caught 1 to 4 of them depending on the tool; checks on the tool calls caught all 9. That is why `tool_calls` is part of the contract, and why ECP will not pass a "never called X" check for an agent that does not report its tool calls.
 
 ## Why ECP Exists
 
@@ -72,6 +69,8 @@ ecp run --manifest examples/customer_support_demo/manifest.yaml --report report.
 - `runtime/python/src/ecp_runtime` - reference runtime and `ecp` CLI
 - `examples/customer_support_demo` - flagship policy/tool-use demo
 - `examples/*_demo` - framework integrations
+- `integrations/` and `ecp_runtime.integrations` - Promptfoo provider and DeepEval bridge
+- `experiments/` - the studies behind the claims on this page
 - `schema/` - JSON Schema contracts for manifests, agent results, tool calls, and reports
 - `spec/` and `docs/spec.md` - protocol specification
 

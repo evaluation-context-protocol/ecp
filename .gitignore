@@ -228,3 +228,7 @@ experiments/natural_defects/results/tool_logs/
 
 # blind-labelling answer key (author's labels); keep out of what labellers receive
 experiments/head_to_head/labelling/key.json
+
+# interop: machine-specific interpreter paths, and run logs
+experiments/interop/scenarios.json
+experiments/interop/results_*.log
